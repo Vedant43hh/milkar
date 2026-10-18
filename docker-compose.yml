@@ -1,0 +1,23 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: milkar-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: milkar
+      POSTGRES_PASSWORD: milkar
+      POSTGRES_DB: milkar
+    ports:
+      - "5433:5432"
+    volumes:
+      - milkar-pg:/var/lib/postgresql/data
+      # Creates the separate milkar_test database used by integration tests.
+      - ./docker/init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U milkar -d milkar"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  milkar-pg:

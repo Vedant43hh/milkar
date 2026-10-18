@@ -1,0 +1,457 @@
+// Milkar data model.
+// Money is always integer paise (Int). Percentages are integer basis points (500 = 5%).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  RESIDENT
+  CAPTAIN // a resident who can also run order rounds for their society
+  SUPPLIER
+  ADMIN
+}
+
+enum Unit {
+  KG
+  G
+  LITRE
+  ML
+  PACKET
+  PIECE
+  DOZEN
+}
+
+enum Category {
+  GRAINS_FLOUR
+  DALS_PULSES
+  OILS_GHEE
+  SUGAR_SALT
+  SPICES
+  TEA_COFFEE
+  BREAKFAST
+  HOME_CARE
+  PERSONAL_CARE
+  EGGS_DAIRY
+}
+
+enum RoundStatus {
+  OPEN
+  FINALIZING
+  FINALIZED
+  COMPLETED
+  CANCELLED
+}
+
+enum RoundProductStatus {
+  ACTIVE
+  CONFIRMED
+  DROPPED
+}
+
+enum OrderItemStatus {
+  ACTIVE
+  CONFIRMED
+  DROPPED
+  CANCELLED
+}
+
+enum PaymentProvider {
+  WALLET // fully covered by wallet balance, no gateway involved
+  MOCK
+  RAZORPAY
+}
+
+enum PaymentStatus {
+  CREATED
+  PAID
+  FAILED
+  EXPIRED
+  CREDITED_TO_WALLET // money captured but the change could not be applied
+}
+
+enum WalletTxnType {
+  TIER_REFUND
+  DROP_REFUND
+  CANCEL_REFUND // units removed by the resident before the reduction freeze
+  ROUND_CANCEL_REFUND
+  ORDER_DEBIT
+  LATE_PAYMENT_CREDIT
+  SHORT_DELIVERY_REFUND
+  ADJUSTMENT
+}
+
+enum DeliveryIssueReason {
+  SHORT
+  DAMAGED
+}
+
+enum PurchaseOrderStatus {
+  ISSUED
+  ACKNOWLEDGED
+}
+
+enum DistributionStatus {
+  PENDING
+  COLLECTED
+}
+
+model Society {
+  id        String   @id @default(cuid())
+  name      String
+  code      String   @unique // join code used in invite links
+  address   String
+  city      String
+  pincode   String
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  flats  Flat[]
+  rounds OrderRound[]
+}
+
+model Flat {
+  id        String @id @default(cuid())
+  societyId String
+  tower     String
+  number    String
+
+  society             Society              @relation(fields: [societyId], references: [id], onDelete: Cascade)
+  residents           User[]
+  orderItems          OrderItem[]
+  distributionRecords DistributionRecord[]
+  deliveryIssues      DeliveryIssue[]
+
+  @@unique([societyId, tower, number])
+}
+
+model User {
+  id         String   @id @default(cuid())
+  phone      String   @unique // E.164, e.g. +919000000001
+  name       String?
+  role       Role     @default(RESIDENT)
+  flatId     String?
+  supplierId String?
+  createdAt  DateTime @default(now()) @db.Timestamptz(3)
+
+  flat                   Flat?                @relation(fields: [flatId], references: [id])
+  supplier               Supplier?            @relation(fields: [supplierId], references: [id])
+  sessions               Session[]
+  orderItems             OrderItem[]
+  payments               Payment[]
+  walletTransactions     WalletTransaction[]
+  roundsCreated          OrderRound[]
+  deliveryIssuesRecorded DeliveryIssue[]
+  distributionsCollected DistributionRecord[]
+
+  @@index([flatId])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  expiresAt DateTime @db.Timestamptz(3)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model OtpRequest {
+  id         String    @id @default(cuid())
+  phone      String
+  ip         String
+  codeHash   String
+  expiresAt  DateTime  @db.Timestamptz(3)
+  attempts   Int       @default(0)
+  consumedAt DateTime? @db.Timestamptz(3)
+  createdAt  DateTime  @default(now()) @db.Timestamptz(3)
+
+  @@index([phone, createdAt])
+  @@index([ip, createdAt])
+}
+
+model Supplier {
+  id        String   @id @default(cuid())
+  name      String
+  gstin     String?
+  phone     String
+  city      String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  users          User[]
+  products       Product[]
+  roundProducts  RoundProduct[]
+  purchaseOrders SupplierPurchaseOrder[]
+}
+
+model Product {
+  id                String   @id @default(cuid())
+  supplierId        String
+  name              String
+  category          Category
+  unit              Unit
+  packSize          Int // in `unit`, e.g. 5 + KG = a 5 kg bag
+  mrpPaise          Int // retail price incl. GST, used for "you saved" figures
+  gstBps            Int
+  minOrderQty       Int // society-wide minimum for the supplier to accept the product
+  defaultMaxPerFlat Int // prefills RoundProduct.maxQtyPerFlat
+  active            Boolean  @default(true)
+  createdAt         DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime @updatedAt @db.Timestamptz(3)
+
+  supplier           Supplier            @relation(fields: [supplierId], references: [id])
+  tiers              PriceTier[]
+  roundProducts      RoundProduct[]
+  purchaseOrderLines PurchaseOrderLine[]
+
+  @@index([supplierId])
+}
+
+// Supplier price per unit, excluding GST, for society-wide quantity >= minQty.
+model PriceTier {
+  id                 String @id @default(cuid())
+  productId          String
+  minQty             Int
+  supplierPricePaise Int
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, minQty])
+}
+
+model PlatformSetting {
+  id                     Int      @id @default(1)
+  marginBps              Int      @default(300)
+  reductionFreezeMinutes Int      @default(720)
+  updatedAt              DateTime @updatedAt @db.Timestamptz(3)
+}
+
+model OrderRound {
+  id                     String      @id @default(cuid())
+  number                 Int         @unique @default(autoincrement())
+  societyId              String
+  createdById            String
+  title                  String
+  status                 RoundStatus @default(OPEN)
+  cutoffAt               DateTime    @db.Timestamptz(3)
+  deliveryAt             DateTime    @db.Timestamptz(3)
+  marginBps              Int // snapshot of PlatformSetting at creation
+  reductionFreezeMinutes Int // snapshot of PlatformSetting at creation
+  requirePickupCode      Boolean     @default(true)
+  version                Int         @default(0) // bumped by every order mutation (row lock)
+  finalizedAt            DateTime?   @db.Timestamptz(3)
+  completedAt            DateTime?   @db.Timestamptz(3)
+  cancelledAt            DateTime?   @db.Timestamptz(3)
+  createdAt              DateTime    @default(now()) @db.Timestamptz(3)
+
+  society             Society                 @relation(fields: [societyId], references: [id])
+  createdBy           User                    @relation(fields: [createdById], references: [id])
+  products            RoundProduct[]
+  orderItems          OrderItem[]
+  payments            Payment[]
+  walletTransactions  WalletTransaction[]
+  purchaseOrders      SupplierPurchaseOrder[]
+  distributionRecords DistributionRecord[]
+  deliveryIssues      DeliveryIssue[]
+
+  @@index([societyId, status])
+  @@index([status, cutoffAt])
+}
+
+// A product offered in a round, with pricing snapshotted at round creation.
+model RoundProduct {
+  id                      String             @id @default(cuid())
+  roundId                 String
+  productId               String
+  supplierId              String
+  tiers                   Json // [{ minQty, supplierPricePaise }] sorted by minQty
+  gstBps                  Int
+  mrpPaise                Int
+  minOrderQty             Int
+  maxQtyPerFlat           Int
+  status                  RoundProductStatus @default(ACTIVE)
+  finalQty                Int?
+  finalSupplierPricePaise Int?
+  finalUnitPricePaise     Int?
+
+  round              OrderRound          @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  product            Product             @relation(fields: [productId], references: [id])
+  supplier           Supplier            @relation(fields: [supplierId], references: [id])
+  orderItems         OrderItem[]
+  purchaseOrderLines PurchaseOrderLine[]
+
+  @@unique([roundId, productId])
+}
+
+model OrderItem {
+  id               String          @id @default(cuid())
+  roundId          String
+  roundProductId   String
+  userId           String
+  flatId           String
+  quantity         Int             @default(0)
+  chargedPaise     Int             @default(0) // sum of lots
+  status           OrderItemStatus @default(ACTIVE)
+  finalPaise       Int?
+  refundPaise      Int?
+  absorbedPaise    Int?
+  shortQty         Int             @default(0)
+  damagedQty       Int             @default(0)
+  issueRefundPaise Int             @default(0)
+  createdAt        DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime        @updatedAt @db.Timestamptz(3)
+
+  round              OrderRound          @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  roundProduct       RoundProduct        @relation(fields: [roundProductId], references: [id], onDelete: Cascade)
+  user               User                @relation(fields: [userId], references: [id])
+  flat               Flat                @relation(fields: [flatId], references: [id])
+  lots               OrderLot[]
+  walletTransactions WalletTransaction[]
+  deliveryIssues     DeliveryIssue[]
+
+  @@unique([roundProductId, userId])
+  @@index([roundId, userId])
+  @@index([roundId, flatId])
+}
+
+// Units bought at one price. Reductions remove units from the most expensive lots first.
+model OrderLot {
+  id             String   @id @default(cuid())
+  orderItemId    String
+  quantity       Int
+  unitPricePaise Int // GST-inclusive resident price per unit when bought
+  paymentId      String?
+  createdAt      DateTime @default(now()) @db.Timestamptz(3)
+
+  orderItem OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  payment   Payment?  @relation(fields: [paymentId], references: [id])
+
+  @@index([orderItemId])
+}
+
+model Payment {
+  id                 String          @id @default(cuid())
+  userId             String
+  roundId            String
+  changes            Json // the quote: per product baseQty, targetQty, lots added, units removed
+  chargePaise        Int // new units
+  creditPaise        Int // removed units, refunded to the wallet
+  walletAppliedPaise Int
+  gatewayPaise       Int
+  provider           PaymentProvider
+  providerOrderId    String?
+  providerPaymentId  String?
+  status             PaymentStatus   @default(CREATED)
+  failureReason      String?
+  expiresAt          DateTime        @db.Timestamptz(3)
+  paidAt             DateTime?       @db.Timestamptz(3)
+  createdAt          DateTime        @default(now()) @db.Timestamptz(3)
+
+  user               User                @relation(fields: [userId], references: [id])
+  round              OrderRound          @relation(fields: [roundId], references: [id])
+  lots               OrderLot[]
+  walletTransactions WalletTransaction[]
+
+  @@index([userId, roundId])
+}
+
+model WalletTransaction {
+  id             String        @id @default(cuid())
+  userId         String
+  amountPaise    Int // positive = credit, negative = debit
+  type           WalletTxnType
+  roundId        String?
+  paymentId      String?
+  orderItemId    String?
+  idempotencyKey String        @unique
+  note           String?
+  createdAt      DateTime      @default(now()) @db.Timestamptz(3)
+
+  user      User        @relation(fields: [userId], references: [id])
+  round     OrderRound? @relation(fields: [roundId], references: [id])
+  payment   Payment?    @relation(fields: [paymentId], references: [id])
+  orderItem OrderItem?  @relation(fields: [orderItemId], references: [id])
+
+  @@index([userId, createdAt])
+}
+
+// Audit trail for short/damaged items recorded at distribution.
+model DeliveryIssue {
+  id          String              @id @default(cuid())
+  roundId     String
+  flatId      String
+  orderItemId String
+  reason      DeliveryIssueReason
+  quantity    Int // units added by this record
+  refundPaise Int
+  note        String?
+  createdById String
+  createdAt   DateTime            @default(now()) @db.Timestamptz(3)
+
+  round     OrderRound @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  flat      Flat       @relation(fields: [flatId], references: [id])
+  orderItem OrderItem  @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  createdBy User       @relation(fields: [createdById], references: [id])
+
+  @@index([roundId])
+}
+
+model SupplierPurchaseOrder {
+  id             String              @id @default(cuid())
+  number         Int                 @unique @default(autoincrement())
+  roundId        String
+  supplierId     String
+  status         PurchaseOrderStatus @default(ISSUED)
+  subtotalPaise  Int
+  gstPaise       Int
+  totalPaise     Int
+  acknowledgedAt DateTime?           @db.Timestamptz(3)
+  createdAt      DateTime            @default(now()) @db.Timestamptz(3)
+
+  round    OrderRound          @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  supplier Supplier            @relation(fields: [supplierId], references: [id])
+  lines    PurchaseOrderLine[]
+
+  @@unique([roundId, supplierId])
+}
+
+model PurchaseOrderLine {
+  id                 String @id @default(cuid())
+  poId               String
+  productId          String
+  roundProductId     String
+  quantity           Int
+  supplierPricePaise Int
+  gstBps             Int
+  taxablePaise       Int
+  gstPaise           Int
+  lineTotalPaise     Int
+
+  po           SupplierPurchaseOrder @relation(fields: [poId], references: [id], onDelete: Cascade)
+  product      Product               @relation(fields: [productId], references: [id])
+  roundProduct RoundProduct          @relation(fields: [roundProductId], references: [id])
+}
+
+model DistributionRecord {
+  id            String             @id @default(cuid())
+  roundId       String
+  flatId        String
+  pickupCode    String
+  status        DistributionStatus @default(PENDING)
+  collectedAt   DateTime?          @db.Timestamptz(3)
+  collectedById String?
+
+  round       OrderRound @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  flat        Flat       @relation(fields: [flatId], references: [id])
+  collectedBy User?      @relation(fields: [collectedById], references: [id])
+
+  @@unique([roundId, flatId])
+}
