@@ -32,11 +32,11 @@ export type ChangeErrorCode =
   | "REDUCTION_FROZEN"
   | "FLAT_CAP_EXCEEDED"
   | "INVALID_QUANTITY"
-  | "PRODUCT_UNAVAILABLE";
+  | "OFFERING_UNAVAILABLE";
 
 export type ChangeError = {
   code: ChangeErrorCode;
-  roundProductId: string;
+  offeringId: string;
   /** For FLAT_CAP_EXCEEDED: the most this user can hold given the rest of the flat's quantity. */
   maxAllowed?: number;
 };
@@ -44,34 +44,34 @@ export type ChangeError = {
 export type ChangeCheck = {
   round: RoundWindow;
   now: Date;
-  roundProductId: string;
-  productActive: boolean;
+  offeringId: string;
+  offeringActive: boolean;
   currentQty: number;
   targetQty: number;
-  /** Quantity of the same product held by other users in the same flat. */
+  /** Quantity of the same offering held by other users in the same flat. */
   flatOthersQty: number;
   maxQtyPerFlat: number;
 };
 
 export function checkChange(c: ChangeCheck): ChangeError | null {
-  const id = c.roundProductId;
+  const id = c.offeringId;
   if (!Number.isSafeInteger(c.targetQty) || c.targetQty < 0) {
-    return { code: "INVALID_QUANTITY", roundProductId: id };
+    return { code: "INVALID_QUANTITY", offeringId: id };
   }
   if (c.targetQty === c.currentQty) return null;
   if (c.targetQty > c.currentQty) {
-    if (!canAdd(c.round, c.now)) return { code: "ROUND_CLOSED", roundProductId: id };
-    if (!c.productActive) return { code: "PRODUCT_UNAVAILABLE", roundProductId: id };
+    if (!canAdd(c.round, c.now)) return { code: "ROUND_CLOSED", offeringId: id };
+    if (!c.offeringActive) return { code: "OFFERING_UNAVAILABLE", offeringId: id };
     if (c.flatOthersQty + c.targetQty > c.maxQtyPerFlat) {
       return {
         code: "FLAT_CAP_EXCEEDED",
-        roundProductId: id,
+        offeringId: id,
         maxAllowed: Math.max(c.maxQtyPerFlat - c.flatOthersQty, 0),
       };
     }
     return null;
   }
-  if (!canAdd(c.round, c.now)) return { code: "ROUND_CLOSED", roundProductId: id };
-  if (!canReduce(c.round, c.now)) return { code: "REDUCTION_FROZEN", roundProductId: id };
+  if (!canAdd(c.round, c.now)) return { code: "ROUND_CLOSED", offeringId: id };
+  if (!canReduce(c.round, c.now)) return { code: "REDUCTION_FROZEN", offeringId: id };
   return null;
 }

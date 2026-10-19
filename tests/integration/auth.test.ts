@@ -2,11 +2,11 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import { prisma } from "@/lib/db";
 import { OTP_MAX_ATTEMPTS, SESSION_TTL_MS } from "@/lib/auth/rules";
 import { DEMO_USERS } from "@/lib/demo";
-import { findOrCreateUserByPhone, joinSociety, resolveDemoLogin } from "@/server/auth";
+import { findOrCreateUserByPhone, joinCommunity, resolveDemoLogin } from "@/server/auth";
 import { hashOtp, requestOtp, verifyOtp } from "@/server/otp";
 import { createSession, deleteSession, findSessionUser, hashSessionToken } from "@/server/session";
 import { truncateAll } from "../../prisma/truncate";
-import { makeSociety, nextPhone } from "./helpers";
+import { makeCommunity, nextPhone } from "./helpers";
 
 const limits = { phone15m: 3, phoneDay: 10, ip15m: 30, ipDay: 200 };
 const MIN = 60_000;
@@ -131,14 +131,14 @@ describe("accounts and sessions", () => {
     expect(await findSessionUser(token, at(5))).toBeNull();
   });
 
-  it("includes flat and society details for residents", async () => {
-    const society = await makeSociety("SESS1");
-    const user = await prisma.user.create({ data: { phone: nextPhone(), name: "Asha", flatId: society.flats[0].id } });
+  it("includes flat and community details for residents", async () => {
+    const community = await makeCommunity("SESS1");
+    const user = await prisma.user.create({ data: { phone: nextPhone(), name: "Asha", flatId: community.flats[0].id } });
     const { token } = await createSession(user.id, t0);
     expect(await findSessionUser(token, at(1))).toMatchObject({
       name: "Asha",
       role: "RESIDENT",
-      flat: { tower: "A", number: "101", society: { code: "SESS1", name: "SESS1 CHS" } },
+      flat: { tower: "A", number: "101", community: { code: "SESS1", name: "SESS1 CHS", unitLabel: "Flat", blockLabel: "Tower" } },
     });
   });
 });
@@ -157,34 +157,34 @@ describe("demo login", () => {
   });
 });
 
-describe("joinSociety", () => {
-  it("puts a new resident in a flat of the invited society", async () => {
-    const society = await makeSociety("JOIN1");
+describe("joinCommunity", () => {
+  it("puts a new resident in a flat of the invited community", async () => {
+    const community = await makeCommunity("JOIN1");
     const user = await findOrCreateUserByPhone(nextPhone());
-    const result = await joinSociety({ userId: user.id, societyCode: "join1", flatId: society.flats[1].id, name: "  Ravi Kumar " });
-    expect(result).toEqual({ ok: true, societyId: society.id, societyName: "JOIN1 CHS" });
-    expect(await prisma.user.findUniqueOrThrow({ where: { id: user.id } })).toMatchObject({ name: "Ravi Kumar", flatId: society.flats[1].id });
+    const result = await joinCommunity({ userId: user.id, communityCode: "join1", flatId: community.flats[1].id, name: "  Ravi Kumar " });
+    expect(result).toEqual({ ok: true, communityId: community.id, communityName: "JOIN1 CHS" });
+    expect(await prisma.user.findUniqueOrThrow({ where: { id: user.id } })).toMatchObject({ name: "Ravi Kumar", flatId: community.flats[1].id });
   });
 
-  it("rejects flats from another society, unknown codes, existing members and non-residents", async () => {
-    const mine = await makeSociety("JOIN2");
-    const other = await makeSociety("JOIN3");
+  it("rejects flats from another community, unknown codes, existing members and non-residents", async () => {
+    const mine = await makeCommunity("JOIN2");
+    const other = await makeCommunity("JOIN3");
     const user = await findOrCreateUserByPhone(nextPhone());
-    expect(await joinSociety({ userId: user.id, societyCode: "JOIN2", flatId: other.flats[0].id, name: "Ravi" })).toEqual({ ok: false, error: "UNKNOWN_FLAT" });
-    expect(await joinSociety({ userId: user.id, societyCode: "NOPE", flatId: mine.flats[0].id, name: "Ravi" })).toEqual({ ok: false, error: "UNKNOWN_SOCIETY" });
+    expect(await joinCommunity({ userId: user.id, communityCode: "JOIN2", flatId: other.flats[0].id, name: "Ravi" })).toEqual({ ok: false, error: "UNKNOWN_FLAT" });
+    expect(await joinCommunity({ userId: user.id, communityCode: "NOPE", flatId: mine.flats[0].id, name: "Ravi" })).toEqual({ ok: false, error: "UNKNOWN_COMMUNITY" });
 
-    await joinSociety({ userId: user.id, societyCode: "JOIN2", flatId: mine.flats[0].id, name: "Ravi" });
-    expect(await joinSociety({ userId: user.id, societyCode: "JOIN2", flatId: mine.flats[1].id, name: "Ravi" })).toEqual({ ok: false, error: "ALREADY_MEMBER" });
+    await joinCommunity({ userId: user.id, communityCode: "JOIN2", flatId: mine.flats[0].id, name: "Ravi" });
+    expect(await joinCommunity({ userId: user.id, communityCode: "JOIN2", flatId: mine.flats[1].id, name: "Ravi" })).toEqual({ ok: false, error: "ALREADY_MEMBER" });
 
-    const supplier = await prisma.user.create({ data: { phone: nextPhone(), role: "SUPPLIER" } });
-    expect(await joinSociety({ userId: supplier.id, societyCode: "JOIN2", flatId: mine.flats[0].id, name: "S" })).toEqual({ ok: false, error: "NOT_RESIDENT" });
+    const vendor = await prisma.user.create({ data: { phone: nextPhone(), role: "VENDOR" } });
+    expect(await joinCommunity({ userId: vendor.id, communityCode: "JOIN2", flatId: mine.flats[0].id, name: "S" })).toEqual({ ok: false, error: "NOT_RESIDENT" });
   });
 
   it("lets only one of two simultaneous joins succeed", async () => {
-    const society = await makeSociety("JOIN4");
+    const community = await makeCommunity("JOIN4");
     const user = await findOrCreateUserByPhone(nextPhone());
     const results = await Promise.all(
-      society.flats.map((flat) => joinSociety({ userId: user.id, societyCode: "JOIN4", flatId: flat.id, name: "Ravi" })),
+      community.flats.map((flat) => joinCommunity({ userId: user.id, communityCode: "JOIN4", flatId: flat.id, name: "Ravi" })),
     );
     expect(results.filter((r) => r.ok)).toHaveLength(1);
   });

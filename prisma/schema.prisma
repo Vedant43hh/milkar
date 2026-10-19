@@ -12,9 +12,28 @@ datasource db {
 
 enum Role {
   RESIDENT
-  CAPTAIN // a resident who can also run order rounds for their society
-  SUPPLIER
+  CAPTAIN // a resident who can also run rounds and polls for their community
+  VENDOR
   ADMIN
+}
+
+enum CommunityType {
+  APARTMENT_SOCIETY
+  GATED_COMMUNITY
+  PG_COLIVING
+  HOSTEL
+  OFFICE_CAMPUS
+}
+
+enum VendorKind {
+  GOODS
+  SERVICES
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
 }
 
 enum Unit {
@@ -27,7 +46,7 @@ enum Unit {
   DOZEN
 }
 
-enum Category {
+enum ProductCategory {
   GRAINS_FLOUR
   DALS_PULSES
   OILS_GHEE
@@ -40,6 +59,23 @@ enum Category {
   EGGS_DAIRY
 }
 
+enum ServiceCategory {
+  AC
+  RO
+  DEEP_CLEANING
+  PEST_CONTROL
+  WATER_TANK
+  CAR_WASH
+  SOFA_CARPET
+  APPLIANCE_REPAIR
+  CHIMNEY
+}
+
+enum RoundKind {
+  GROCERY
+  SERVICE
+}
+
 enum RoundStatus {
   OPEN
   FINALIZING
@@ -48,7 +84,18 @@ enum RoundStatus {
   CANCELLED
 }
 
-enum RoundProductStatus {
+enum OfferingKind {
+  PRODUCT
+  SERVICE_OPTION
+}
+
+// What a tier's minimum counts: units bought (groceries) or distinct flats booked (services).
+enum TierBasis {
+  UNITS
+  FLATS
+}
+
+enum OfferingStatus {
   ACTIVE
   CONFIRMED
   DROPPED
@@ -83,17 +130,27 @@ enum WalletTxnType {
   ORDER_DEBIT
   LATE_PAYMENT_CREDIT
   SHORT_DELIVERY_REFUND
+  NO_ACCESS_REFUND // technician could not get in: paid amount minus the visit fee
+  VISIT_CANCEL_REFUND
+  SERVICE_ISSUE_REFUND
   ADJUSTMENT
 }
 
-enum DeliveryIssueReason {
+enum OrderIssueReason {
   SHORT
   DAMAGED
+  SERVICE_NOT_DONE
 }
 
-enum PurchaseOrderStatus {
+enum VendorOrderStatus {
   ISSUED
   ACKNOWLEDGED
+}
+
+enum VendorAdjustmentType {
+  NO_ACCESS_FEE
+  VISIT_CANCELLED
+  ISSUE_REFUND
 }
 
 enum DistributionStatus {
@@ -101,52 +158,132 @@ enum DistributionStatus {
   COLLECTED
 }
 
-model Society {
-  id        String   @id @default(cuid())
-  name      String
-  code      String   @unique // join code used in invite links
-  address   String
-  city      String
-  pincode   String
-  createdAt DateTime @default(now()) @db.Timestamptz(3)
+enum BookingStatus {
+  HELD // slot kept from last week's repeating round, waiting for confirm and pay
+  ACTIVE
+  CANCELLED
+}
+
+enum VisitKind {
+  STANDARD
+  REVISIT
+}
+
+enum VisitStatus {
+  SCHEDULED
+  ON_THE_WAY
+  IN_PROGRESS
+  COMPLETED
+  NO_ACCESS
+  CANCELLED
+}
+
+enum ServiceIssueKind {
+  NOT_DONE_PROPERLY
+  NO_ACCESS_DISPUTE
+}
+
+enum ServiceIssueStatus {
+  OPEN
+  REVISIT_SCHEDULED
+  REFUNDED
+  REJECTED
+  RESOLVED
+}
+
+enum PollKind {
+  PRODUCT
+  SERVICE
+}
+
+enum PollStatus {
+  SUGGESTED // proposed by a resident, waiting for the captain
+  OPEN
+  CONVERTED // a round was opened from it
+  CLOSED
+}
+
+enum NotificationType {
+  ROUND_OPENED
+  TIER_UNLOCKED
+  CUTOFF_REMINDER
+  ROUND_FINALIZED
+  REFUND_CREDITED
+  VISIT_SCHEDULED
+  TECHNICIAN_ON_THE_WAY
+  VISIT_COMPLETED
+  VISIT_NO_ACCESS
+  POLL_THRESHOLD
+  POLL_SUGGESTION
+  SLOT_HELD
+  ISSUE_UPDATE
+  VENDOR_ORDER
+}
+
+// A residential community: apartment society, gated community, PG, hostel or office campus.
+model Community {
+  id         String        @id @default(cuid())
+  name       String
+  code       String        @unique // join code used in invite links
+  type       CommunityType @default(APARTMENT_SOCIETY)
+  blockLabel String        @default("Tower") // what a Flat.tower is called here: Tower, Wing, Block, Floor
+  unitLabel  String        @default("Flat") // what a Flat is called here: Flat, Villa, Room
+  address    String
+  city       String
+  pincode    String
+  createdAt  DateTime      @default(now()) @db.Timestamptz(3)
 
   flats  Flat[]
   rounds OrderRound[]
+  polls  InterestPoll[]
 }
 
+// One household: a flat, villa or room. Shown with the community's unitLabel.
 model Flat {
-  id        String @id @default(cuid())
-  societyId String
-  tower     String
-  number    String
+  id          String @id @default(cuid())
+  communityId String
+  tower       String
+  number      String
 
-  society             Society              @relation(fields: [societyId], references: [id], onDelete: Cascade)
+  community           Community            @relation(fields: [communityId], references: [id], onDelete: Cascade)
   residents           User[]
   orderItems          OrderItem[]
   distributionRecords DistributionRecord[]
-  deliveryIssues      DeliveryIssue[]
+  orderIssues         OrderIssue[]
+  bookings            ServiceBooking[]
+  visits              ServiceVisit[]
+  serviceIssues       ServiceIssue[]
+  pollVotes           PollVote[]
 
-  @@unique([societyId, tower, number])
+  @@unique([communityId, tower, number])
 }
 
 model User {
-  id         String   @id @default(cuid())
-  phone      String   @unique // E.164, e.g. +919000000001
-  name       String?
-  role       Role     @default(RESIDENT)
-  flatId     String?
-  supplierId String?
-  createdAt  DateTime @default(now()) @db.Timestamptz(3)
+  id        String   @id @default(cuid())
+  phone     String   @unique // E.164, e.g. +919000000001
+  name      String?
+  role      Role     @default(RESIDENT)
+  flatId    String?
+  vendorId  String?
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
 
   flat                   Flat?                @relation(fields: [flatId], references: [id])
-  supplier               Supplier?            @relation(fields: [supplierId], references: [id])
+  vendor                 Vendor?              @relation(fields: [vendorId], references: [id])
   sessions               Session[]
   orderItems             OrderItem[]
   payments               Payment[]
   walletTransactions     WalletTransaction[]
   roundsCreated          OrderRound[]
-  deliveryIssuesRecorded DeliveryIssue[]
+  orderIssuesRecorded    OrderIssue[]
   distributionsCollected DistributionRecord[]
+  bookings               ServiceBooking[]
+  ratings                VisitRating[]
+  serviceIssuesReported  ServiceIssue[]       @relation("ServiceIssueReporter")
+  serviceIssuesResolved  ServiceIssue[]       @relation("ServiceIssueResolver")
+  pollsSuggested         InterestPoll[]       @relation("PollSuggester")
+  pollsPublished         InterestPoll[]       @relation("PollPublisher")
+  pollVotes              PollVote[]
+  notifications          Notification[]
 
   @@index([flatId])
 }
@@ -177,54 +314,133 @@ model OtpRequest {
   @@index([ip, createdAt])
 }
 
-model Supplier {
-  id        String   @id @default(cuid())
-  name      String
-  gstin     String?
-  phone     String
-  city      String
-  active    Boolean  @default(true)
-  createdAt DateTime @default(now()) @db.Timestamptz(3)
+// A wholesaler (GOODS) or a home-services company (SERVICES).
+model Vendor {
+  id                 String             @id @default(cuid())
+  name               String
+  kind               VendorKind
+  gstin              String?
+  phone              String
+  city               String
+  about              String?
+  active             Boolean            @default(true)
+  verificationStatus VerificationStatus @default(PENDING)
+  verifiedAt         DateTime?          @db.Timestamptz(3)
+  verificationNote   String? // what the admin checked (GST certificate, trade licence, police verification …)
+  ratingCount        Int                @default(0) // maintained in the same transaction as each rating
+  ratingSum          Int                @default(0)
+  createdAt          DateTime           @default(now()) @db.Timestamptz(3)
 
-  users          User[]
-  products       Product[]
-  roundProducts  RoundProduct[]
-  purchaseOrders SupplierPurchaseOrder[]
+  users        User[]
+  products     Product[]
+  services     Service[]
+  rounds       OrderRound[]
+  offerings    RoundOffering[]
+  vendorOrders VendorOrder[]
+  ratings      VisitRating[]
 }
 
 model Product {
-  id                String   @id @default(cuid())
-  supplierId        String
+  id                String          @id @default(cuid())
+  vendorId          String
   name              String
-  category          Category
+  category          ProductCategory
   unit              Unit
   packSize          Int // in `unit`, e.g. 5 + KG = a 5 kg bag
   mrpPaise          Int // retail price incl. GST, used for "you saved" figures
   gstBps            Int
-  minOrderQty       Int // society-wide minimum for the supplier to accept the product
-  defaultMaxPerFlat Int // prefills RoundProduct.maxQtyPerFlat
-  active            Boolean  @default(true)
-  createdAt         DateTime @default(now()) @db.Timestamptz(3)
-  updatedAt         DateTime @updatedAt @db.Timestamptz(3)
+  minOrderQty       Int // community-wide minimum for the vendor to accept the product
+  defaultMaxPerFlat Int // prefills RoundOffering.maxQtyPerFlat
+  active            Boolean         @default(true)
+  createdAt         DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime        @updatedAt @db.Timestamptz(3)
 
-  supplier           Supplier            @relation(fields: [supplierId], references: [id])
-  tiers              PriceTier[]
-  roundProducts      RoundProduct[]
-  purchaseOrderLines PurchaseOrderLine[]
+  vendor     Vendor            @relation(fields: [vendorId], references: [id])
+  tiers      PriceTier[]
+  offerings  RoundOffering[]
+  orderLines VendorOrderLine[]
+  polls      InterestPoll[]
 
-  @@index([supplierId])
+  @@index([vendorId])
 }
 
-// Supplier price per unit, excluding GST, for society-wide quantity >= minQty.
+// Vendor price per unit, excluding GST, once the community-wide quantity reaches minQty.
 model PriceTier {
-  id                 String @id @default(cuid())
-  productId          String
-  minQty             Int
-  supplierPricePaise Int
+  id               String @id @default(cuid())
+  productId        String
+  minQty           Int
+  vendorPricePaise Int
 
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@unique([productId, minQty])
+}
+
+// A home service a vendor offers, e.g. "AC servicing". Its options are what residents book.
+model Service {
+  id               String          @id @default(cuid())
+  vendorId         String
+  category         ServiceCategory
+  name             String
+  description      String
+  minFlats         Int // flats needed (across all options) for the vendor to run the Service Day
+  noAccessFeePaise Int // GST-inclusive visit fee kept when the technician cannot get in
+  durationMinutes  Int
+  gstBps           Int
+  weeklyByDefault  Boolean         @default(false) // suggests "repeat weekly" when opening a round (car wash)
+  active           Boolean         @default(true)
+  createdAt        DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime        @updatedAt @db.Timestamptz(3)
+
+  vendor        Vendor               @relation(fields: [vendorId], references: [id])
+  options       ServiceOption[]
+  slotTemplates VendorSlotTemplate[]
+  rounds        OrderRound[]
+  polls         InterestPoll[]
+
+  @@index([vendorId])
+}
+
+// A bookable variant priced per unit, e.g. "Split AC" per unit or "Deep clean, 2 BHK" per home.
+model ServiceOption {
+  id         String  @id @default(cuid())
+  serviceId  String
+  name       String
+  unitLabel  String // "unit", "home", "car", "tank"
+  mrpPaise   Int // typical one-off price incl. GST, for "you saved" figures
+  maxPerFlat Int
+  sortOrder  Int     @default(0)
+  active     Boolean @default(true)
+
+  service    Service             @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  tiers      ServiceOptionTier[]
+  offerings  RoundOffering[]
+  orderLines VendorOrderLine[]
+}
+
+// Vendor price per unit of the option, excluding GST, once minFlats flats have booked the service.
+model ServiceOptionTier {
+  id               String @id @default(cuid())
+  optionId         String
+  minFlats         Int
+  vendorPricePaise Int
+
+  option ServiceOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+
+  @@unique([optionId, minFlats])
+}
+
+// A vendor's daily time window for a service. Capacity per slot = technicians.
+model VendorSlotTemplate {
+  id          String @id @default(cuid())
+  serviceId   String
+  startTime   String // IST wall clock, "09:00"
+  endTime     String // "11:00"
+  technicians Int
+
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@unique([serviceId, startTime])
 }
 
 model PlatformSetting {
@@ -234,67 +450,94 @@ model PlatformSetting {
   updatedAt              DateTime @updatedAt @db.Timestamptz(3)
 }
 
+// A grocery order round, or a Service Day (kind SERVICE) for one service from one vendor.
 model OrderRound {
   id                     String      @id @default(cuid())
   number                 Int         @unique @default(autoincrement())
-  societyId              String
+  communityId            String
   createdById            String
+  kind                   RoundKind
   title                  String
   status                 RoundStatus @default(OPEN)
   cutoffAt               DateTime    @db.Timestamptz(3)
-  deliveryAt             DateTime    @db.Timestamptz(3)
+  deliveryAt             DateTime    @db.Timestamptz(3) // grocery delivery day, or the first service day
   marginBps              Int // snapshot of PlatformSetting at creation
   reductionFreezeMinutes Int // snapshot of PlatformSetting at creation
   requirePickupCode      Boolean     @default(true)
+  serviceId              String?
+  vendorId               String? // the service vendor, for SERVICE rounds
+  noAccessFeePaise       Int? // snapshot of Service.noAccessFeePaise
+  repeatWeekly           Boolean     @default(false)
+  repeatOfRoundId        String?     @unique // last week's round this one was opened from
   version                Int         @default(0) // bumped by every order mutation (row lock)
   finalizedAt            DateTime?   @db.Timestamptz(3)
   completedAt            DateTime?   @db.Timestamptz(3)
   cancelledAt            DateTime?   @db.Timestamptz(3)
   createdAt              DateTime    @default(now()) @db.Timestamptz(3)
 
-  society             Society                 @relation(fields: [societyId], references: [id])
-  createdBy           User                    @relation(fields: [createdById], references: [id])
-  products            RoundProduct[]
+  community           Community            @relation(fields: [communityId], references: [id])
+  createdBy           User                 @relation(fields: [createdById], references: [id])
+  service             Service?             @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  vendor              Vendor?              @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+  repeatOf            OrderRound?          @relation("RepeatRound", fields: [repeatOfRoundId], references: [id])
+  repeatNext          OrderRound?          @relation("RepeatRound")
+  offerings           RoundOffering[]
   orderItems          OrderItem[]
   payments            Payment[]
   walletTransactions  WalletTransaction[]
-  purchaseOrders      SupplierPurchaseOrder[]
+  vendorOrders        VendorOrder[]
   distributionRecords DistributionRecord[]
-  deliveryIssues      DeliveryIssue[]
+  orderIssues         OrderIssue[]
+  slots               ServiceSlot[]
+  bookings            ServiceBooking[]
+  visits              ServiceVisit[]
+  serviceIssues       ServiceIssue[]
+  fromPoll            InterestPoll?
 
-  @@index([societyId, status])
+  @@index([communityId, status])
   @@index([status, cutoffAt])
 }
 
-// A product offered in a round, with pricing snapshotted at round creation.
-model RoundProduct {
-  id                      String             @id @default(cuid())
-  roundId                 String
-  productId               String
-  supplierId              String
-  tiers                   Json // [{ minQty, supplierPricePaise }] sorted by minQty
-  gstBps                  Int
-  mrpPaise                Int
-  minOrderQty             Int
-  maxQtyPerFlat           Int
-  status                  RoundProductStatus @default(ACTIVE)
-  finalQty                Int?
-  finalSupplierPricePaise Int?
-  finalUnitPricePaise     Int?
+// Something residents can order in a round: a grocery product or a service option, with pricing
+// snapshotted at round creation. Offerings sharing a tierGroupKey reach tiers together: a grocery
+// product on its own (basis UNITS), all options of a Service Day together (basis FLATS).
+model RoundOffering {
+  id                    String         @id @default(cuid())
+  roundId               String
+  kind                  OfferingKind
+  productId             String?
+  serviceOptionId       String?
+  vendorId              String
+  tierGroupKey          String // "product:<productId>" or "service:<serviceId>"
+  tierBasis             TierBasis
+  unitLabel             String? // service options: "unit", "home", "car"
+  tiers                 Json // [{ minQty, vendorPricePaise }] sorted by minQty; minQty counts the tier basis
+  gstBps                Int
+  mrpPaise              Int
+  minOrderQty           Int // group minimum, in the tier basis (units or flats)
+  maxQtyPerFlat         Int
+  status                OfferingStatus @default(ACTIVE)
+  finalQty              Int? // units of this offering at cutoff
+  finalBasisCount       Int? // the group's basis count at cutoff
+  finalVendorPricePaise Int?
+  finalUnitPricePaise   Int?
 
-  round              OrderRound          @relation(fields: [roundId], references: [id], onDelete: Cascade)
-  product            Product             @relation(fields: [productId], references: [id])
-  supplier           Supplier            @relation(fields: [supplierId], references: [id])
-  orderItems         OrderItem[]
-  purchaseOrderLines PurchaseOrderLine[]
+  round         OrderRound        @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  product       Product?          @relation(fields: [productId], references: [id], onDelete: Restrict)
+  serviceOption ServiceOption?    @relation(fields: [serviceOptionId], references: [id], onDelete: Restrict)
+  vendor        Vendor            @relation(fields: [vendorId], references: [id])
+  orderItems    OrderItem[]
+  orderLines    VendorOrderLine[]
 
   @@unique([roundId, productId])
+  @@unique([roundId, serviceOptionId])
+  @@index([roundId, tierGroupKey])
 }
 
 model OrderItem {
   id               String          @id @default(cuid())
   roundId          String
-  roundProductId   String
+  offeringId       String
   userId           String
   flatId           String
   quantity         Int             @default(0)
@@ -310,14 +553,14 @@ model OrderItem {
   updatedAt        DateTime        @updatedAt @db.Timestamptz(3)
 
   round              OrderRound          @relation(fields: [roundId], references: [id], onDelete: Cascade)
-  roundProduct       RoundProduct        @relation(fields: [roundProductId], references: [id], onDelete: Cascade)
+  offering           RoundOffering       @relation(fields: [offeringId], references: [id], onDelete: Cascade)
   user               User                @relation(fields: [userId], references: [id])
   flat               Flat                @relation(fields: [flatId], references: [id])
   lots               OrderLot[]
   walletTransactions WalletTransaction[]
-  deliveryIssues     DeliveryIssue[]
+  orderIssues        OrderIssue[]
 
-  @@unique([roundProductId, userId])
+  @@unique([offeringId, userId])
   @@index([roundId, userId])
   @@index([roundId, flatId])
 }
@@ -341,7 +584,7 @@ model Payment {
   id                 String          @id @default(cuid())
   userId             String
   roundId            String
-  changes            Json // the quote: per product baseQty, targetQty, lots added, units removed
+  changes            Json // the quote: per offering baseQty, targetQty, lots added, units removed
   chargePaise        Int // new units
   creditPaise        Int // removed units, refunded to the wallet
   walletAppliedPaise Int
@@ -383,61 +626,85 @@ model WalletTransaction {
   @@index([userId, createdAt])
 }
 
-// Audit trail for short/damaged items recorded at distribution.
-model DeliveryIssue {
-  id          String              @id @default(cuid())
-  roundId     String
-  flatId      String
-  orderItemId String
-  reason      DeliveryIssueReason
-  quantity    Int // units added by this record
-  refundPaise Int
-  note        String?
-  createdById String
-  createdAt   DateTime            @default(now()) @db.Timestamptz(3)
+// Audit trail for refunds on part of an order: short or damaged goods at distribution, or
+// service units not done properly. Quantities are cumulative per order item (see deliveryIssueRefund).
+model OrderIssue {
+  id             String           @id @default(cuid())
+  roundId        String
+  flatId         String
+  orderItemId    String
+  serviceIssueId String?
+  reason         OrderIssueReason
+  quantity       Int // units added by this record
+  refundPaise    Int
+  note           String?
+  createdById    String
+  createdAt      DateTime         @default(now()) @db.Timestamptz(3)
 
-  round     OrderRound @relation(fields: [roundId], references: [id], onDelete: Cascade)
-  flat      Flat       @relation(fields: [flatId], references: [id])
-  orderItem OrderItem  @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
-  createdBy User       @relation(fields: [createdById], references: [id])
+  round        OrderRound    @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  flat         Flat          @relation(fields: [flatId], references: [id])
+  orderItem    OrderItem     @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  serviceIssue ServiceIssue? @relation(fields: [serviceIssueId], references: [id])
+  createdBy    User          @relation(fields: [createdById], references: [id])
 
   @@index([roundId])
 }
 
-model SupplierPurchaseOrder {
-  id             String              @id @default(cuid())
-  number         Int                 @unique @default(autoincrement())
+// What the platform owes one vendor for a round: a purchase order (goods) or a job sheet (services).
+model VendorOrder {
+  id             String            @id @default(cuid())
+  number         Int               @unique @default(autoincrement())
   roundId        String
-  supplierId     String
-  status         PurchaseOrderStatus @default(ISSUED)
+  vendorId       String
+  status         VendorOrderStatus @default(ISSUED)
   subtotalPaise  Int
   gstPaise       Int
   totalPaise     Int
-  acknowledgedAt DateTime?           @db.Timestamptz(3)
-  createdAt      DateTime            @default(now()) @db.Timestamptz(3)
+  acknowledgedAt DateTime?         @db.Timestamptz(3)
+  createdAt      DateTime          @default(now()) @db.Timestamptz(3)
 
-  round    OrderRound          @relation(fields: [roundId], references: [id], onDelete: Cascade)
-  supplier Supplier            @relation(fields: [supplierId], references: [id])
-  lines    PurchaseOrderLine[]
+  round       OrderRound         @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  vendor      Vendor             @relation(fields: [vendorId], references: [id])
+  lines       VendorOrderLine[]
+  adjustments VendorAdjustment[]
 
-  @@unique([roundId, supplierId])
+  @@unique([roundId, vendorId])
 }
 
-model PurchaseOrderLine {
-  id                 String @id @default(cuid())
-  poId               String
-  productId          String
-  roundProductId     String
-  quantity           Int
-  supplierPricePaise Int
-  gstBps             Int
-  taxablePaise       Int
-  gstPaise           Int
-  lineTotalPaise     Int
+model VendorOrderLine {
+  id               String  @id @default(cuid())
+  vendorOrderId    String
+  offeringId       String
+  productId        String?
+  serviceOptionId  String?
+  quantity         Int
+  vendorPricePaise Int
+  gstBps           Int
+  taxablePaise     Int
+  gstPaise         Int
+  lineTotalPaise   Int
 
-  po           SupplierPurchaseOrder @relation(fields: [poId], references: [id], onDelete: Cascade)
-  product      Product               @relation(fields: [productId], references: [id])
-  roundProduct RoundProduct          @relation(fields: [roundProductId], references: [id])
+  vendorOrder   VendorOrder    @relation(fields: [vendorOrderId], references: [id], onDelete: Cascade)
+  offering      RoundOffering  @relation(fields: [offeringId], references: [id])
+  product       Product?       @relation(fields: [productId], references: [id], onDelete: Restrict)
+  serviceOption ServiceOption? @relation(fields: [serviceOptionId], references: [id], onDelete: Restrict)
+}
+
+// A change to what the platform pays a vendor after the order was issued (no-access visit,
+// cancelled visit, refunded issue). One per visit and type, so retries never double-count.
+model VendorAdjustment {
+  id            String               @id @default(cuid())
+  vendorOrderId String
+  visitId       String?
+  type          VendorAdjustmentType
+  amountPaise   Int // change to the vendor payout; negative = the vendor is paid less
+  note          String?
+  createdAt     DateTime             @default(now()) @db.Timestamptz(3)
+
+  vendorOrder VendorOrder   @relation(fields: [vendorOrderId], references: [id], onDelete: Cascade)
+  visit       ServiceVisit? @relation(fields: [visitId], references: [id])
+
+  @@unique([visitId, type])
 }
 
 model DistributionRecord {
@@ -454,4 +721,190 @@ model DistributionRecord {
   collectedBy User?      @relation(fields: [collectedById], references: [id])
 
   @@unique([roundId, flatId])
+}
+
+// A bookable time window on a Service Day. bookedCount includes HELD bookings; a check
+// constraint keeps it within 0..capacity, and bookings take a seat with a conditional increment.
+model ServiceSlot {
+  id          String   @id @default(cuid())
+  roundId     String
+  startsAt    DateTime @db.Timestamptz(3)
+  endsAt      DateTime @db.Timestamptz(3)
+  capacity    Int
+  bookedCount Int      @default(0)
+
+  round    OrderRound       @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  bookings ServiceBooking[]
+  visits   ServiceVisit[]
+
+  @@unique([roundId, startsAt])
+}
+
+// One visit per flat per round; family members share it and each pays for their own units.
+model ServiceBooking {
+  id                String        @id @default(cuid())
+  roundId           String
+  flatId            String
+  slotId            String
+  userId            String // who booked
+  status            BookingStatus
+  holdExpiresAt     DateTime?     @db.Timestamptz(3)
+  keepSlotWeekly    Boolean       @default(false)
+  autoPayFromWallet Boolean       @default(false)
+  repeatOfBookingId String?       @unique // last week's booking this hold came from
+  createdAt         DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime      @updatedAt @db.Timestamptz(3)
+
+  round      OrderRound      @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  flat       Flat            @relation(fields: [flatId], references: [id])
+  slot       ServiceSlot     @relation(fields: [slotId], references: [id])
+  user       User            @relation(fields: [userId], references: [id])
+  repeatOf   ServiceBooking? @relation("RepeatBooking", fields: [repeatOfBookingId], references: [id])
+  repeatNext ServiceBooking? @relation("RepeatBooking")
+  visits     ServiceVisit[]
+
+  @@unique([roundId, flatId])
+  @@index([slotId])
+  @@index([status, holdExpiresAt])
+}
+
+model ServiceVisit {
+  id             String      @id @default(cuid())
+  roundId        String
+  bookingId      String
+  flatId         String
+  slotId         String? // revisits are scheduled outside the round's slots
+  kind           VisitKind   @default(STANDARD)
+  revisitOfId    String?     @unique // at most one free revisit per visit
+  status         VisitStatus @default(SCHEDULED)
+  startsAt       DateTime    @db.Timestamptz(3)
+  endsAt         DateTime    @db.Timestamptz(3)
+  technicianName String?
+  completionCode String // 4 digits the resident tells the technician when the job is done
+  codeAttempts   Int         @default(0)
+  onTheWayAt     DateTime?   @db.Timestamptz(3)
+  startedAt      DateTime?   @db.Timestamptz(3)
+  completedAt    DateTime?   @db.Timestamptz(3)
+  noAccessAt     DateTime?   @db.Timestamptz(3)
+  cancelledAt    DateTime?   @db.Timestamptz(3)
+  cancelReason   String?
+  createdAt      DateTime    @default(now()) @db.Timestamptz(3)
+
+  round       OrderRound         @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  booking     ServiceBooking     @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  flat        Flat               @relation(fields: [flatId], references: [id])
+  slot        ServiceSlot?       @relation(fields: [slotId], references: [id], onDelete: Restrict)
+  revisitOf   ServiceVisit?      @relation("Revisit", fields: [revisitOfId], references: [id])
+  revisit     ServiceVisit?      @relation("Revisit")
+  rating      VisitRating?
+  issue       ServiceIssue?
+  adjustments VendorAdjustment[]
+
+  @@unique([bookingId, kind])
+  @@index([roundId, status])
+}
+
+model VisitRating {
+  id        String   @id @default(cuid())
+  visitId   String   @unique
+  userId    String
+  vendorId  String
+  rating    Int // 1–5, enforced by a check constraint
+  comment   String?
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  visit  ServiceVisit @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  user   User         @relation(fields: [userId], references: [id])
+  vendor Vendor       @relation(fields: [vendorId], references: [id])
+
+  @@index([vendorId, createdAt])
+}
+
+// A resident's complaint about a visit (within 48h), resolved by one free revisit or a refund.
+model ServiceIssue {
+  id           String             @id @default(cuid())
+  visitId      String             @unique
+  roundId      String
+  flatId       String
+  kind         ServiceIssueKind
+  reportedById String
+  note         String
+  status       ServiceIssueStatus @default(OPEN)
+  resolution   String?
+  resolvedById String?
+  resolvedAt   DateTime?          @db.Timestamptz(3)
+  createdAt    DateTime           @default(now()) @db.Timestamptz(3)
+
+  visit       ServiceVisit @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  round       OrderRound   @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  flat        Flat         @relation(fields: [flatId], references: [id])
+  reportedBy  User         @relation("ServiceIssueReporter", fields: [reportedById], references: [id])
+  resolvedBy  User?        @relation("ServiceIssueResolver", fields: [resolvedById], references: [id])
+  orderIssues OrderIssue[]
+
+  @@index([roundId, status])
+}
+
+// "Would you join this?" Votes count once per flat. Crossing the threshold prompts the captain.
+model InterestPoll {
+  id                  String     @id @default(cuid())
+  communityId         String
+  kind                PollKind
+  title               String
+  description         String?
+  productId           String?
+  serviceId           String?
+  threshold           Int // flats
+  status              PollStatus
+  suggestedById       String?
+  publishedById       String?
+  publishedAt         DateTime?  @db.Timestamptz(3)
+  closesAt            DateTime?  @db.Timestamptz(3)
+  thresholdNotifiedAt DateTime?  @db.Timestamptz(3)
+  convertedRoundId    String?    @unique
+  convertedAt         DateTime?  @db.Timestamptz(3)
+  createdAt           DateTime   @default(now()) @db.Timestamptz(3)
+
+  community      Community   @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  product        Product?    @relation(fields: [productId], references: [id])
+  service        Service?    @relation(fields: [serviceId], references: [id])
+  suggestedBy    User?       @relation("PollSuggester", fields: [suggestedById], references: [id])
+  publishedBy    User?       @relation("PollPublisher", fields: [publishedById], references: [id])
+  convertedRound OrderRound? @relation(fields: [convertedRoundId], references: [id])
+  votes          PollVote[]
+
+  @@index([communityId, status])
+}
+
+model PollVote {
+  id        String   @id @default(cuid())
+  pollId    String
+  flatId    String
+  userId    String
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  poll InterestPoll @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  flat Flat         @relation(fields: [flatId], references: [id])
+  user User         @relation(fields: [userId], references: [id])
+
+  @@unique([pollId, flatId])
+}
+
+// In-app notification. Text is rendered from `type` and `params` through i18n when read.
+// dedupeKey makes sends idempotent per user (e.g. "TIER_UNLOCKED:<round>:<group>:<minQty>").
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  params    Json             @default("{}")
+  href      String?
+  dedupeKey String?
+  readAt    DateTime?        @db.Timestamptz(3)
+  createdAt DateTime         @default(now()) @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, dedupeKey])
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
 }

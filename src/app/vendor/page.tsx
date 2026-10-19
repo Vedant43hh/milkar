@@ -15,10 +15,10 @@ export default function VendorPage() {
 }
 
 async function VendorHome() {
-  const user = await requireArea("supplier");
+  const user = await requireArea("vendor");
   return (
     <>
-      <PageHeader title={`${t("areas.supplierTitle")} · ${user.supplier?.name ?? ""}`} subtitle={t("areas.signedInAs", { name: user.name ?? user.phone, role: t(`roles.${user.role}`) })} />
+      <PageHeader title={`${t("areas.vendorTitle")} · ${user.vendor?.name ?? ""}`} subtitle={t("areas.signedInAs", { name: user.name ?? user.phone, role: t(`roles.${user.role}`) })} />
       <EmptyState icon={<Package aria-hidden className="size-6" />} title={t("nav.vendorOrders")} body={t("placeholder.staffBody", { phase: 9 })} />
     </>
   );

@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { t } from "@/i18n";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { homePathFor, safeNextPath } from "@/lib/auth/rules";
-import { DEMO_USER_KEYS, DEMO_USERS } from "@/lib/demo";
+import { DEMO_USER_KEYS, DEMO_USERS, demoUserContext } from "@/lib/demo";
 import { getEnv } from "@/lib/env";
 import { demoLoginAction } from "@/server/actions/auth";
 import { LoginForm } from "./login-form";
@@ -57,7 +57,7 @@ async function LoginSection({ searchParams }: { searchParams: PageProps<"/login"
   );
 }
 
-const DEMO_ICONS = { ADMIN: ShieldCheck, CAPTAIN: Users, RESIDENT: UserRound, SUPPLIER: Store } as const;
+const DEMO_ICONS = { ADMIN: ShieldCheck, CAPTAIN: Users, RESIDENT: UserRound, VENDOR: Store } as const;
 
 function DemoLogins({ next }: { next: string | null }) {
   return (
@@ -83,7 +83,7 @@ function DemoLogins({ next }: { next: string | null }) {
                     <span className="block text-sm font-medium text-fg">{t("auth.demoAs", { name: demo.name })}</span>
                     <span className="block text-xs text-muted">
                       {t(`roles.${demo.role}`)}
-                      {demo.flat ? ` · ${demo.flat}` : ""}
+                      {demoUserContext(demo) ? ` · ${demoUserContext(demo)}` : ""}
                     </span>
                   </span>
                   <ChevronRight aria-hidden className="size-5 text-subtle" />

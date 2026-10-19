@@ -1,22 +1,27 @@
-import { unitPrice, type ProductPricing } from "./price";
+import type { TierBasis } from "./basis";
+import { unitPrice, type OfferingPricing } from "./price";
 import { nextTierAfter, sortTiers, tierIndexAt } from "./tiers";
 
-export type MeterInput = ProductPricing & {
+export type MeterInput = OfferingPricing & {
+  tierBasis: TierBasis;
   minOrderQty: number;
   mrpPaise: number;
 };
 
 export type Meter = {
-  totalQty: number;
-  /** Resident price per unit (incl. margin and GST) at the current society-wide quantity. */
+  /** What `count` measures: units bought or distinct flats booked. Labels come from the UI. */
+  basis: TierBasis;
+  /** The tier group's count right now. */
+  count: number;
+  /** Resident price per unit (incl. margin and GST) at the current count. */
   currentUnitPaise: number;
-  /** True once the supplier's society-wide minimum is met. */
+  /** True once the vendor's group minimum is met. */
   qualifies: boolean;
-  unitsToQualify: number;
+  toQualify: number;
   next: {
     minQty: number;
     unitPaise: number;
-    unitsNeeded: number;
+    needed: number;
     savingPerUnitPaise: number;
   } | null;
   /** 0–100 progress from the current tier's start to the next tier (100 at the best tier). */
@@ -27,42 +32,42 @@ export type Meter = {
   ladder: { minQty: number; unitPaise: number; reached: boolean }[];
 };
 
-export function computeMeter(input: MeterInput, totalQty: number): Meter {
-  const qty = Math.max(totalQty, 0);
+export function computeMeter(input: MeterInput, basisCount: number): Meter {
+  const count = Math.max(basisCount, 0);
   const tiers = sortTiers(input.tiers);
-  const index = tierIndexAt(tiers, qty);
-  const priceOf = (supplierPaise: number) =>
-    unitPrice(supplierPaise, input.marginBps, input.gstBps).totalPaise;
-  const currentUnitPaise = priceOf(tiers[index].supplierPricePaise);
+  const index = tierIndexAt(tiers, count);
+  const priceOf = (vendorPaise: number) => unitPrice(vendorPaise, input.marginBps, input.gstBps).totalPaise;
+  const currentUnitPaise = priceOf(tiers[index].vendorPricePaise);
 
-  const upcoming = nextTierAfter(tiers, qty);
+  const upcoming = nextTierAfter(tiers, count);
   let next: Meter["next"] = null;
   let progressPct = 100;
   if (upcoming) {
-    const unitPaise = priceOf(upcoming.tier.supplierPricePaise);
+    const unitPaise = priceOf(upcoming.tier.vendorPricePaise);
     next = {
       minQty: upcoming.tier.minQty,
       unitPaise,
-      unitsNeeded: upcoming.unitsNeeded,
+      needed: upcoming.needed,
       savingPerUnitPaise: currentUnitPaise - unitPaise,
     };
     const from = index === 0 ? 0 : tiers[index].minQty;
     const span = upcoming.tier.minQty - from;
-    progressPct = Math.floor(((qty - from) * 100) / span);
+    progressPct = Math.floor(((count - from) * 100) / span);
   }
 
   return {
-    totalQty: qty,
+    basis: input.tierBasis,
+    count,
     currentUnitPaise,
-    qualifies: qty >= input.minOrderQty,
-    unitsToQualify: Math.max(input.minOrderQty - qty, 0),
+    qualifies: count >= input.minOrderQty,
+    toQualify: Math.max(input.minOrderQty - count, 0),
     next,
     progressPct,
     savingVsMrpPaise: Math.max(input.mrpPaise - currentUnitPaise, 0),
     ladder: tiers.map((t) => ({
       minQty: t.minQty,
-      unitPaise: priceOf(t.supplierPricePaise),
-      reached: qty >= t.minQty && qty > 0,
+      unitPaise: priceOf(t.vendorPricePaise),
+      reached: count >= t.minQty && count > 0,
     })),
   };
 }

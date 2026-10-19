@@ -8,7 +8,7 @@ import { clientIpFrom, homePathFor, safeNextPath, type RateLimitHit } from "@/li
 import { getEnv } from "@/lib/env";
 import { setFlash } from "@/lib/flash";
 import { normalizeIndianMobile } from "@/lib/phone";
-import { findOrCreateUserByPhone, joinSchema, joinSociety, resolveDemoLogin } from "@/server/auth";
+import { findOrCreateUserByPhone, joinCommunity, joinSchema, resolveDemoLogin } from "@/server/auth";
 import { requestOtp, verifyOtp } from "@/server/otp";
 
 export type FormError = { key: MessageKey; vars?: Record<string, string | number> };
@@ -93,7 +93,7 @@ export async function logoutAction(): Promise<void> {
   redirect("/login");
 }
 
-/** Sends someone who typed an invite code to that society's invite page. */
+/** Sends someone who typed an invite code to that community's invite page. */
 export async function goToInviteAction(formData: FormData): Promise<void> {
   const code = String(formData.get("code") ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "");
   redirect(code ? `/join/${code}` : "/join?error=code");
@@ -116,16 +116,16 @@ export async function joinAction(prev: JoinState, formData: FormData): Promise<J
     return { name, error: { key: nameProblem ? "errors.invalidName" : "errors.chooseFlat" } };
   }
 
-  const result = await joinSociety({ userId: user.id, societyCode: code, ...parsed.data });
+  const result = await joinCommunity({ userId: user.id, communityCode: code, ...parsed.data });
   if (!result.ok) {
     const key: MessageKey = {
-      UNKNOWN_SOCIETY: "errors.unknownSociety",
+      UNKNOWN_COMMUNITY: "errors.unknownCommunity",
       UNKNOWN_FLAT: "errors.chooseFlat",
       ALREADY_MEMBER: "errors.alreadyMember",
       NOT_RESIDENT: "errors.notResident",
     }[result.error] as MessageKey;
     return { name, error: { key } };
   }
-  await setFlash("success", "join.joined", { society: result.societyName });
+  await setFlash("success", "join.joined", { community: result.communityName });
   redirect(ROUND_ID.test(round) ? `/round/${round}` : "/");
 }

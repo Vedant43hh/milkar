@@ -1,6 +1,6 @@
 // Pure auth rules: rate limits, where each role lands, and safe redirects.
 
-export type Role = "RESIDENT" | "CAPTAIN" | "SUPPLIER" | "ADMIN";
+export type Role = "RESIDENT" | "CAPTAIN" | "VENDOR" | "ADMIN";
 
 export const SESSION_COOKIE = "milkar_session";
 export const OTP_TTL_MS = 10 * 60 * 1000;
@@ -31,19 +31,19 @@ export function otpRateLimit(counts: OtpCounts, limits: OtpLimits): RateLimitHit
 
 export type HomeUser = { role: Role; flatId: string | null };
 
-/** Where a user lands after login. Residents without a flat must join a society first. */
+/** Where a user lands after login. Residents without a flat must join a community first. */
 export function homePathFor(user: HomeUser): string {
   switch (user.role) {
     case "ADMIN":
       return "/admin";
-    case "SUPPLIER":
+    case "VENDOR":
       return "/vendor";
     default:
       return user.flatId ? "/" : "/join";
   }
 }
 
-export type Area = "resident" | "captain" | "supplier" | "admin";
+export type Area = "resident" | "captain" | "vendor" | "admin";
 
 export function canAccess(user: HomeUser, area: Area): boolean {
   switch (area) {
@@ -51,8 +51,8 @@ export function canAccess(user: HomeUser, area: Area): boolean {
       return (user.role === "RESIDENT" || user.role === "CAPTAIN") && user.flatId !== null;
     case "captain":
       return user.role === "CAPTAIN" && user.flatId !== null;
-    case "supplier":
-      return user.role === "SUPPLIER";
+    case "vendor":
+      return user.role === "VENDOR";
     case "admin":
       return user.role === "ADMIN";
   }

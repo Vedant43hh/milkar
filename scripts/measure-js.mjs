@@ -8,6 +8,7 @@ const PAGES = [
   { path: "/join/GREENMDW", as: null },
   { path: "/", as: "Rahul Deshmukh" },
   { path: "/groceries", as: "Rahul Deshmukh" },
+  { path: "/notifications", as: "Rahul Deshmukh" },
   { path: "/captain", as: "Sunita Kulkarni" },
 ];
 

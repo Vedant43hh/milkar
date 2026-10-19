@@ -25,7 +25,7 @@ describe("otpRateLimit", () => {
 describe("homePathFor / canAccess", () => {
   it("sends each role to its home", () => {
     expect(homePathFor({ role: "ADMIN", flatId: null })).toBe("/admin");
-    expect(homePathFor({ role: "SUPPLIER", flatId: null })).toBe("/vendor");
+    expect(homePathFor({ role: "VENDOR", flatId: null })).toBe("/vendor");
     expect(homePathFor({ role: "RESIDENT", flatId: "f1" })).toBe("/");
     expect(homePathFor({ role: "CAPTAIN", flatId: "f1" })).toBe("/");
     expect(homePathFor({ role: "RESIDENT", flatId: null })).toBe("/join");
@@ -40,9 +40,9 @@ describe("homePathFor / canAccess", () => {
     expect(canAccess({ role: "RESIDENT", flatId: null }, "resident")).toBe(false);
   });
 
-  it("keeps suppliers and admins in their own areas", () => {
-    expect(canAccess({ role: "SUPPLIER", flatId: null }, "supplier")).toBe(true);
-    expect(canAccess({ role: "SUPPLIER", flatId: null }, "admin")).toBe(false);
+  it("keeps vendors and admins in their own areas", () => {
+    expect(canAccess({ role: "VENDOR", flatId: null }, "vendor")).toBe(true);
+    expect(canAccess({ role: "VENDOR", flatId: null }, "admin")).toBe(false);
     expect(canAccess({ role: "ADMIN", flatId: null }, "resident")).toBe(false);
     expect(canAccess({ role: "ADMIN", flatId: null }, "admin")).toBe(true);
   });

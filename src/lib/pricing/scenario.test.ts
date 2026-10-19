@@ -9,8 +9,8 @@ const HOUR = 3600_000;
 const cutoffAt = new Date("2026-10-23T14:30:00Z"); // Fri 8 PM IST, freeze at Fri 8 AM IST
 const at = (hoursBeforeCutoff: number) => new Date(cutoffAt.getTime() - hoursBeforeCutoff * HOUR);
 
-/** A society buying one product (rice), tracking each resident's lots and wallet. */
-function society(maxQtyPerFlat = 20) {
+/** A community buying one product (rice), tracking each resident's lots and wallet. */
+function community(maxQtyPerFlat = 20) {
   const round = { status: "OPEN", cutoffAt, reductionFreezeMinutes: 720 };
   const residents = new Map<string, { flatId: string; lots: IdLot[]; wallet: number }>();
   let seq = 0;
@@ -28,13 +28,13 @@ function society(maxQtyPerFlat = 20) {
       now,
       targets: { rice: target },
       walletBalancePaise: me.wallet,
-      products: [
+      offerings: [
         {
-          roundProductId: "rice",
+          offeringId: "rice",
           pricing: RICE,
           active: true,
           maxQtyPerFlat,
-          societyQty: total(),
+          basisCount: total(),
           flatOthersQty,
           userLots: me.lots,
         },
@@ -56,9 +56,11 @@ function society(maxQtyPerFlat = 20) {
   function finalize() {
     return computeFinalization({
       marginBps: MARGIN_BPS,
-      products: [
+      offerings: [
         {
-          roundProductId: "rice",
+          offeringId: "rice",
+          tierGroupKey: "product:rice",
+          tierBasis: "UNITS",
           tiers: RICE.tiers,
           gstBps: RICE.gstBps,
           minOrderQty: RICE.minOrderQty,
@@ -74,7 +76,7 @@ function society(maxQtyPerFlat = 20) {
     });
   }
 
-  // Nine households bring the society to 45 bags (the ₹465 tier) well before cutoff.
+  // Nine households bring the community to 45 bags (the ₹465 tier) well before cutoff.
   for (let i = 1; i <= 9; i++) setQty(`resident${i}`, `flat${i}`, 5, at(48 - i));
 
   return { setQty, finalize, total, residents };
@@ -82,7 +84,7 @@ function society(maxQtyPerFlat = 20) {
 
 describe("big order then cancel", () => {
   it("is blocked by the reduction freeze, so the platform absorbs nothing", () => {
-    const s = society();
+    const s = community();
     expect(s.total()).toBe(45);
 
     // Mallory adds 10 bags 3 hours before cutoff. They're charged ₹465 (the tier before their order),
@@ -100,8 +102,8 @@ describe("big order then cancel", () => {
     expect(cancel.ok).toBe(false);
     expect(!cancel.ok && cancel.errors[0].code).toBe("REDUCTION_FROZEN");
 
-    const { products, totals } = s.finalize();
-    const rice = products[0];
+    const { offerings, totals } = s.finalize();
+    const rice = offerings[0];
     expect(rice.totalQty).toBe(57);
     expect(rice.unit?.totalPaise).toBe(P440);
     expect(totals.absorbedPaise).toBe(0);
@@ -110,33 +112,33 @@ describe("big order then cancel", () => {
   });
 
   it("control: the same cancel before the freeze is allowed, and the platform's cost is bounded and visible", () => {
-    const s = society();
+    const s = community();
     s.setQty("mallory", "flatM", 10, at(14));
     s.setQty("neighbour", "flatN", 2, at(13.5)); // buys at ₹440
     const cancel = s.setQty("mallory", "flatM", 0, at(13)); // 13h before cutoff: allowed
     expect(cancel.ok && cancel.quote.creditPaise).toBe(10 * P465); // full refund of what was paid
     expect(s.residents.get("mallory")?.wallet).toBe(10 * P465);
 
-    const { products, totals } = s.finalize();
-    expect(products[0].totalQty).toBe(47);
-    expect(products[0].unit?.totalPaise).toBe(P465);
-    const neighbour = products[0].items.find((i) => i.orderItemId === "neighbour");
+    const { offerings, totals } = s.finalize();
+    expect(offerings[0].totalQty).toBe(47);
+    expect(offerings[0].unit?.totalPaise).toBe(P465);
+    const neighbour = offerings[0].items.find((i) => i.orderItemId === "neighbour");
     expect(neighbour).toMatchObject({ finalPaise: 2 * P440, refundPaise: 0, absorbedPaise: 2 * 2500 });
     expect(totals.absorbedPaise).toBe(5000); // ₹50 price-protection cost, shown in admin stats
   });
 
   it("with a per-flat cap of 6, the big order cannot be placed at all", () => {
-    const s = society(6);
+    const s = community(6);
     const big = s.setQty("mallory", "flatM", 10, at(3));
     expect(big.ok).toBe(false);
-    expect(!big.ok && big.errors[0]).toEqual({ code: "FLAT_CAP_EXCEEDED", roundProductId: "rice", maxAllowed: 6 });
+    expect(!big.ok && big.errors[0]).toEqual({ code: "FLAT_CAP_EXCEEDED", offeringId: "rice", maxAllowed: 6 });
     expect(s.total()).toBe(45);
   });
 });
 
 describe("a resident cancelling", () => {
-  it("gets back what they paid, and the society total drops for everyone", () => {
-    const s = society();
+  it("gets back what they paid, and the community total drops for everyone", () => {
+    const s = community();
     const before = s.residents.get("resident9");
     const paid = lotsTotal(before?.lots ?? []);
     const result = s.setQty("resident9", "flat9", 0, at(20));

@@ -9,8 +9,8 @@ const ms = (d: Date, delta: number) => new Date(d.getTime() + delta);
 const base: ChangeCheck = {
   round,
   now: ms(freezeAt, -60_000),
-  roundProductId: "rice",
-  productActive: true,
+  offeringId: "rice",
+  offeringActive: true,
   currentQty: 2,
   targetQty: 2,
   flatOthersQty: 0,
@@ -68,7 +68,7 @@ describe("checkChange", () => {
     expect(checkChange({ ...base, flatOthersQty: 3, targetQty: 3 })).toBeNull();
     expect(checkChange({ ...base, flatOthersQty: 3, targetQty: 4 })).toEqual({
       code: "FLAT_CAP_EXCEEDED",
-      roundProductId: "rice",
+      offeringId: "rice",
       maxAllowed: 3,
     });
   });
@@ -81,7 +81,7 @@ describe("checkChange", () => {
   it("rejects invalid quantities and inactive products", () => {
     expect(checkChange({ ...base, targetQty: -1 })?.code).toBe("INVALID_QUANTITY");
     expect(checkChange({ ...base, targetQty: 1.5 })?.code).toBe("INVALID_QUANTITY");
-    expect(checkChange({ ...base, productActive: false, targetQty: 3 })?.code).toBe("PRODUCT_UNAVAILABLE");
+    expect(checkChange({ ...base, offeringActive: false, targetQty: 3 })?.code).toBe("OFFERING_UNAVAILABLE");
   });
 
   it("treats an unchanged quantity as a no-op even after cutoff", () => {

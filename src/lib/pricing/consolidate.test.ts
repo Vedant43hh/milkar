@@ -1,22 +1,32 @@
 import { describe, expect, it } from "vitest";
-import { buildPackingList, buildPurchaseOrders } from "./consolidate";
+import { buildPackingList, buildVendorOrders } from "./consolidate";
 
-describe("buildPurchaseOrders", () => {
-  it("creates one PO per supplier with GST on the supplier price", () => {
-    const pos = buildPurchaseOrders([
-      { roundProductId: "rp1", productId: "rice", supplierId: "s1", totalQty: 57, supplierPricePaise: 40684, gstBps: 500 },
-      { roundProductId: "rp2", productId: "soap", supplierId: "s2", totalQty: 10, supplierPricePaise: 15000, gstBps: 1800 },
-      { roundProductId: "rp3", productId: "dal", supplierId: "s1", totalQty: 20, supplierPricePaise: 14000, gstBps: 500 },
-      { roundProductId: "rp4", productId: "none", supplierId: "s3", totalQty: 0, supplierPricePaise: 100, gstBps: 0 },
+describe("buildVendorOrders", () => {
+  it("creates one order per vendor with GST on the vendor price", () => {
+    const goods = (offeringId: string, productId: string, vendorId: string, totalQty: number, vendorPricePaise: number, gstBps: number) => ({
+      offeringId,
+      productId,
+      serviceOptionId: null,
+      vendorId,
+      totalQty,
+      vendorPricePaise,
+      gstBps,
+    });
+    const orders = buildVendorOrders([
+      goods("rp1", "rice", "s1", 57, 40684, 500),
+      goods("rp2", "soap", "s2", 10, 15000, 1800),
+      goods("rp3", "dal", "s1", 20, 14000, 500),
+      goods("rp4", "none", "s3", 0, 100, 0),
     ]);
-    expect(pos.map((p) => p.supplierId)).toEqual(["s1", "s2"]);
-    const [s1, s2] = pos;
+    expect(orders.map((o) => o.vendorId)).toEqual(["s1", "s2"]);
+    const [s1, s2] = orders;
     expect(s1.lines).toHaveLength(2);
     expect(s1.lines[0]).toEqual({
-      roundProductId: "rp1",
+      offeringId: "rp1",
       productId: "rice",
+      serviceOptionId: null,
       quantity: 57,
-      supplierPricePaise: 40684,
+      vendorPricePaise: 40684,
       gstBps: 500,
       taxablePaise: 57 * 40684,
       gstPaise: 115949, // 5% of 23,18,988 paise = 115949.4
@@ -25,6 +35,19 @@ describe("buildPurchaseOrders", () => {
     expect(s1.subtotalPaise).toBe(57 * 40684 + 20 * 14000);
     expect(s1.totalPaise).toBe(s1.subtotalPaise + s1.gstPaise);
     expect(s2).toMatchObject({ subtotalPaise: 150000, gstPaise: 27000, totalPaise: 177000 });
+  });
+
+  it("builds a service vendor's job sheet from its options", () => {
+    const [order] = buildVendorOrders([
+      { offeringId: "split", productId: null, serviceOptionId: "opt-split", vendorId: "coolcare", totalQty: 21, vendorPricePaise: 45000, gstBps: 1800 },
+      { offeringId: "window", productId: null, serviceOptionId: "opt-window", vendorId: "coolcare", totalQty: 4, vendorPricePaise: 45000, gstBps: 1800 },
+    ]);
+    expect(order.lines.map((l) => [l.serviceOptionId, l.quantity])).toEqual([
+      ["opt-split", 21],
+      ["opt-window", 4],
+    ]);
+    expect(order.subtotalPaise).toBe(25 * 45000);
+    expect(order.gstPaise).toBe(170100 + 32400);
   });
 });
 

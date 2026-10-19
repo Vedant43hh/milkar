@@ -3,23 +3,23 @@ import { tierAt, type Tier } from "./tiers";
 
 /**
  * Resident price for one unit.
- * supplier (GST-exclusive tier price) + platform margin = taxable value; GST is charged on the taxable value.
+ * vendor price (GST-exclusive tier price) + platform margin = taxable value; GST is charged on the taxable value.
  */
 export type UnitPrice = {
-  supplierPaise: number;
+  vendorPaise: number;
   marginPaise: number;
   taxablePaise: number;
   gstPaise: number;
   totalPaise: number;
 };
 
-export function unitPrice(supplierPaise: number, marginBps: number, gstBps: number): UnitPrice {
-  assertSafeInt(supplierPaise, "supplierPaise");
-  const marginPaise = applyBps(supplierPaise, marginBps);
-  const taxablePaise = supplierPaise + marginPaise;
+export function unitPrice(vendorPaise: number, marginBps: number, gstBps: number): UnitPrice {
+  assertSafeInt(vendorPaise, "vendorPaise");
+  const marginPaise = applyBps(vendorPaise, marginBps);
+  const taxablePaise = vendorPaise + marginPaise;
   const gstPaise = applyBps(taxablePaise, gstBps);
   return {
-    supplierPaise,
+    vendorPaise,
     marginPaise,
     taxablePaise,
     gstPaise,
@@ -27,23 +27,23 @@ export function unitPrice(supplierPaise: number, marginBps: number, gstBps: numb
   };
 }
 
-export type ProductPricing = {
+export type OfferingPricing = {
   tiers: readonly Tier[];
   marginBps: number;
   gstBps: number;
 };
 
-/** Resident unit price at a society-wide quantity. */
-export function unitPriceAtQty(product: ProductPricing, societyQty: number): UnitPrice {
-  const tier = tierAt(product.tiers, societyQty);
-  return unitPrice(tier.supplierPricePaise, product.marginBps, product.gstBps);
+/** Resident unit price once the offering's tier group reaches `basisCount` (units or flats). */
+export function unitPriceAt(pricing: OfferingPricing, basisCount: number): UnitPrice {
+  const tier = tierAt(pricing.tiers, basisCount);
+  return unitPrice(tier.vendorPricePaise, pricing.marginBps, pricing.gstBps);
 }
 
 /**
- * Largest supplier price whose resident total does not exceed `targetTotalPaise`.
- * Lets seed data and supplier tooling start from the price residents should see.
+ * Largest vendor price whose resident total does not exceed `targetTotalPaise`.
+ * Lets seed data and vendor tooling start from the price residents should see.
  */
-export function supplierPriceForTotal(targetTotalPaise: number, marginBps: number, gstBps: number): number {
+export function vendorPriceForTotal(targetTotalPaise: number, marginBps: number, gstBps: number): number {
   assertSafeInt(targetTotalPaise, "targetTotalPaise");
   let s = Math.floor((targetTotalPaise * 10000 * 10000) / ((10000 + marginBps) * (10000 + gstBps)));
   while (unitPrice(s + 1, marginBps, gstBps).totalPaise <= targetTotalPaise) s++;

@@ -47,8 +47,8 @@ export function unitWord(count: number, words: UnitWords): string {
 }
 
 /**
- * The live price meter: society-wide count, current price, and how far the next tier is.
- * `basisWords` names what is being counted (bags, flats …).
+ * The live price meter: the tier group's count, current price, and how far the next tier is.
+ * `basisWords` names what is being counted: bags for a grocery product, flats for a service.
  */
 export function TierMeter({ meter, basisWords, compact = false }: { meter: Meter; basisWords: UnitWords; compact?: boolean }) {
   const next = meter.next;
@@ -56,13 +56,13 @@ export function TierMeter({ meter, basisWords, compact = false }: { meter: Meter
     ? {
         tone: "warning" as const,
         icon: <Users aria-hidden className="size-4" />,
-        text: t("meter.qualify", { n: meter.unitsToQualify, unit: unitWord(meter.unitsToQualify, basisWords) }),
+        text: t("meter.qualify", { n: meter.toQualify, unit: unitWord(meter.toQualify, basisWords) }),
       }
     : next
       ? {
           tone: "accent" as const,
           icon: <TrendingDown aria-hidden className="size-4" />,
-          text: t("meter.unlock", { n: next.unitsNeeded, unit: unitWord(next.unitsNeeded, basisWords), price: formatINR(next.unitPaise) }),
+          text: t("meter.unlock", { n: next.needed, unit: unitWord(next.needed, basisWords), price: formatINR(next.unitPaise) }),
         }
       : { tone: "success" as const, icon: <PartyPopper aria-hidden className="size-4" />, text: t("meter.best") };
 
@@ -71,7 +71,7 @@ export function TierMeter({ meter, basisWords, compact = false }: { meter: Meter
   return (
     <div className="space-y-2">
       <div className="flex items-baseline justify-between gap-2 text-sm">
-        <span className="text-muted">{t("meter.joined", { n: meter.totalQty, unit: unitWord(meter.totalQty, basisWords) })}</span>
+        <span className="text-muted">{t("meter.joined", { n: meter.count, unit: unitWord(meter.count, basisWords) })}</span>
         <span className={cn("flex items-center gap-1 font-medium", statusColor)}>
           {status.icon}
           {status.text}

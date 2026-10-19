@@ -77,7 +77,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
 /**
  * Shows "flash" messages: a short-lived cookie written by a server action before it redirects.
- * Checks after every navigation. Render inside <Suspense> (it reads the pathname).
+ * Checks after every navigation to a new path. Render inside <Suspense> (it reads the pathname).
+ * Actions that stay on the same page should return a result and call useToast() instead.
  */
 export function FlashToasts() {
   const push = useToast();

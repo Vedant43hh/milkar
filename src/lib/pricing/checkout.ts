@@ -1,17 +1,20 @@
 import { assertSafeInt } from "./money";
 import { lotsQty, removeUnits, type Lot } from "./lots";
-import { unitPriceAtQty, type ProductPricing } from "./price";
+import { unitPriceAt, type OfferingPricing } from "./price";
 import { checkChange, type ChangeError, type RoundWindow } from "./rules";
 
 export type IdLot = Lot & { id: string };
 
-export type QuoteProduct = {
-  roundProductId: string;
-  pricing: ProductPricing;
+export type QuoteOffering = {
+  offeringId: string;
+  pricing: OfferingPricing;
   active: boolean;
   maxQtyPerFlat: number;
-  /** Society-wide paid quantity right now, including this user's current units. */
-  societyQty: number;
+  /**
+   * The offering's tier-group count right now, in its basis (see basis.ts), including this user's
+   * current units: community-wide units for a grocery product, distinct flats booked for a service.
+   */
+  basisCount: number;
   /** Paid quantity held by other users in the same flat. */
   flatOthersQty: number;
   userLots: IdLot[];
@@ -20,14 +23,14 @@ export type QuoteProduct = {
 export type QuoteInput = {
   round: RoundWindow;
   now: Date;
-  products: QuoteProduct[];
-  /** roundProductId → quantity the resident wants to end up with. */
+  offerings: QuoteOffering[];
+  /** offeringId → quantity the resident wants to end up with. */
   targets: Record<string, number>;
   walletBalancePaise: number;
 };
 
 export type QuoteLine = {
-  roundProductId: string;
+  offeringId: string;
   baseQty: number;
   /** Identifies the exact lots the quote was computed from, to detect stale quotes. */
   baseLotsKey: string;
@@ -60,36 +63,37 @@ export function lotsKey(lots: readonly IdLot[]): string {
 /**
  * Prices a set of quantity changes for one resident.
  *
- * Charging rule: added units are priced at the tier for the society's paid total BEFORE this
- * change (the resident's new units are not counted). If the order unlocks a better tier, the
- * difference is refunded at cutoff like everyone else's. This stops anyone using their own order
- * to lock in a protected low price.
+ * Charging rule: added units are priced at the tier for the group's basis count BEFORE this
+ * change. The resident's new units are not counted, and for services a flat booking for the first
+ * time does not count itself. If the order unlocks a better tier, the difference is refunded at
+ * cutoff like everyone else's. This stops anyone using their own order to lock in a protected
+ * low price.
  *
  * Removed units are refunded at what was paid for them, most expensive lots first.
  * Wallet balance (including credit from removals in this same change) is always applied first.
  */
 export function quoteChanges(input: QuoteInput): QuoteResult {
   assertSafeInt(input.walletBalancePaise, "walletBalancePaise");
-  const byId = new Map(input.products.map((p) => [p.roundProductId, p]));
+  const byId = new Map(input.offerings.map((o) => [o.offeringId, o]));
   const errors: ChangeError[] = [];
   const lines: QuoteLine[] = [];
 
-  for (const [roundProductId, targetQty] of Object.entries(input.targets)) {
-    const product = byId.get(roundProductId);
-    if (!product) {
-      errors.push({ code: "PRODUCT_UNAVAILABLE", roundProductId });
+  for (const [offeringId, targetQty] of Object.entries(input.targets)) {
+    const offering = byId.get(offeringId);
+    if (!offering) {
+      errors.push({ code: "OFFERING_UNAVAILABLE", offeringId });
       continue;
     }
-    const baseQty = lotsQty(product.userLots);
+    const baseQty = lotsQty(offering.userLots);
     const error = checkChange({
       round: input.round,
       now: input.now,
-      roundProductId,
-      productActive: product.active,
+      offeringId,
+      offeringActive: offering.active,
       currentQty: baseQty,
       targetQty,
-      flatOthersQty: product.flatOthersQty,
-      maxQtyPerFlat: product.maxQtyPerFlat,
+      flatOthersQty: offering.flatOthersQty,
+      maxQtyPerFlat: offering.maxQtyPerFlat,
     });
     if (error) {
       errors.push(error);
@@ -98,9 +102,9 @@ export function quoteChanges(input: QuoteInput): QuoteResult {
     if (targetQty === baseQty) continue;
 
     const line: QuoteLine = {
-      roundProductId,
+      offeringId,
       baseQty,
-      baseLotsKey: lotsKey(product.userLots),
+      baseLotsKey: lotsKey(offering.userLots),
       targetQty,
       addQty: 0,
       addUnitPaise: 0,
@@ -111,11 +115,11 @@ export function quoteChanges(input: QuoteInput): QuoteResult {
     };
     if (targetQty > baseQty) {
       line.addQty = targetQty - baseQty;
-      line.addUnitPaise = unitPriceAtQty(product.pricing, product.societyQty).totalPaise;
+      line.addUnitPaise = unitPriceAt(offering.pricing, offering.basisCount).totalPaise;
       line.addPaise = line.addQty * line.addUnitPaise;
     } else {
       line.removeQty = baseQty - targetQty;
-      const { removed, refundPaise } = removeUnits(product.userLots, line.removeQty);
+      const { removed, refundPaise } = removeUnits(offering.userLots, line.removeQty);
       line.removals = removed.map((r) => ({
         lotId: r.lot.id,
         units: r.units,

@@ -1,9 +1,12 @@
 import { assertSafeInt } from "./money";
 
-/** Supplier price per unit (GST-exclusive) once the society-wide quantity reaches minQty. */
+/**
+ * Vendor price per unit (GST-exclusive) once the tier group's count reaches minQty. The count is
+ * in the group's basis: units bought (groceries) or distinct flats booked (services).
+ */
 export type Tier = {
   minQty: number;
-  supplierPricePaise: number;
+  vendorPricePaise: number;
 };
 
 export function sortTiers(tiers: readonly Tier[]): Tier[] {
@@ -24,14 +27,14 @@ export function validateTiers(tiers: readonly Tier[]): string[] {
     if (!Number.isSafeInteger(tier.minQty) || tier.minQty < 1) {
       errors.push(`Tier ${i + 1}: minimum quantity must be a whole number of at least 1.`);
     }
-    if (!Number.isSafeInteger(tier.supplierPricePaise) || tier.supplierPricePaise <= 0) {
+    if (!Number.isSafeInteger(tier.vendorPricePaise) || tier.vendorPricePaise <= 0) {
       errors.push(`Tier ${i + 1}: price must be a positive amount.`);
     }
     if (i > 0) {
       const prev = sorted[i - 1];
       if (tier.minQty === prev.minQty) {
         errors.push(`Two tiers start at quantity ${tier.minQty}.`);
-      } else if (tier.supplierPricePaise >= prev.supplierPricePaise) {
+      } else if (tier.vendorPricePaise >= prev.vendorPricePaise) {
         errors.push(`Tier starting at ${tier.minQty} must be cheaper than the tier before it.`);
       }
     }
@@ -47,7 +50,7 @@ function checkedSorted(tiers: readonly Tier[]): Tier[] {
   return sorted;
 }
 
-/** Index of the tier that applies at a society-wide quantity. Quantities below 1 use the first tier. */
+/** Index of the tier that applies at a basis count. Counts below 1 use the first tier. */
 export function tierIndexAt(tiers: readonly Tier[], qty: number): number {
   assertSafeInt(qty, "qty");
   const sorted = checkedSorted(tiers);
@@ -62,14 +65,14 @@ export function tierAt(tiers: readonly Tier[], qty: number): Tier {
   return sortTiers(tiers)[tierIndexAt(tiers, qty)];
 }
 
-/** The next cheaper tier and how many more units unlock it, or null at the best tier. */
+/** The next cheaper tier and how many more (units or flats) unlock it, or null at the best tier. */
 export function nextTierAfter(
   tiers: readonly Tier[],
   qty: number,
-): { tier: Tier; unitsNeeded: number } | null {
+): { tier: Tier; needed: number } | null {
   const sorted = sortTiers(tiers);
   const index = tierIndexAt(sorted, qty);
   const next = sorted[index + 1];
   if (!next) return null;
-  return { tier: next, unitsNeeded: next.minQty - Math.max(qty, 0) };
+  return { tier: next, needed: next.minQty - Math.max(qty, 0) };
 }

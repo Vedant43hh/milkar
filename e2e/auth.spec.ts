@@ -11,7 +11,7 @@ test("a new resident joins through the invite link", async ({ page }) => {
   await expect(page).toHaveURL(/\/join\/GREENMDW$/);
 
   await page.getByLabel("Your name").fill("Test Resident");
-  await page.getByLabel("Tower / wing").selectOption("B");
+  await page.getByLabel("Tower", { exact: true }).selectOption("B");
   await page.getByLabel("Flat number").selectOption({ label: "201" });
   await page.getByRole("button", { name: "Join Green Meadows CHS" }).click();
 
@@ -22,6 +22,21 @@ test("a new resident joins through the invite link", async ({ page }) => {
   await expect(page.getByRole("link", { name: /Captain tools/ })).toHaveCount(0);
 });
 
+test("a PG resident joins with the PG's own labels: wing and room", async ({ page }) => {
+  await page.goto("/join/SUNRISE");
+  await expect(page.getByText("Sunrise Co-living, Bengaluru")).toBeVisible();
+  await page.getByRole("link", { name: "Log in with your phone to join" }).click();
+  await loginWithOtp(page, uniquePhone());
+  await expect(page).toHaveURL(/\/join\/SUNRISE$/);
+
+  await page.getByLabel("Your name").fill("Test Tenant");
+  await page.getByLabel("Wing", { exact: true }).selectOption("B");
+  await page.getByLabel("Room number").selectOption({ label: "102" });
+  await page.getByRole("button", { name: "Join Sunrise Co-living" }).click();
+  await expect(page).toHaveURL("/");
+  await expect(page.getByText("Room B-102, Sunrise Co-living")).toBeVisible();
+});
+
 test("invalid phone numbers are rejected", async ({ page }) => {
   await page.goto("/login");
   await page.getByLabel("Mobile number").fill("12345");
@@ -29,7 +44,7 @@ test("invalid phone numbers are rejected", async ({ page }) => {
   await expect(page.getByRole("alert").filter({ hasText: /\S/ })).toHaveText("Enter a valid 10-digit Indian mobile number.");
 });
 
-test("a new user without a flat is sent to join a society", async ({ page }) => {
+test("a new user without a flat is sent to join a community", async ({ page }) => {
   await page.goto("/login");
   await loginWithOtp(page, uniquePhone());
   await expect(page).toHaveURL("/join");

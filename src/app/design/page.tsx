@@ -20,10 +20,11 @@ import { CountdownDemo, FeedbackDemo, StepperDemo, TabsDemo } from "./demos";
 export const metadata: Metadata = { title: t("design.title") };
 
 const rice = {
+  tierBasis: "UNITS" as const,
   tiers: [
-    { minQty: 1, supplierPricePaise: 46232 },
-    { minQty: 20, supplierPricePaise: 42996 },
-    { minQty: 50, supplierPricePaise: 40684 },
+    { minQty: 1, vendorPricePaise: 46232 },
+    { minQty: 20, vendorPricePaise: 42996 },
+    { minQty: 50, vendorPricePaise: 40684 },
   ],
   marginBps: 300,
   gstBps: 500,
@@ -31,15 +32,16 @@ const rice = {
   mrpPaise: 55000,
 };
 const acService = {
+  tierBasis: "FLATS" as const,
   tiers: [
-    { minQty: 1, supplierPricePaise: 56000 },
-    { minQty: 5, supplierPricePaise: 44000 },
-    { minQty: 20, supplierPricePaise: 32000 },
+    { minQty: 1, vendorPricePaise: 57512 },
+    { minQty: 5, vendorPricePaise: 45170 },
+    { minQty: 20, vendorPricePaise: 32911 },
   ],
   marginBps: 300,
   gstBps: 1800,
   minOrderQty: 5,
-  mrpPaise: 79900,
+  mrpPaise: 89900,
 };
 const bags = { one: "bag", other: "bags" };
 const flats = { one: "flat", other: "flats" };
@@ -173,7 +175,7 @@ export default function DesignPage() {
         <Section title="Tier meters">
           <div className="grid gap-3 md:grid-cols-2">
             <Card>
-              <CardHeader title="Chakki Fresh Atta · 10 kg" subtitle="Below the supplier minimum" />
+              <CardHeader title="Chakki Fresh Atta · 10 kg" subtitle="Below the vendor minimum" />
               <TierMeter meter={computeMeter(rice, 6)} basisWords={bags} />
             </Card>
             <Card>
@@ -207,7 +209,7 @@ export default function DesignPage() {
               You can still add items until 8 pm.
             </Banner>
             <Banner tone="accent" icon={<PiggyBank aria-hidden className="size-4" />}>
-              ₹25 per bag comes back to your wallet if the society stays at 50+.
+              ₹25 per bag comes back to your wallet if the community stays at 50+.
             </Banner>
             <Banner tone="success" icon={<CircleCheck aria-hidden className="size-4" />}>
               Visit completed. Rate your technician.

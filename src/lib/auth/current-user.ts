@@ -38,11 +38,11 @@ export async function requireArea(area: Area): Promise<SessionUser> {
   return user;
 }
 
-/** Admins may see any society; residents and captains only their own. */
-export async function requireSocietyAccess(societyId: string): Promise<SessionUser> {
+/** Admins may see any community; residents and captains only their own. */
+export async function requireCommunityAccess(communityId: string): Promise<SessionUser> {
   const user = await requireUser();
   if (user.role === "ADMIN") return user;
-  if (user.flat?.society.id !== societyId) redirect(homePathFor(user));
+  if (user.flat?.community.id !== communityId) redirect(homePathFor(user));
   return user;
 }
 

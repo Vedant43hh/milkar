@@ -13,9 +13,19 @@ export type SessionUser = {
     id: string;
     tower: string;
     number: string;
-    society: { id: string; name: string; code: string; city: string };
+    community: SessionCommunity;
   } | null;
-  supplier: { id: string; name: string } | null;
+  vendor: { id: string; name: string; kind: "GOODS" | "SERVICES" } | null;
+};
+
+export type SessionCommunity = {
+  id: string;
+  name: string;
+  code: string;
+  city: string;
+  /** What a flat and a tower are called here, e.g. "Room" and "Wing" in a PG. */
+  unitLabel: string;
+  blockLabel: string;
 };
 
 export type ResidentUser = SessionUser & { flatId: string; flat: NonNullable<SessionUser["flat"]> };
@@ -38,8 +48,12 @@ export async function findSessionUser(token: string, now: Date): Promise<Session
     include: {
       user: {
         include: {
-          flat: { include: { society: { select: { id: true, name: true, code: true, city: true } } } },
-          supplier: { select: { id: true, name: true } },
+          flat: {
+            include: {
+              community: { select: { id: true, name: true, code: true, city: true, unitLabel: true, blockLabel: true } },
+            },
+          },
+          vendor: { select: { id: true, name: true, kind: true } },
         },
       },
     },
@@ -53,9 +67,9 @@ export async function findSessionUser(token: string, now: Date): Promise<Session
     role: user.role,
     flatId: user.flatId,
     flat: user.flat
-      ? { id: user.flat.id, tower: user.flat.tower, number: user.flat.number, society: user.flat.society }
+      ? { id: user.flat.id, tower: user.flat.tower, number: user.flat.number, community: user.flat.community }
       : null,
-    supplier: user.supplier,
+    vendor: user.vendor,
   };
 }
 

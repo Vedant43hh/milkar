@@ -30,7 +30,7 @@ export default function JoinPage({ searchParams }: PageProps<"/join">) {
 async function JoinCodeSection({ searchParams }: { searchParams: PageProps<"/join">["searchParams"] }) {
   const [params, user] = await Promise.all([searchParams, getCurrentUser()]);
   // Members, vendors and admins have nothing to join here.
-  if (user && (user.flatId || user.role === "SUPPLIER" || user.role === "ADMIN")) redirect(homePathFor(user));
+  if (user && (user.flatId || user.role === "VENDOR" || user.role === "ADMIN")) redirect(homePathFor(user));
 
   return (
     <Card>
@@ -41,7 +41,7 @@ async function JoinCodeSection({ searchParams }: { searchParams: PageProps<"/joi
         </div>
         {params.error === "code" && (
           <Banner tone="danger" role="alert" icon={<CircleAlert aria-hidden className="size-4" />}>
-            {t("errors.unknownSociety")}
+            {t("errors.unknownCommunity")}
           </Banner>
         )}
         <Button block>{t("common.continue")}</Button>

@@ -1,21 +1,24 @@
 import { applyBps } from "./money";
 
-export type ConfirmedProduct = {
-  roundProductId: string;
-  productId: string;
-  supplierId: string;
+export type ConfirmedOffering = {
+  offeringId: string;
+  /** Exactly one of productId / serviceOptionId is set. */
+  productId: string | null;
+  serviceOptionId: string | null;
+  vendorId: string;
   totalQty: number;
-  supplierPricePaise: number;
+  vendorPricePaise: number;
   gstBps: number;
 };
 
-export type PurchaseOrderDraft = {
-  supplierId: string;
+export type VendorOrderDraft = {
+  vendorId: string;
   lines: {
-    roundProductId: string;
-    productId: string;
+    offeringId: string;
+    productId: string | null;
+    serviceOptionId: string | null;
     quantity: number;
-    supplierPricePaise: number;
+    vendorPricePaise: number;
     gstBps: number;
     taxablePaise: number;
     gstPaise: number;
@@ -26,33 +29,37 @@ export type PurchaseOrderDraft = {
   totalPaise: number;
 };
 
-/** One purchase order per supplier, priced at the supplier's tier price plus GST. */
-export function buildPurchaseOrders(products: readonly ConfirmedProduct[]): PurchaseOrderDraft[] {
-  const bySupplier = new Map<string, PurchaseOrderDraft>();
-  for (const p of products) {
-    if (p.totalQty <= 0) continue;
-    let po = bySupplier.get(p.supplierId);
-    if (!po) {
-      po = { supplierId: p.supplierId, lines: [], subtotalPaise: 0, gstPaise: 0, totalPaise: 0 };
-      bySupplier.set(p.supplierId, po);
+/**
+ * One order per vendor (a purchase order for goods, a job sheet for services), priced at the
+ * vendor's tier price plus GST.
+ */
+export function buildVendorOrders(offerings: readonly ConfirmedOffering[]): VendorOrderDraft[] {
+  const byVendor = new Map<string, VendorOrderDraft>();
+  for (const o of offerings) {
+    if (o.totalQty <= 0) continue;
+    let order = byVendor.get(o.vendorId);
+    if (!order) {
+      order = { vendorId: o.vendorId, lines: [], subtotalPaise: 0, gstPaise: 0, totalPaise: 0 };
+      byVendor.set(o.vendorId, order);
     }
-    const taxablePaise = p.totalQty * p.supplierPricePaise;
-    const gstPaise = applyBps(taxablePaise, p.gstBps);
-    po.lines.push({
-      roundProductId: p.roundProductId,
-      productId: p.productId,
-      quantity: p.totalQty,
-      supplierPricePaise: p.supplierPricePaise,
-      gstBps: p.gstBps,
+    const taxablePaise = o.totalQty * o.vendorPricePaise;
+    const gstPaise = applyBps(taxablePaise, o.gstBps);
+    order.lines.push({
+      offeringId: o.offeringId,
+      productId: o.productId,
+      serviceOptionId: o.serviceOptionId,
+      quantity: o.totalQty,
+      vendorPricePaise: o.vendorPricePaise,
+      gstBps: o.gstBps,
       taxablePaise,
       gstPaise,
       lineTotalPaise: taxablePaise + gstPaise,
     });
-    po.subtotalPaise += taxablePaise;
-    po.gstPaise += gstPaise;
-    po.totalPaise += taxablePaise + gstPaise;
+    order.subtotalPaise += taxablePaise;
+    order.gstPaise += gstPaise;
+    order.totalPaise += taxablePaise + gstPaise;
   }
-  return [...bySupplier.values()].sort((a, b) => a.supplierId.localeCompare(b.supplierId));
+  return [...byVendor.values()].sort((a, b) => a.vendorId.localeCompare(b.vendorId));
 }
 
 export type PackingInput = {

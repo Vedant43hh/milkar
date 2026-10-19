@@ -12,7 +12,17 @@ type Flat = { id: string; tower: string; number: string };
 
 const natural = new Intl.Collator("en", { numeric: true });
 
-export function JoinForm({ code, round, societyName, flats }: { code: string; round: string | null; societyName: string; flats: Flat[] }) {
+type JoinFormProps = {
+  code: string;
+  round: string | null;
+  communityName: string;
+  /** What this community calls a tower and a flat, e.g. "Wing" and "Room". */
+  blockLabel: string;
+  unitLabel: string;
+  flats: Flat[];
+};
+
+export function JoinForm({ code, round, communityName, blockLabel, unitLabel, flats }: JoinFormProps) {
   const [state, formAction, pending] = useActionState(joinAction, {} as JoinState);
   const [tower, setTower] = useState("");
   const towers = [...new Set(flats.map((f) => f.tower))].sort(natural.compare);
@@ -28,9 +38,9 @@ export function JoinForm({ code, round, societyName, flats }: { code: string; ro
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <Label htmlFor="tower">{t("join.towerLabel")}</Label>
+          <Label htmlFor="tower">{blockLabel}</Label>
           <Select id="tower" value={tower} onChange={(e) => setTower(e.target.value)} required>
-            <option value="">{t("join.chooseTower")}</option>
+            <option value="">{t("join.choose", { thing: blockLabel.toLowerCase() })}</option>
             {towers.map((name) => (
               <option key={name} value={name}>
                 {name}
@@ -39,9 +49,9 @@ export function JoinForm({ code, round, societyName, flats }: { code: string; ro
           </Select>
         </div>
         <div>
-          <Label htmlFor="flatId">{t("join.flatLabel")}</Label>
+          <Label htmlFor="flatId">{t("join.unitNumber", { unit: unitLabel })}</Label>
           <Select id="flatId" name="flatId" key={tower} defaultValue="" required disabled={!tower}>
-            <option value="">{t("join.chooseFlat")}</option>
+            <option value="">{t("join.choose", { thing: unitLabel.toLowerCase() })}</option>
             {towerFlats.map((f) => (
               <option key={f.id} value={f.id}>
                 {f.number}
@@ -56,7 +66,7 @@ export function JoinForm({ code, round, societyName, flats }: { code: string; ro
         </Banner>
       )}
       <Button block loading={pending}>
-        {t("join.submit", { society: societyName })}
+        {t("join.submit", { community: communityName })}
       </Button>
     </form>
   );

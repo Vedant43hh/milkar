@@ -54,10 +54,10 @@ export async function AccountMenu({ context }: { context: "resident" | "staff" |
             </Badge>
             {user.flat && (
               <Badge>
-                {user.flat.tower}-{user.flat.number} · {user.flat.society.name}
+                {user.flat.community.unitLabel} {user.flat.tower}-{user.flat.number} · {user.flat.community.name}
               </Badge>
             )}
-            {user.supplier && <Badge>{user.supplier.name}</Badge>}
+            {user.vendor && <Badge>{user.vendor.name}</Badge>}
           </div>
         </div>
 

@@ -29,21 +29,22 @@ describe("database constraints", () => {
     await makeUser("+919999900002");
     await expect(makeUser("+919999900002")).rejects.toThrow();
 
-    const society = await prisma.society.create({
+    const community = await prisma.community.create({
       data: { name: "Test CHS", code: "TEST1", address: "x", city: "Pune", pincode: "411001" },
     });
-    await prisma.flat.create({ data: { societyId: society.id, tower: "A", number: "101" } });
-    await expect(prisma.flat.create({ data: { societyId: society.id, tower: "A", number: "101" } })).rejects.toThrow();
+    await prisma.flat.create({ data: { communityId: community.id, tower: "A", number: "101" } });
+    await expect(prisma.flat.create({ data: { communityId: community.id, tower: "A", number: "101" } })).rejects.toThrow();
   });
 
   it("numbers rounds sequentially", async () => {
     const captain = await makeUser();
-    const society = await prisma.society.create({
+    const community = await prisma.community.create({
       data: { name: "Test CHS", code: "TEST2", address: "x", city: "Pune", pincode: "411001" },
     });
     const base = {
-      societyId: society.id,
+      communityId: community.id,
       createdById: captain.id,
+      kind: "GROCERY" as const,
       title: "Round",
       cutoffAt: new Date(),
       deliveryAt: new Date(),

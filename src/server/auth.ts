@@ -14,7 +14,7 @@ export async function findOrCreateUserByPhone(phone: string) {
 }
 
 export type DemoLoginResult =
-  | { ok: true; user: { id: string; role: "RESIDENT" | "CAPTAIN" | "SUPPLIER" | "ADMIN"; flatId: string | null } }
+  | { ok: true; user: { id: string; role: "RESIDENT" | "CAPTAIN" | "VENDOR" | "ADMIN"; flatId: string | null } }
   | { ok: false; error: "DEMO_DISABLED" | "UNKNOWN_DEMO_USER" };
 
 /** Resolves a seeded demo account. Refuses unless demo mode is on; callers pass the live setting. */
@@ -27,14 +27,16 @@ export async function resolveDemoLogin(key: string, demoMode: boolean): Promise<
 }
 
 /** Public details shown on an invite link. */
-export async function getSocietyInvite(code: string) {
-  return prisma.society.findUnique({
+export async function getCommunityInvite(code: string) {
+  return prisma.community.findUnique({
     where: { code: code.toUpperCase() },
     select: {
       id: true,
       name: true,
       city: true,
       code: true,
+      blockLabel: true,
+      unitLabel: true,
       flats: { select: { id: true, tower: true, number: true } },
     },
   });
@@ -46,14 +48,14 @@ export const joinSchema = z.object({
 });
 
 export type JoinResult =
-  | { ok: true; societyId: string; societyName: string }
-  | { ok: false; error: "UNKNOWN_SOCIETY" | "UNKNOWN_FLAT" | "ALREADY_MEMBER" | "NOT_RESIDENT" };
+  | { ok: true; communityId: string; communityName: string }
+  | { ok: false; error: "UNKNOWN_COMMUNITY" | "UNKNOWN_FLAT" | "ALREADY_MEMBER" | "NOT_RESIDENT" };
 
-/** Attaches a resident without a flat to a flat in the society the invite code belongs to. */
-export async function joinSociety(input: { userId: string; societyCode: string; flatId: string; name: string }): Promise<JoinResult> {
-  const society = await prisma.society.findUnique({ where: { code: input.societyCode.toUpperCase() }, select: { id: true, name: true } });
-  if (!society) return { ok: false, error: "UNKNOWN_SOCIETY" };
-  const flat = await prisma.flat.findFirst({ where: { id: input.flatId, societyId: society.id }, select: { id: true } });
+/** Attaches a resident without a flat to a flat in the community the invite code belongs to. */
+export async function joinCommunity(input: { userId: string; communityCode: string; flatId: string; name: string }): Promise<JoinResult> {
+  const community = await prisma.community.findUnique({ where: { code: input.communityCode.toUpperCase() }, select: { id: true, name: true } });
+  if (!community) return { ok: false, error: "UNKNOWN_COMMUNITY" };
+  const flat = await prisma.flat.findFirst({ where: { id: input.flatId, communityId: community.id }, select: { id: true } });
   if (!flat) return { ok: false, error: "UNKNOWN_FLAT" };
 
   const user = await prisma.user.findUnique({ where: { id: input.userId }, select: { role: true, flatId: true } });
@@ -65,5 +67,5 @@ export async function joinSociety(input: { userId: string; societyCode: string; 
     where: { id: input.userId, flatId: null },
     data: { flatId: flat.id, name: input.name.trim() },
   });
-  return updated.count === 1 ? { ok: true, societyId: society.id, societyName: society.name } : { ok: false, error: "ALREADY_MEMBER" };
+  return updated.count === 1 ? { ok: true, communityId: community.id, communityName: community.name } : { ok: false, error: "ALREADY_MEMBER" };
 }

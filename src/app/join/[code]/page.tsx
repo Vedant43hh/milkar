@@ -10,7 +10,7 @@ import { Banner } from "@/components/ui/display";
 import { PageSkeleton } from "@/components/ui/skeleton";
 import { t } from "@/i18n";
 import { getCurrentUser, loginPath } from "@/lib/auth/current-user";
-import { getSocietyInvite } from "@/server/auth";
+import { getCommunityInvite } from "@/server/auth";
 import { JoinForm } from "./join-form";
 
 export const metadata: Metadata = { title: t("join.title") };
@@ -32,8 +32,8 @@ async function Invite({ params, searchParams }: Pick<PageProps<"/join/[code]">, 
   await connection();
   const [{ code }, query] = await Promise.all([params, searchParams]);
   const round = typeof query.round === "string" && ROUND_ID.test(query.round) ? query.round : null;
-  const [society, user] = await Promise.all([getSocietyInvite(code), getCurrentUser()]);
-  if (!society) {
+  const [community, user] = await Promise.all([getCommunityInvite(code), getCurrentUser()]);
+  if (!community) {
     return (
       <Banner tone="danger" role="alert" icon={<CircleAlert aria-hidden className="size-4" />}>
         {t("join.invalidLink")}
@@ -41,15 +41,15 @@ async function Invite({ params, searchParams }: Pick<PageProps<"/join/[code]">, 
     );
   }
 
-  const invitePath = `/join/${society.code}${round ? `?round=${round}` : ""}`;
+  const invitePath = `/join/${community.code}${round ? `?round=${round}` : ""}`;
   const header = (
     <>
       <p className="inline-flex items-center gap-1.5 rounded-full bg-brand-soft px-3 py-1 text-sm font-medium text-brand-soft-fg">
         <Building2 aria-hidden className="size-4" />
-        {t("join.invitedTo", { society: society.name, city: society.city })}
+        {t("join.invitedTo", { community: community.name, city: community.city })}
       </p>
       <h1 className="mt-3 text-2xl font-semibold tracking-tight">{t("join.heading")}</h1>
-      <p className="mt-1 mb-6 text-sm text-muted">{t("join.pitch", { society: society.name })}</p>
+      <p className="mt-1 mb-6 text-sm text-muted">{t("join.pitch", { community: community.name })}</p>
     </>
   );
 
@@ -64,7 +64,7 @@ async function Invite({ params, searchParams }: Pick<PageProps<"/join/[code]">, 
     );
   }
 
-  if (user.role === "SUPPLIER" || user.role === "ADMIN") {
+  if (user.role === "VENDOR" || user.role === "ADMIN") {
     return (
       <>
         {header}
@@ -74,11 +74,11 @@ async function Invite({ params, searchParams }: Pick<PageProps<"/join/[code]">, 
   }
 
   if (user.flat) {
-    if (user.flat.society.id === society.id) redirect(round ? `/round/${round}` : "/");
+    if (user.flat.community.id === community.id) redirect(round ? `/round/${round}` : "/");
     return (
       <>
         {header}
-        <Banner icon={<Info aria-hidden className="size-4" />}>{t("join.alreadyMember", { society: user.flat.society.name })}</Banner>
+        <Banner icon={<Info aria-hidden className="size-4" />}>{t("join.alreadyMember", { community: user.flat.community.name })}</Banner>
       </>
     );
   }
@@ -87,7 +87,14 @@ async function Invite({ params, searchParams }: Pick<PageProps<"/join/[code]">, 
     <>
       {header}
       <Card>
-        <JoinForm code={society.code} round={round} societyName={society.name} flats={society.flats} />
+        <JoinForm
+          code={community.code}
+          round={round}
+          communityName={community.name}
+          blockLabel={community.blockLabel}
+          unitLabel={community.unitLabel}
+          flats={community.flats}
+        />
       </Card>
     </>
   );

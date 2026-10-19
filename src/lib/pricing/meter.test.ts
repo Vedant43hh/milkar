@@ -6,23 +6,23 @@ describe("computeMeter", () => {
   it("shows how many more units unlock the next tier", () => {
     const m = computeMeter(RICE, 12);
     expect(m.currentUnitPaise).toBe(P500);
-    expect(m.next).toEqual({ minQty: 20, unitPaise: P465, unitsNeeded: 8, savingPerUnitPaise: 3500 });
+    expect(m.next).toEqual({ minQty: 20, unitPaise: P465, needed: 8, savingPerUnitPaise: 3500 });
     expect(m.progressPct).toBe(60);
   });
 
-  it("flags products below the supplier minimum", () => {
+  it("flags offerings below the vendor minimum", () => {
     const empty = computeMeter(RICE, 0);
     expect(empty.qualifies).toBe(false);
-    expect(empty.unitsToQualify).toBe(10);
+    expect(empty.toQualify).toBe(10);
     expect(empty.progressPct).toBe(0);
-    expect(computeMeter(RICE, 9).unitsToQualify).toBe(1);
+    expect(computeMeter(RICE, 9).toQualify).toBe(1);
     expect(computeMeter(RICE, 10).qualifies).toBe(true);
   });
 
   it("measures progress from the current tier's start", () => {
     expect(computeMeter(RICE, 20).progressPct).toBe(0);
     expect(computeMeter(RICE, 35).progressPct).toBe(50);
-    expect(computeMeter(RICE, 49).next?.unitsNeeded).toBe(1);
+    expect(computeMeter(RICE, 49).next?.needed).toBe(1);
   });
 
   it("has no next tier at the best price", () => {

@@ -5,11 +5,11 @@ import { prisma } from "@/lib/db";
 export async function GET() {
   await connection();
   try {
-    const [societies, openRounds] = await Promise.all([
-      prisma.society.count(),
+    const [communities, openRounds] = await Promise.all([
+      prisma.community.count(),
       prisma.orderRound.count({ where: { status: "OPEN" } }),
     ]);
-    return Response.json({ ok: true, societies, openRounds });
+    return Response.json({ ok: true, communities, openRounds });
   } catch {
     return Response.json({ ok: false, error: "database unavailable" }, { status: 503 });
   }

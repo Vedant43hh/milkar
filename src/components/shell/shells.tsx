@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
 import { t } from "@/i18n";
 import { getCurrentUser } from "@/lib/auth/current-user";
+import { unreadCount } from "@/server/notifications";
 import { InlineSkeleton } from "../ui/skeleton";
 import { Sheet } from "../ui/sheet";
 import { AccountMenu, ThemeMenu } from "./account-menu";
@@ -20,20 +21,43 @@ async function CommunityName() {
   return (
     <span className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-fg">
       <Building2 aria-hidden className="size-4 shrink-0 text-brand" />
-      <span className="truncate">{user.flat.society.name}</span>
+      <span className="truncate">{user.flat.community.name}</span>
     </span>
   );
 }
 
-function BellLink() {
+function BellLink({ href, count }: { href: string; count: number }) {
   return (
     <Link
-      href="/notifications"
-      aria-label={t("nav.notifications")}
+      href={href}
+      aria-label={count > 0 ? t("notifications.bellUnread", { n: count }) : t("notifications.bell")}
       className="relative inline-flex size-11 items-center justify-center rounded-full text-muted transition-colors hover:bg-surface-2 hover:text-fg"
     >
       <Bell aria-hidden className="size-5" />
+      {count > 0 && (
+        <span
+          aria-hidden
+          data-testid="unread-badge"
+          className="absolute top-1.5 right-1.5 flex h-4.5 min-w-4.5 animate-pop items-center justify-center rounded-full bg-danger px-1 text-[0.65rem] leading-none font-bold text-white ring-2 ring-surface dark:text-surface"
+        >
+          {count > 9 ? "9+" : count}
+        </span>
+      )}
     </Link>
+  );
+}
+
+/** The bell with the signed-in user's unread count. Reads the session: render inside <Suspense>. */
+async function UnreadBell({ href }: { href: string }) {
+  const user = await getCurrentUser();
+  return <BellLink href={href} count={user ? await unreadCount(user.id) : 0} />;
+}
+
+function NotificationBell({ href }: { href: string }) {
+  return (
+    <Suspense fallback={<BellLink href={href} count={0} />}>
+      <UnreadBell href={href} />
+    </Suspense>
   );
 }
 
@@ -60,7 +84,7 @@ export function ResidentShell({ children }: { children: ReactNode }) {
               </Suspense>
             </span>
             <div className="ml-auto flex items-center gap-1">
-              <BellLink />
+              <NotificationBell href="/notifications" />
               <Suspense fallback={<span className="size-11" />}>
                 <AccountMenu context="resident" />
               </Suspense>
@@ -76,10 +100,17 @@ export function ResidentShell({ children }: { children: ReactNode }) {
   );
 }
 
-const AREA_TITLES: Record<StaffArea, "areas.captainTitle" | "areas.supplierTitle" | "areas.adminTitle"> = {
+const AREA_TITLES: Record<StaffArea, "areas.captainTitle" | "areas.vendorTitle" | "areas.adminTitle"> = {
   captain: "areas.captainTitle",
-  vendor: "areas.supplierTitle",
+  vendor: "areas.vendorTitle",
   admin: "areas.adminTitle",
+};
+
+/** Captains are residents, so their notifications live in the resident app. */
+const NOTIFICATIONS_PATH: Record<StaffArea, string> = {
+  captain: "/notifications",
+  vendor: "/vendor/notifications",
+  admin: "/admin/notifications",
 };
 
 export function StaffShell({ area, children }: { area: StaffArea; children: ReactNode }) {
@@ -107,6 +138,7 @@ export function StaffShell({ area, children }: { area: StaffArea; children: Reac
             </span>
             <span className="font-semibold md:hidden">{t(AREA_TITLES[area])}</span>
             <div className="ml-auto flex items-center gap-1">
+              <NotificationBell href={NOTIFICATIONS_PATH[area]} />
               <Suspense fallback={<span className="size-11" />}>
                 <AccountMenu context="staff" />
               </Suspense>

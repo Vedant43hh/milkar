@@ -21,7 +21,7 @@ async function ResidentHome() {
     <div>
       <PageHeader
         title={t("home.greeting", { name: user.name?.split(" ")[0] ?? "" })}
-        subtitle={t("home.flatIn", { flat: `${user.flat.tower}-${user.flat.number}`, society: user.flat.society.name })}
+        subtitle={t("home.flatIn", { unit: user.flat.community.unitLabel, flat: `${user.flat.tower}-${user.flat.number}`, community: user.flat.community.name })}
       />
 
       {user.role === "CAPTAIN" && (

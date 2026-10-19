@@ -21,6 +21,8 @@ const envSchema = z.object({
   RAZORPAY_KEY_ID: optionalString,
   RAZORPAY_KEY_SECRET: optionalString,
   PLATFORM_GSTIN: optionalString,
+  // Push and SMS notifications are stubs until a provider is chosen; "log" prints what they would send.
+  NOTIFY_STUBS: z.enum(["off", "log"]).default("off"),
 });
 
 export type Env = z.infer<typeof envSchema>;
