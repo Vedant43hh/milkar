@@ -25,7 +25,7 @@ describe("otpRateLimit", () => {
 describe("homePathFor / canAccess", () => {
   it("sends each role to its home", () => {
     expect(homePathFor({ role: "ADMIN", flatId: null })).toBe("/admin");
-    expect(homePathFor({ role: "SUPPLIER", flatId: null })).toBe("/supplier");
+    expect(homePathFor({ role: "SUPPLIER", flatId: null })).toBe("/vendor");
     expect(homePathFor({ role: "RESIDENT", flatId: "f1" })).toBe("/");
     expect(homePathFor({ role: "CAPTAIN", flatId: "f1" })).toBe("/");
     expect(homePathFor({ role: "RESIDENT", flatId: null })).toBe("/join");

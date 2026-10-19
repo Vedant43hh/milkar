@@ -1,21 +1,25 @@
+import { ClipboardList } from "lucide-react";
 import { Suspense } from "react";
-import { AccountMenu } from "@/components/account-menu";
-import { AreaPlaceholder } from "@/components/area-placeholder";
-import { AppShell, Skeleton } from "@/components/ui";
+import { PageHeader } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/display";
+import { PageSkeleton } from "@/components/ui/skeleton";
 import { t } from "@/i18n";
 import { requireArea } from "@/lib/auth/current-user";
 
 export default function CaptainPage() {
   return (
-    <AppShell right={<Suspense><AccountMenu /></Suspense>}>
-      <Suspense fallback={<Skeleton />}>
-        <CaptainHome />
-      </Suspense>
-    </AppShell>
+    <Suspense fallback={<PageSkeleton cards={1} />}>
+      <CaptainHome />
+    </Suspense>
   );
 }
 
 async function CaptainHome() {
   const user = await requireArea("captain");
-  return <AreaPlaceholder title={t("areas.captainTitle")} user={user} phase={3} />;
+  return (
+    <>
+      <PageHeader title={t("areas.captainTitle")} subtitle={t("areas.signedInAs", { name: user.name ?? user.phone, role: t(`roles.${user.role}`) })} />
+      <EmptyState icon={<ClipboardList aria-hidden className="size-6" />} title={t("nav.rounds")} body={t("placeholder.staffBody", { phase: 5 })} />
+    </>
+  );
 }

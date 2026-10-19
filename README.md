@@ -25,9 +25,17 @@ npm run dev                 # http://localhost:3000
 ```bash
 npm test                    # unit tests (pricing engine, rules, formatting)
 npm run test:int            # integration tests against the milkar_test database
-npm run test:e2e            # browser smoke tests (needs a seeded DB; starts `npm run start` if nothing is running)
+npm run test:e2e            # browser tests incl. accessibility (axe) and a reload-loop guard; needs a seeded DB
+E2E_DEV=1 npm run test:e2e  # the same against a running `npm run dev` (longer timeouts for on-demand compiles)
+npm run measure:js          # compressed JavaScript per key page, against `npm run start`
 npm run typecheck && npm run lint
 ```
+
+`test:e2e` starts `npm run start` if nothing is listening; point it elsewhere with `E2E_BASE_URL`.
+
+## Design system
+
+Tokens (colours for light and dark, radius, shadows, motion) live in `src/app/globals.css`; components in `src/components/ui/`; the app shells in `src/components/shell/`. Open **`/design`** (development or `DEMO_MODE=true`) for a living style guide of every component in both themes. Dark mode follows the system setting by default; residents can override it in the account menu.
 
 Integration tests refuse to run unless `TEST_DATABASE_URL` points at a database whose name contains `test`.
 Browser tests need Chromium once: `npx playwright install chromium`. They create a few throwaway users in the dev database; `npm run db:seed` resets it.

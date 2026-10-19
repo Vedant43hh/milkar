@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatIST, istLocalToUtc, startOfIstDay, startOfIstMonth, utcToIstLocal } from "./time";
+import { formatIST, formatRemaining, istLocalToUtc, startOfIstDay, startOfIstMonth, utcToIstLocal } from "./time";
 
 describe("IST conversion", () => {
   it("converts IST wall-clock input to UTC", () => {
@@ -24,6 +24,13 @@ describe("IST conversion", () => {
     expect(startOfIstMonth(now).toISOString()).toBe("2026-10-31T18:30:00.000Z");
     expect(startOfIstDay(now).toISOString()).toBe("2026-10-31T18:30:00.000Z");
     expect(startOfIstDay(now, -1).toISOString()).toBe("2026-10-30T18:30:00.000Z");
+  });
+
+  it("formats time remaining", () => {
+    expect(formatRemaining(2 * 86400_000 + 4 * 3600_000 + 59_000)).toBe("2d 4h");
+    expect(formatRemaining(3 * 3600_000 + 12 * 60_000)).toBe("3h 12m");
+    expect(formatRemaining(9 * 60_000 + 5_000)).toBe("9m 05s");
+    expect(formatRemaining(-5_000)).toBe("0m 00s");
   });
 
   it("formats in India time", () => {

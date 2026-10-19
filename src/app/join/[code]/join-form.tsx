@@ -1,7 +1,10 @@
 "use client";
 
+import { CircleAlert } from "lucide-react";
 import { useActionState, useState } from "react";
-import { Button, ErrorText, Input, Label, Select } from "@/components/ui";
+import { Button } from "@/components/ui/button";
+import { Banner } from "@/components/ui/display";
+import { Input, Label, Select } from "@/components/ui/form";
 import { t } from "@/i18n";
 import { joinAction, type JoinState } from "@/server/actions/auth";
 
@@ -47,8 +50,14 @@ export function JoinForm({ code, round, societyName, flats }: { code: string; ro
           </Select>
         </div>
       </div>
-      {state.error && <ErrorText>{t(state.error.key, state.error.vars)}</ErrorText>}
-      <Button disabled={pending}>{t("join.submit", { society: societyName })}</Button>
+      {state.error && (
+        <Banner tone="danger" role="alert" icon={<CircleAlert aria-hidden className="size-4" />}>
+          {t(state.error.key, state.error.vars)}
+        </Banner>
+      )}
+      <Button block loading={pending}>
+        {t("join.submit", { society: societyName })}
+      </Button>
     </form>
   );
 }

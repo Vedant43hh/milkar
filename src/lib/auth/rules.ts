@@ -37,7 +37,7 @@ export function homePathFor(user: HomeUser): string {
     case "ADMIN":
       return "/admin";
     case "SUPPLIER":
-      return "/supplier";
+      return "/vendor";
     default:
       return user.flatId ? "/" : "/join";
   }

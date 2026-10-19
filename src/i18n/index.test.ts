@@ -8,7 +8,7 @@ describe("i18n", () => {
   });
 
   it("fills placeholders", () => {
-    expect(t("meter.unlock", { units: 8, price: "₹440" })).toBe("8 more to unlock ₹440!");
+    expect(t("meter.unlock", { n: 8, unit: "bags", price: "₹440" })).toBe("8 more bags to unlock ₹440!");
   });
 
   it("leaves unknown placeholders visible", () => {

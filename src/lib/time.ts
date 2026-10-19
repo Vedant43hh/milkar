@@ -40,6 +40,17 @@ export function startOfIstDay(now: Date, days = 0): Date {
   );
 }
 
+/** Time left as "2d 4h", "3h 12m" or "9m 05s". Negative durations show as zero. */
+export function formatRemaining(ms: number): string {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  const d = Math.floor(s / 86400);
+  const h = Math.floor((s % 86400) / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  if (d > 0) return `${d}d ${h}h`;
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m ${String(s % 60).padStart(2, "0")}s`;
+}
+
 const formatters = {
   dateTime: new Intl.DateTimeFormat("en-IN", {
     timeZone: IST_TIME_ZONE,

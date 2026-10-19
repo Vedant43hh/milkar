@@ -6,6 +6,7 @@ import type { MessageKey } from "@/i18n";
 import { endSession, getCurrentUser, loginPath, startSession } from "@/lib/auth/current-user";
 import { clientIpFrom, homePathFor, safeNextPath, type RateLimitHit } from "@/lib/auth/rules";
 import { getEnv } from "@/lib/env";
+import { setFlash } from "@/lib/flash";
 import { normalizeIndianMobile } from "@/lib/phone";
 import { findOrCreateUserByPhone, joinSchema, joinSociety, resolveDemoLogin } from "@/server/auth";
 import { requestOtp, verifyOtp } from "@/server/otp";
@@ -125,5 +126,6 @@ export async function joinAction(prev: JoinState, formData: FormData): Promise<J
     }[result.error] as MessageKey;
     return { name, error: { key } };
   }
+  await setFlash("success", "join.joined", { society: result.societyName });
   redirect(ROUND_ID.test(round) ? `/round/${round}` : "/");
 }

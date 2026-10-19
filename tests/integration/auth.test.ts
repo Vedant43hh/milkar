@@ -162,7 +162,7 @@ describe("joinSociety", () => {
     const society = await makeSociety("JOIN1");
     const user = await findOrCreateUserByPhone(nextPhone());
     const result = await joinSociety({ userId: user.id, societyCode: "join1", flatId: society.flats[1].id, name: "  Ravi Kumar " });
-    expect(result).toEqual({ ok: true, societyId: society.id });
+    expect(result).toEqual({ ok: true, societyId: society.id, societyName: "JOIN1 CHS" });
     expect(await prisma.user.findUniqueOrThrow({ where: { id: user.id } })).toMatchObject({ name: "Ravi Kumar", flatId: society.flats[1].id });
   });
 

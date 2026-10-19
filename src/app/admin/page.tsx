@@ -1,21 +1,25 @@
+import { ChartColumn } from "lucide-react";
 import { Suspense } from "react";
-import { AccountMenu } from "@/components/account-menu";
-import { AreaPlaceholder } from "@/components/area-placeholder";
-import { AppShell, Skeleton } from "@/components/ui";
+import { PageHeader } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/display";
+import { PageSkeleton } from "@/components/ui/skeleton";
 import { t } from "@/i18n";
 import { requireArea } from "@/lib/auth/current-user";
 
 export default function AdminPage() {
   return (
-    <AppShell right={<Suspense><AccountMenu /></Suspense>}>
-      <Suspense fallback={<Skeleton />}>
-        <AdminHome />
-      </Suspense>
-    </AppShell>
+    <Suspense fallback={<PageSkeleton cards={1} />}>
+      <AdminHome />
+    </Suspense>
   );
 }
 
 async function AdminHome() {
   const user = await requireArea("admin");
-  return <AreaPlaceholder title={t("areas.adminTitle")} user={user} phase={9} />;
+  return (
+    <>
+      <PageHeader title={t("areas.adminTitle")} subtitle={t("areas.signedInAs", { name: user.name ?? user.phone, role: t(`roles.${user.role}`) })} />
+      <EmptyState icon={<ChartColumn aria-hidden className="size-6" />} title={t("nav.stats")} body={t("placeholder.staffBody", { phase: 12 })} />
+    </>
+  );
 }

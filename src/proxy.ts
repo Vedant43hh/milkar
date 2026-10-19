@@ -2,11 +2,16 @@
 // every page and server action still checks access through src/lib/auth/current-user.ts.
 import { NextResponse, type NextRequest } from "next/server";
 import { SESSION_COOKIE } from "@/lib/auth/rules";
+import { recordPageRequest } from "@/lib/dev-reload-watchdog";
 
-const PUBLIC_PATHS = [/^\/login(?:\/|$)/, /^\/join(?:\/|$)/, /^\/offline(?:\/|$)/];
+const PUBLIC_PATHS = [/^\/login(?:\/|$)/, /^\/join(?:\/|$)/, /^\/offline(?:\/|$)/, /^\/design(?:\/|$)/];
 
 export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
+  if (process.env.NODE_ENV === "development" && request.method === "GET" && request.headers.get("sec-fetch-dest") === "document") {
+    const warning = recordPageRequest(pathname);
+    if (warning) console.warn(warning);
+  }
   if (PUBLIC_PATHS.some((pattern) => pattern.test(pathname))) return NextResponse.next();
   if (request.cookies.has(SESSION_COOKIE)) return NextResponse.next();
 

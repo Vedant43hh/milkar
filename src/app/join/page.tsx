@@ -1,8 +1,13 @@
+import { CircleAlert } from "lucide-react";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import { AccountMenu } from "@/components/account-menu";
-import { AppShell, Button, ErrorText, Input, Label, Skeleton } from "@/components/ui";
+import { PublicShell } from "@/components/shell/shells";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Banner } from "@/components/ui/display";
+import { Input, Label } from "@/components/ui/form";
+import { Skeleton } from "@/components/ui/skeleton";
 import { t } from "@/i18n";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { homePathFor } from "@/lib/auth/rules";
@@ -12,29 +17,35 @@ export const metadata: Metadata = { title: t("join.title") };
 
 export default function JoinPage({ searchParams }: PageProps<"/join">) {
   return (
-    <AppShell right={<Suspense><AccountMenu /></Suspense>}>
-      <h1 className="text-xl font-semibold">{t("join.heading")}</h1>
-      <p className="mt-1 mb-6 text-sm text-stone-600">{t("join.codeIntro")}</p>
-      <Suspense fallback={<Skeleton lines={2} />}>
+    <PublicShell>
+      <h1 className="text-2xl font-semibold tracking-tight">{t("join.heading")}</h1>
+      <p className="mt-1 mb-6 text-sm text-muted">{t("join.codeIntro")}</p>
+      <Suspense fallback={<Skeleton className="h-32" />}>
         <JoinCodeSection searchParams={searchParams} />
       </Suspense>
-    </AppShell>
+    </PublicShell>
   );
 }
 
 async function JoinCodeSection({ searchParams }: { searchParams: PageProps<"/join">["searchParams"] }) {
   const [params, user] = await Promise.all([searchParams, getCurrentUser()]);
-  // Members, suppliers and admins have nothing to join here.
+  // Members, vendors and admins have nothing to join here.
   if (user && (user.flatId || user.role === "SUPPLIER" || user.role === "ADMIN")) redirect(homePathFor(user));
 
   return (
-    <form action={goToInviteAction} className="space-y-4">
-      <div>
-        <Label htmlFor="code">{t("join.codeLabel")}</Label>
-        <Input id="code" name="code" autoCapitalize="characters" autoComplete="off" placeholder={t("join.codePlaceholder")} required />
-      </div>
-      {params.error === "code" && <ErrorText>{t("errors.unknownSociety")}</ErrorText>}
-      <Button>{t("common.continue")}</Button>
-    </form>
+    <Card>
+      <form action={goToInviteAction} className="space-y-4">
+        <div>
+          <Label htmlFor="code">{t("join.codeLabel")}</Label>
+          <Input id="code" name="code" autoCapitalize="characters" autoComplete="off" placeholder={t("join.codePlaceholder")} className="uppercase" required />
+        </div>
+        {params.error === "code" && (
+          <Banner tone="danger" role="alert" icon={<CircleAlert aria-hidden className="size-4" />}>
+            {t("errors.unknownSociety")}
+          </Banner>
+        )}
+        <Button block>{t("common.continue")}</Button>
+      </form>
+    </Card>
   );
 }
