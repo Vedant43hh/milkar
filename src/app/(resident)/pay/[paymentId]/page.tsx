@@ -33,7 +33,7 @@ async function Pay({ params }: { params: PageProps<"/pay/[paymentId]">["params"]
   if (!payment || payment.provider !== "MOCK") notFound();
   const now = new Date();
   const back = (
-    <ButtonLink href={`/groceries?round=${payment.roundId}`} variant="secondary" block>
+    <ButtonLink href={payment.round.kind === "SERVICE" ? `/services/${payment.roundId}` : `/groceries?round=${payment.roundId}`} variant="secondary" block>
       {t("pay.back")}
     </ButtonLink>
   );

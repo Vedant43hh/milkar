@@ -10,6 +10,7 @@ import { tierIndexAt, sortTiers, type Tier } from "@/lib/pricing/tiers";
 import { notify } from "./notifications";
 import { paymentGateway } from "./payments/gateway";
 import { lockRound } from "./round-lock";
+import { releaseSeat, takeSeat } from "./slots";
 import { lockUser, walletBalance } from "./wallet";
 
 type Db = PrismaClient | Prisma.TransactionClient;
@@ -18,7 +19,13 @@ type Tx = Prisma.TransactionClient;
 /** The resident placing or changing an order. */
 export type Shopper = { id: string; flatId: string; communityId: string };
 
-export type CheckoutError = ChangeError["code"] | "ROUND_NOT_FOUND" | "NOTHING_TO_CHANGE" | "PRICE_CHANGED";
+export type CheckoutError = ChangeError["code"] | "ROUND_NOT_FOUND" | "NOTHING_TO_CHANGE" | "PRICE_CHANGED" | "SLOT_REQUIRED" | "SLOT_FULL";
+
+/**
+ * Service Days only: the time slot a flat books with its first units, and its weekly choices
+ * (keep this slot next week, and pay for it from the wallet automatically).
+ */
+export type BookingIntent = { slotId?: string | null; keepSlotWeekly?: boolean; autoPayFromWallet?: boolean };
 
 /** A price unlocked by this change: everyone in the group now pays less. */
 export type Unlock = { item: string; pricePaise: number };
@@ -38,6 +45,7 @@ async function loadRound(db: Db, roundId: string) {
           },
         },
       },
+      slots: { select: { id: true, capacity: true, bookedCount: true } },
     },
   });
 }
@@ -92,10 +100,42 @@ export type CheckoutErrors = (ChangeError | { code: CheckoutError; offeringId?: 
 /** `names` maps offering ids to product or option names, for messages. */
 export type QuoteResult = { ok: true; quote: Quote; names: Record<string, string> } | { ok: false; errors: CheckoutErrors; names: Record<string, string> };
 
-async function quoteWith(db: Db, shopper: Shopper, roundId: string, targets: Record<string, number>, now: Date): Promise<{ result: QuoteResult; round: LoadedRound | null }> {
+/** Units the flat holds in the round now, and after this change. */
+function flatUnits(round: LoadedRound, flatId: string, quote?: Quote): { before: number; after: number } {
+  const before = round.offerings.flatMap((o) => o.orderItems).filter((i) => i.flatId === flatId).reduce((n, i) => n + i.quantity, 0);
+  const delta = (quote?.lines ?? []).reduce((n, l) => n + l.addQty - l.removeQty, 0);
+  return { before, after: before + delta };
+}
+
+type BookingRow = { status: "HELD" | "ACTIVE" | "CANCELLED"; holdExpiresAt: Date | null };
+
+/** A booking that holds a seat right now: active, or held for this resident and not yet lapsed. */
+function holdsSeat(booking: BookingRow | null, now: Date): boolean {
+  if (!booking) return false;
+  if (booking.status === "ACTIVE") return true;
+  return booking.status === "HELD" && !!booking.holdExpiresAt && booking.holdExpiresAt.getTime() > now.getTime();
+}
+
+/** Whether a Service Day change can get a seat: a flat's first units need a slot with room. */
+async function checkBooking(db: Db, round: LoadedRound, flatId: string, quote: Quote, intent: BookingIntent | undefined, now: Date): Promise<"SLOT_REQUIRED" | "SLOT_FULL" | null> {
+  if (round.kind !== "SERVICE" || flatUnits(round, flatId, quote).after === 0) return null;
+  const booking = await db.serviceBooking.findUnique({ where: { roundId_flatId: { roundId: round.id, flatId } }, select: { status: true, holdExpiresAt: true } });
+  if (holdsSeat(booking, now)) return null;
+  const slot = round.slots.find((sl) => sl.id === intent?.slotId);
+  if (!slot) return "SLOT_REQUIRED";
+  return slot.bookedCount >= slot.capacity ? "SLOT_FULL" : null;
+}
+
+async function quoteWith(
+  db: Db,
+  shopper: Shopper,
+  roundId: string,
+  targets: Record<string, number>,
+  now: Date,
+  intent?: BookingIntent,
+): Promise<{ result: QuoteResult; round: LoadedRound | null }> {
   const round = await loadRound(db, roundId);
-  // Service Days need a time slot as well; their booking flow arrives with the services screens.
-  if (!round || round.communityId !== shopper.communityId || round.kind !== "GROCERY") {
+  if (!round || round.communityId !== shopper.communityId) {
     return { result: { ok: false, errors: [{ code: "ROUND_NOT_FOUND" }], names: {} }, round: null };
   }
   const names = Object.fromEntries(round.offerings.map((o) => [o.id, offeringName(o)]));
@@ -108,12 +148,61 @@ async function quoteWith(db: Db, shopper: Shopper, roundId: string, targets: Rec
   });
   if (!quoted.ok) return { result: { ok: false, errors: quoted.errors, names }, round };
   if (quoted.quote.lines.length === 0) return { result: { ok: false, errors: [{ code: "NOTHING_TO_CHANGE" }], names }, round };
+  const slotProblem = await checkBooking(db, round, shopper.flatId, quoted.quote, intent, now);
+  if (slotProblem) return { result: { ok: false, errors: [{ code: slotProblem }], names }, round };
   return { result: { ok: true, quote: quoted.quote, names }, round };
 }
 
-/** Prices a cart against the round as it is right now. Nothing is saved. */
-export async function quoteCart(shopper: Shopper, roundId: string, targets: Record<string, number>, now: Date): Promise<QuoteResult> {
-  return (await quoteWith(prisma, shopper, roundId, targets, now)).result;
+/** Prices a cart (and for a Service Day, checks the slot) against the round as it is now. Nothing is saved. */
+export async function quoteCart(shopper: Shopper, roundId: string, targets: Record<string, number>, now: Date, intent?: BookingIntent): Promise<QuoteResult> {
+  return (await quoteWith(prisma, shopper, roundId, targets, now, intent)).result;
+}
+
+// ---------- Service Day bookings ----------
+
+/**
+ * Before a paid change is applied: makes sure the flat holds a seat if it will have units. A
+ * lapsed hold gives its seat back; a new booking takes one with the conditional increment, so a
+ * full slot can never be overbooked. Returns the reason if no seat could be had.
+ */
+async function reserveSeat(tx: Tx, round: LoadedRound, flatId: string, userId: string, quote: Quote, intent: BookingIntent | undefined, now: Date): Promise<"SLOT_REQUIRED" | "SLOT_FULL" | null> {
+  if (round.kind !== "SERVICE") return null;
+  const where = { roundId_flatId: { roundId: round.id, flatId } };
+  let booking = await tx.serviceBooking.findUnique({ where });
+  const prefs = {
+    keepSlotWeekly: intent?.keepSlotWeekly ?? booking?.keepSlotWeekly ?? false,
+    autoPayFromWallet: intent?.autoPayFromWallet ?? booking?.autoPayFromWallet ?? false,
+  };
+  const units = flatUnits(round, flatId, quote).after;
+
+  if (booking?.status === "HELD" && !holdsSeat(booking, now)) {
+    booking = await tx.serviceBooking.update({ where, data: { status: "CANCELLED", holdExpiresAt: null } });
+    await releaseSeat(tx, booking.slotId);
+  }
+  if (booking && holdsSeat(booking, now)) {
+    if (units > 0) await tx.serviceBooking.update({ where, data: { status: "ACTIVE", holdExpiresAt: null, ...prefs } });
+    return null;
+  }
+  if (units === 0) return null;
+
+  const slotId = intent?.slotId;
+  if (!slotId || !round.slots.some((sl) => sl.id === slotId)) return "SLOT_REQUIRED";
+  if (!(await takeSeat(tx, slotId))) return "SLOT_FULL";
+  if (booking) await tx.serviceBooking.update({ where, data: { status: "ACTIVE", slotId, userId, holdExpiresAt: null, ...prefs } });
+  else await tx.serviceBooking.create({ data: { roundId: round.id, flatId, slotId, userId, status: "ACTIVE", ...prefs, createdAt: now } });
+  return null;
+}
+
+/** After a change: a flat left with no units gives up its visit and its seat. */
+async function releaseIfEmpty(tx: Tx, round: LoadedRound, flatId: string): Promise<void> {
+  if (round.kind !== "SERVICE") return;
+  const { _sum } = await tx.orderItem.aggregate({ where: { roundId: round.id, flatId }, _sum: { quantity: true } });
+  if ((_sum.quantity ?? 0) > 0) return;
+  const where = { roundId_flatId: { roundId: round.id, flatId } };
+  const booking = await tx.serviceBooking.findUnique({ where });
+  if (booking?.status !== "ACTIVE") return;
+  await tx.serviceBooking.update({ where, data: { status: "CANCELLED" } });
+  await releaseSeat(tx, booking.slotId);
 }
 
 // ---------- applying a paid change ----------
@@ -207,35 +296,42 @@ export type CheckoutResult =
  * applied at once under the round and wallet locks. Otherwise a payment valid for 15 minutes is
  * created and confirmed after the resident pays at the gateway.
  */
-export async function startCheckout(shopper: Shopper, roundId: string, targets: Record<string, number>, now: Date): Promise<CheckoutResult> {
-  const preview = (await quoteWith(prisma, shopper, roundId, targets, now)).result;
+export async function startCheckout(shopper: Shopper, roundId: string, targets: Record<string, number>, now: Date, intent?: BookingIntent): Promise<CheckoutResult> {
+  const preview = (await quoteWith(prisma, shopper, roundId, targets, now, intent)).result;
   if (!preview.ok) return { status: "REJECTED", errors: preview.errors, names: preview.names };
 
   if (preview.quote.gatewayPaise === 0) {
     return prisma.$transaction(async (tx): Promise<CheckoutResult> => {
       await lockRound(tx, roundId);
       await lockUser(tx, shopper.id);
-      const { result, round } = await quoteWith(tx, shopper, roundId, targets, now);
+      const { result, round } = await quoteWith(tx, shopper, roundId, targets, now, intent);
       if (!result.ok) return { status: "REJECTED", errors: result.errors, names: result.names };
       if (result.quote.gatewayPaise > 0) return { status: "REJECTED", errors: [{ code: "PRICE_CHANGED" }], names: result.names };
-      const payment = await tx.payment.create({ data: paymentData(shopper.id, roundId, result.quote, "WALLET", now) });
+      const seat = await reserveSeat(tx, round!, shopper.flatId, shopper.id, result.quote, intent, now);
+      if (seat) return { status: "REJECTED", errors: [{ code: seat }], names: result.names };
+      const payment = await tx.payment.create({ data: paymentData(shopper.id, roundId, result.quote, "WALLET", now, intent) });
       const unlocked = await applyPayment(tx, round!, payment, shopper.flatId, result.quote, now);
+      await releaseIfEmpty(tx, round!, shopper.flatId);
       return { status: "PAID", paymentId: payment.id, roundId, unlocked };
     });
   }
 
   const gateway = paymentGateway();
-  const payment = await prisma.payment.create({ data: paymentData(shopper.id, roundId, preview.quote, gateway.provider, now) });
+  const payment = await prisma.payment.create({ data: paymentData(shopper.id, roundId, preview.quote, gateway.provider, now, intent) });
   const { providerOrderId } = await gateway.createOrder({ paymentId: payment.id, amountPaise: preview.quote.gatewayPaise });
   await prisma.payment.update({ where: { id: payment.id }, data: { providerOrderId } });
   return { status: "AWAITING_PAYMENT", paymentId: payment.id, roundId, provider: gateway.provider, providerOrderId, gatewayPaise: preview.quote.gatewayPaise };
 }
 
-function paymentData(userId: string, roundId: string, quote: Quote, provider: "WALLET" | "MOCK" | "RAZORPAY", now: Date): Prisma.PaymentUncheckedCreateInput {
+/** What a payment stores: the quote it was priced from, plus the slot choice for a Service Day. */
+type StoredChange = Quote & { booking?: BookingIntent };
+
+function paymentData(userId: string, roundId: string, quote: Quote, provider: "WALLET" | "MOCK" | "RAZORPAY", now: Date, intent?: BookingIntent): Prisma.PaymentUncheckedCreateInput {
+  const changes: StoredChange = intent ? { ...quote, booking: intent } : quote;
   return {
     userId,
     roundId,
-    changes: quote as unknown as Prisma.InputJsonValue,
+    changes: changes as unknown as Prisma.InputJsonValue,
     chargePaise: quote.chargePaise,
     creditPaise: quote.creditPaise,
     walletAppliedPaise: quote.walletAppliedPaise,
@@ -247,7 +343,16 @@ function paymentData(userId: string, roundId: string, quote: Quote, provider: "W
   };
 }
 
-export type ConfirmFailure = "EXPIRED" | "ORDER_CHANGED" | "ROUND_CLOSED" | "REDUCTION_FROZEN" | "FLAT_CAP_EXCEEDED" | "OFFERING_UNAVAILABLE" | "WALLET_CHANGED";
+export type ConfirmFailure =
+  | "EXPIRED"
+  | "ORDER_CHANGED"
+  | "ROUND_CLOSED"
+  | "REDUCTION_FROZEN"
+  | "FLAT_CAP_EXCEEDED"
+  | "OFFERING_UNAVAILABLE"
+  | "WALLET_CHANGED"
+  | "SLOT_FULL"
+  | "SLOT_REQUIRED";
 
 export type ConfirmResult =
   | { status: "PAID"; roundId: string; unlocked: Unlock[]; repeat: boolean }
@@ -295,7 +400,7 @@ export async function confirmPayment(paymentId: string, providerPaymentId: strin
     const round = await loadRound(tx, roundId);
     if (!round || !user.flatId) return creditInstead("ROUND_CLOSED");
     const shopper = { id: payment.userId, flatId: user.flatId };
-    const quote = payment.changes as unknown as Quote;
+    const { booking: intent, ...quote } = payment.changes as unknown as StoredChange;
 
     for (const line of quote.lines) {
       const offering = round.offerings.find((o) => o.id === line.offeringId);
@@ -317,7 +422,11 @@ export async function confirmPayment(paymentId: string, providerPaymentId: strin
     const balance = await walletBalance(tx, shopper.id);
     if (balance + quote.creditPaise < quote.walletAppliedPaise) return creditInstead("WALLET_CHANGED");
 
+    const seat = await reserveSeat(tx, round, shopper.flatId, shopper.id, quote, intent, now);
+    if (seat) return creditInstead(seat);
+
     const unlocked = await applyPayment(tx, round, { id: paymentId, userId: payment.userId, providerPaymentId }, shopper.flatId, quote, now);
+    await releaseIfEmpty(tx, round, shopper.flatId);
     return { status: "PAID", roundId, unlocked, repeat: false };
   });
 }
@@ -332,6 +441,17 @@ export async function failPayment(paymentId: string, userId: string, reason: str
 export async function getPaymentForUser(paymentId: string, userId: string) {
   return prisma.payment.findFirst({
     where: { id: paymentId, userId },
-    select: { id: true, status: true, gatewayPaise: true, chargePaise: true, walletAppliedPaise: true, provider: true, providerOrderId: true, expiresAt: true, roundId: true, round: { select: { title: true } } },
+    select: {
+      id: true,
+      status: true,
+      gatewayPaise: true,
+      chargePaise: true,
+      walletAppliedPaise: true,
+      provider: true,
+      providerOrderId: true,
+      expiresAt: true,
+      roundId: true,
+      round: { select: { title: true, kind: true } },
+    },
   });
 }

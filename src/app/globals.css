@@ -138,6 +138,12 @@
   html {
     -webkit-text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;
+    /* Keep focused controls clear of the sticky top bar and the mobile tab bar. */
+    scroll-padding-top: 4.5rem;
+    scroll-padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+    @media (width >= 48rem) {
+      scroll-padding-bottom: 1rem;
+    }
   }
   body {
     background: var(--bg);

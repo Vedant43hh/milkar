@@ -7,7 +7,17 @@ import { requireArea } from "@/lib/auth/current-user";
 import { getEnv } from "@/lib/env";
 import { setFlash } from "@/lib/flash";
 import { formatINR } from "@/lib/pricing/money";
-import { confirmPayment, failPayment, getPaymentForUser, quoteCart, startCheckout, type CheckoutErrors, type ConfirmResult, type Shopper } from "@/server/checkout";
+import {
+  confirmPayment,
+  failPayment,
+  getPaymentForUser,
+  quoteCart,
+  startCheckout,
+  type BookingIntent,
+  type CheckoutErrors,
+  type ConfirmResult,
+  type Shopper,
+} from "@/server/checkout";
 import { verifyRazorpaySignature } from "@/server/payments/razorpay";
 import type { ResidentUser } from "@/server/session";
 
@@ -18,6 +28,20 @@ function cleanTargets(targets: unknown): Record<string, number> {
   if (!targets || typeof targets !== "object") return {};
   return Object.fromEntries(Object.entries(targets as Record<string, unknown>).filter(([, v]) => typeof v === "number").map(([k, v]) => [k, v as number]));
 }
+
+/** Only the fields a resident may choose, with the right types. */
+function cleanBooking(input: unknown): BookingIntent | undefined {
+  if (!input || typeof input !== "object") return undefined;
+  const b = input as Record<string, unknown>;
+  return {
+    slotId: typeof b.slotId === "string" ? b.slotId : null,
+    keepSlotWeekly: b.keepSlotWeekly === true,
+    autoPayFromWallet: b.keepSlotWeekly === true && b.autoPayFromWallet === true,
+  };
+}
+
+/** Where a resident goes back to after paying: the grocery list or the Service Day. */
+const roundPage = (round: { kind: string }, roundId: string) => (round.kind === "SERVICE" ? `/services/${roundId}` : `/groceries?round=${roundId}`);
 
 function errorTexts(errors: CheckoutErrors, names: Record<string, string>): string[] {
   return [
@@ -46,9 +70,9 @@ export type CartQuote =
   | { ok: false; errors: string[] };
 
 /** Prices the cart for the review sheet. Nothing is saved. */
-export async function quoteCartAction(roundId: string, targets: Record<string, number>): Promise<CartQuote> {
+export async function quoteCartAction(roundId: string, targets: Record<string, number>, booking?: BookingIntent): Promise<CartQuote> {
   const user = await requireArea("resident");
-  const result = await quoteCart(shopperOf(user), roundId, cleanTargets(targets), new Date());
+  const result = await quoteCart(shopperOf(user), roundId, cleanTargets(targets), new Date(), cleanBooking(booking));
   if (!result.ok) return { ok: false, errors: errorTexts(result.errors, result.names) };
   const { quote, names } = result;
   return {
@@ -87,9 +111,9 @@ function confirmedText(result: ConfirmResult): { message: string; celebrate: str
 }
 
 /** Places the change. Wallet-covered changes are done at once; otherwise the resident goes to pay. */
-export async function checkoutAction(roundId: string, targets: Record<string, number>): Promise<CheckoutOutcome> {
+export async function checkoutAction(roundId: string, targets: Record<string, number>, booking?: BookingIntent): Promise<CheckoutOutcome> {
   const user = await requireArea("resident");
-  const result = await startCheckout(shopperOf(user), roundId, cleanTargets(targets), new Date());
+  const result = await startCheckout(shopperOf(user), roundId, cleanTargets(targets), new Date(), cleanBooking(booking));
   if (result.status === "REJECTED") return { status: "ERROR", errors: errorTexts(result.errors, result.names) };
   if (result.status === "PAID") {
     refresh();
@@ -136,7 +160,7 @@ export async function payMockAction(formData: FormData): Promise<void> {
   const text = confirmedText(result);
   if (text.celebrate) await setFlash("celebrate", "shop.flashText", { text: text.celebrate });
   else await setFlash(result.status === "PAID" ? "success" : "info", "shop.flashText", { text: text.message });
-  redirect(`/groceries?round=${payment.roundId}`);
+  redirect(roundPage(payment.round, payment.roundId));
 }
 
 /** The test UPI screen's "Cancel payment" button. */
@@ -146,5 +170,5 @@ export async function declineMockAction(formData: FormData): Promise<void> {
   const payment = await getPaymentForUser(paymentId, user.id);
   if (payment) await failPayment(paymentId, user.id, "Declined by the resident");
   await setFlash("info", "pay.declined");
-  redirect(payment ? `/groceries?round=${payment.roundId}` : "/groceries");
+  redirect(payment ? roundPage(payment.round, payment.roundId) : "/");
 }
