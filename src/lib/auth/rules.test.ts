@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canAccess, clientIpFrom, homePathFor, otpRateLimit, safeNextPath } from "./rules";
+import { canAccess, canManageCommunity, clientIpFrom, homePathFor, otpRateLimit, safeNextPath } from "./rules";
 
 const limits = { phone15m: 3, phoneDay: 10, ip15m: 30, ipDay: 200 };
 const none = { phone15m: 0, phoneDay: 0, ip15m: 0, ipDay: 0 };
@@ -77,5 +77,15 @@ describe("clientIpFrom", () => {
   it("falls back to x-real-ip, then unknown", () => {
     expect(clientIpFrom(headers({ "x-real-ip": "198.51.100.2" }))).toBe("198.51.100.2");
     expect(clientIpFrom(headers({}))).toBe("unknown");
+  });
+});
+
+describe("canManageCommunity", () => {
+  it("lets captains run only their own community, and admins any", () => {
+    expect(canManageCommunity({ role: "CAPTAIN", communityId: "c1" }, "c1")).toBe(true);
+    expect(canManageCommunity({ role: "CAPTAIN", communityId: "c1" }, "c2")).toBe(false);
+    expect(canManageCommunity({ role: "RESIDENT", communityId: "c1" }, "c1")).toBe(false);
+    expect(canManageCommunity({ role: "VENDOR", communityId: null }, "c1")).toBe(false);
+    expect(canManageCommunity({ role: "ADMIN", communityId: null }, "c2")).toBe(true);
   });
 });

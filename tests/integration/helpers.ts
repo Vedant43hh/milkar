@@ -63,3 +63,53 @@ export async function makeServiceDay({ capacities }: { capacities: number[] }) {
   }
   return { communityId: community.id, flats: community.flats, userId: user.id, vendorId: vendor.id, serviceId: service.id, round, slots };
 }
+
+/** A community with `flats` flats, one resident in each, plus a captain in the first flat. */
+export async function makeNeighbourhood(code: string, flats: number) {
+  const numbers = Array.from({ length: flats }, (_, i) => ["A", String(101 + i)] as [string, string]);
+  const community = await makeCommunity(code, numbers);
+  const captain = await prisma.user.create({ data: { phone: nextPhone(), name: "Captain", role: "CAPTAIN", flatId: community.flats[0].id } });
+  const residents = [];
+  for (const flat of community.flats) residents.push(await prisma.user.create({ data: { phone: nextPhone(), name: `Resident ${flat.number}`, flatId: flat.id } }));
+  return { community, captain, residents, actor: { id: captain.id, role: "CAPTAIN" as const, communityId: community.id } };
+}
+
+/** One grocery product (₹500 / ₹465 / ₹440 rice) and one AC service with two time slots. */
+export async function makeCatalogue() {
+  const goods = await prisma.vendor.create({ data: { name: "Balaji", kind: "GOODS", phone: "+912024000001", city: "Pune" } });
+  const rice = await prisma.product.create({
+    data: {
+      vendorId: goods.id,
+      name: "Rice",
+      category: "GRAINS_FLOUR",
+      unit: "KG",
+      packSize: 5,
+      mrpPaise: 55000,
+      gstBps: 500,
+      minOrderQty: 10,
+      defaultMaxPerFlat: 4,
+      tiers: { create: [{ minQty: 1, vendorPricePaise: 46232 }, { minQty: 20, vendorPricePaise: 42996 }, { minQty: 50, vendorPricePaise: 40684 }] },
+    },
+  });
+  const services = await prisma.vendor.create({ data: { name: "CoolCare", kind: "SERVICES", phone: "+912024000013", city: "Pune" } });
+  const ac = await prisma.service.create({
+    data: {
+      vendorId: services.id,
+      category: "AC",
+      name: "AC servicing",
+      description: "Jet wash",
+      minFlats: 5,
+      noAccessFeePaise: 14900,
+      durationMinutes: 60,
+      gstBps: 1800,
+      options: {
+        create: [
+          { name: "Split AC", unitLabel: "unit", mrpPaise: 89900, maxPerFlat: 4, sortOrder: 0, tiers: { create: [{ minFlats: 1, vendorPricePaise: 57512 }, { minFlats: 5, vendorPricePaise: 45170 }] } },
+          { name: "Window AC", unitLabel: "unit", mrpPaise: 79900, maxPerFlat: 3, sortOrder: 1, tiers: { create: [{ minFlats: 1, vendorPricePaise: 49000 }] } },
+        ],
+      },
+      slotTemplates: { create: [{ startTime: "09:00", endTime: "11:00", technicians: 3 }, { startTime: "14:00", endTime: "16:00", technicians: 2 }] },
+    },
+  });
+  return { goods, rice, services, ac };
+}

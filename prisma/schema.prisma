@@ -473,6 +473,7 @@ model OrderRound {
   finalizedAt            DateTime?   @db.Timestamptz(3)
   completedAt            DateTime?   @db.Timestamptz(3)
   cancelledAt            DateTime?   @db.Timestamptz(3)
+  cancelReason           String? // shown to residents with their refund
   createdAt              DateTime    @default(now()) @db.Timestamptz(3)
 
   community           Community            @relation(fields: [communityId], references: [id])

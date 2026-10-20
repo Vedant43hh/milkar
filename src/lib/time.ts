@@ -26,6 +26,17 @@ export function utcToIstLocal(date: Date): string {
   return `${ist.getUTCFullYear()}-${pad(ist.getUTCMonth() + 1)}-${pad(ist.getUTCDate())}T${pad(ist.getUTCHours())}:${pad(ist.getUTCMinutes())}`;
 }
 
+/** The UTC instant an IST calendar day begins, from <input type="date"> ("2026-10-25"). */
+export function istDateToUtc(date: string): Date {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error(`Invalid date: "${date}"`);
+  return istLocalToUtc(`${date}T00:00`);
+}
+
+/** The IST calendar date of a UTC instant, formatted for <input type="date">. */
+export function utcToIstDate(date: Date): string {
+  return utcToIstLocal(date).slice(0, 10);
+}
+
 /** UTC instant at which the IST calendar month containing `now` began. */
 export function startOfIstMonth(now: Date): Date {
   const ist = new Date(now.getTime() + IST_OFFSET_MS);

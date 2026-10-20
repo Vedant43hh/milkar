@@ -46,7 +46,17 @@ npm run typecheck && npm run lint
 Tokens (colours for light and dark, radius, shadows, motion) live in `src/app/globals.css`; components in `src/components/ui/`; the app shells in `src/components/shell/`. Open **`/design`** (development or `DEMO_MODE=true`) for a living style guide of every component in both themes. Dark mode follows the system setting by default; residents can override it in the account menu.
 
 Integration tests refuse to run unless `TEST_DATABASE_URL` points at a database whose name contains `test`.
-Browser tests need Chromium once: `npx playwright install chromium`. They create a few throwaway users in the dev database; `npm run db:seed` resets it.
+Browser tests need Chromium once: `npx playwright install chromium`. They change the dev database (new users, rounds, a converted poll), so run `npm run db:seed` before each run of the suite.
+
+After a schema change (`prisma generate`), restart `npm run dev`: the dev server keeps its Prisma client across hot reloads.
+
+## Captain tools (`/captain`)
+
+- **Open a grocery round:** pick products (all ticked by default), the per-flat limit for each, the cutoff and delivery time. Prices are snapshotted from the catalogue when the round opens.
+- **Open a Service Day:** pick a vendor's service, up to three dates and the cutoff. Time slots come from the vendor's templates (capacity = technicians). "Repeat every week" makes next week's round open automatically at cutoff.
+- **Live dashboard** (`/captain/rounds/<id>`, refreshes every 30 seconds): flats, units and money collected; the items closest to a better price; slot load; recent orders. Share it on WhatsApp with an invite link that also lets new neighbours join; extend the cutoff, close orders now, or cancel with a reason. Cancelling refunds everyone exactly what they paid, to their wallet, under the same row lock checkout uses.
+- **Interest polls:** publish a poll (the threshold defaults to the service's minimum flats), publish or dismiss residents' suggestions, and open a pre-filled round in one tap once enough flats vote. Votes count once per flat; the captain is notified once when the threshold is crossed, and a double tap opens only one round.
+- Every round has a stable link, `/round/<id>`, used in notifications and invites.
 
 ## Login
 
@@ -79,5 +89,7 @@ Any 6-digit OTP works in mock mode.
 The seed (`prisma/seed-scenario.ts`) prices every order through the real engine, on one timeline, so wallets, tier unlocks, refunds and notifications agree. It includes two completed grocery rounds and one open round; a completed deep-cleaning Service Day (ratings, a complaint fixed by a free revisit, a no-access visit with the visit fee kept); an open AC Service Day at 14 flats (6 more unlock ₹400, some slots full); a weekly car wash with last week's slots held for 24 hours; and four interest polls. GST rates and GSTINs are illustrative samples.
 
 ## Database migrations
+
+`20261020090000_round_cancel_reason` adds the reason a captain gives when cancelling a round.
 
 `20261019090000_communities_services_polls` renames Society→Community, Supplier→Vendor, RoundProduct→RoundOffering, DeliveryIssue→OrderIssue and SupplierPurchaseOrder→VendorOrder with `ALTER … RENAME`, so existing data is kept; `prisma migrate diff` against the schema is empty afterwards.

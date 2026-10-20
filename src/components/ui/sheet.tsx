@@ -3,7 +3,6 @@
 import { X } from "lucide-react";
 import { useId, useRef, type ReactNode } from "react";
 import { t } from "@/i18n";
-import { cn } from "./cn";
 
 /**
  * Modal sheet on the native <dialog> element: a bottom sheet on phones, a centred dialog on
@@ -25,6 +24,7 @@ export function Sheet({
    */
   triggerLabel?: string;
   trigger: ReactNode;
+  /** Replaces the default round icon-button look, e.g. buttonClasses({ variant: "secondary" }). */
   triggerClassName?: string;
   children: ReactNode;
 }) {
@@ -37,7 +37,7 @@ export function Sheet({
         type="button"
         aria-haspopup="dialog"
         onClick={() => ref.current?.showModal()}
-        className={cn("inline-flex min-h-11 min-w-11 items-center justify-center rounded-full", triggerClassName)}
+        className={triggerClassName ?? "inline-flex min-h-11 min-w-11 items-center justify-center rounded-full"}
       >
         {trigger}
         {/* Hidden text rather than aria-label, so the accessible name always includes what's visible. */}

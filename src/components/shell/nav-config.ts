@@ -43,8 +43,8 @@ export type StaffArea = "captain" | "vendor" | "admin";
 export const STAFF_NAV: Record<StaffArea, NavItem[]> = {
   captain: [
     { href: "/captain", label: "nav.overview", icon: LayoutDashboard, exact: true },
-    { href: "/captain/rounds", label: "nav.rounds", icon: ClipboardList, soon: true },
-    { href: "/captain/polls", label: "nav.polls", icon: Megaphone, soon: true },
+    { href: "/captain/rounds", label: "nav.rounds", icon: ClipboardList },
+    { href: "/captain/polls", label: "nav.polls", icon: Megaphone },
     { href: "/captain/distribution", label: "nav.distribution", icon: Truck, soon: true },
     { href: "/captain/residents", label: "nav.residents", icon: Users, soon: true },
   ],

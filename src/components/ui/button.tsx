@@ -7,6 +7,7 @@ const variants = {
   primary: "bg-brand text-brand-fg hover:bg-brand-hover shadow-card",
   secondary: "border border-border-strong bg-surface text-fg hover:bg-surface-2",
   ghost: "text-brand hover:bg-brand-soft",
+  dangerGhost: "text-danger hover:bg-danger-soft",
   danger: "bg-danger text-white hover:opacity-90 dark:text-surface",
   accent: "bg-accent text-accent-fg hover:brightness-95 shadow-card",
 } as const;

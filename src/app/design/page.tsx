@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { PublicShell } from "@/components/shell/shells";
 import { ThemeToggle } from "@/components/theme";
 import { Badge, Chip } from "@/components/ui/badge";
-import { Button, IconButton } from "@/components/ui/button";
+import { Button, buttonClasses, IconButton } from "@/components/ui/button";
 import { Card, CardHeader, PageHeader } from "@/components/ui/card";
 import { Banner, EmptyState, ListRow, Price, Stat } from "@/components/ui/display";
 import { Field, Input, SegmentedControl, Select, Switch, Textarea } from "@/components/ui/form";
@@ -239,7 +239,7 @@ export default function DesignPage() {
           <Card>
             <TabsDemo />
           </Card>
-          <Sheet title="Choose a slot" trigger={<span className="px-4 text-sm font-medium text-brand">Open sheet</span>} triggerClassName="border border-border">
+          <Sheet title="Choose a slot" trigger="Open sheet" triggerClassName={buttonClasses({ variant: "secondary" })}>
             <p className="text-sm text-muted">Sheets slide up from the bottom on phones and appear centred on larger screens.</p>
           </Sheet>
         </Section>

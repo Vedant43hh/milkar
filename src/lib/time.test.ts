@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatIST, formatRemaining, istLocalToUtc, startOfIstDay, startOfIstMonth, utcToIstLocal } from "./time";
+import { formatIST, formatRemaining, istDateToUtc, istLocalToUtc, startOfIstDay, startOfIstMonth, utcToIstDate, utcToIstLocal } from "./time";
 
 describe("IST conversion", () => {
   it("converts IST wall-clock input to UTC", () => {
@@ -38,5 +38,18 @@ describe("IST conversion", () => {
     expect(formatIST(friday8pm, "time").toLowerCase()).toBe("8:00 pm");
     expect(formatIST(friday8pm, "date")).toBe("23 Oct 2026");
     expect(formatIST(friday8pm).toLowerCase()).toContain("fri");
+  });
+});
+
+describe("IST calendar dates", () => {
+  it("turns a date input into the start of that IST day, and back", () => {
+    expect(istDateToUtc("2026-10-25").toISOString()).toBe("2026-10-24T18:30:00.000Z");
+    expect(utcToIstDate(new Date("2026-10-24T18:30:00Z"))).toBe("2026-10-25");
+    expect(utcToIstDate(new Date("2026-10-24T18:29:59Z"))).toBe("2026-10-24");
+  });
+
+  it("rejects malformed and impossible dates", () => {
+    expect(() => istDateToUtc("25-10-2026")).toThrow();
+    expect(() => istDateToUtc("2026-02-30")).toThrow();
   });
 });

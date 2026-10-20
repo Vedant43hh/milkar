@@ -58,6 +58,11 @@ export function canAccess(user: HomeUser, area: Area): boolean {
   }
 }
 
+/** Who runs a community's rounds and polls: its captains, and platform admins. */
+export function canManageCommunity(user: { role: Role; communityId: string | null }, communityId: string): boolean {
+  return user.role === "ADMIN" || (user.role === "CAPTAIN" && user.communityId === communityId);
+}
+
 /** Only same-site paths are allowed as post-login destinations (no open redirects). */
 export function safeNextPath(next: string | null | undefined): string | null {
   if (!next || !next.startsWith("/") || next.startsWith("//") || next.includes("\\")) return null;
