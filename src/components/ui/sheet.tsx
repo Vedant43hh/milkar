@@ -1,8 +1,49 @@
 "use client";
 
 import { X } from "lucide-react";
-import { useId, useRef, type ReactNode } from "react";
-import { t } from "@/i18n";
+import { useEffect, useId, useRef, type ReactNode, type RefObject } from "react";
+import { tu } from "@/i18n/ui";
+
+const DIALOG =
+  "fixed inset-x-0 bottom-0 top-auto m-0 max-h-[85dvh] w-full max-w-none overflow-y-auto rounded-t-2xl border border-border bg-surface p-0 text-fg shadow-raised backdrop:bg-overlay open:animate-slide-up md:inset-0 md:m-auto md:max-w-md md:rounded-2xl";
+
+function Frame({ dialog, title, children, onClose }: { dialog: RefObject<HTMLDialogElement | null>; title: string; children: ReactNode; onClose?: () => void }) {
+  const titleId = useId();
+  // A modal dialog makes the rest of the document inert. If its page goes away (navigation, or
+  // Next keeping the page hidden for back/forward), close it so the next page stays usable.
+  useEffect(() => {
+    const element = dialog.current;
+    return () => element?.close();
+  }, [dialog]);
+  return (
+    <dialog
+      ref={dialog}
+      aria-labelledby={titleId}
+      onClose={onClose}
+      onClick={(e) => {
+        const target = e.target as HTMLElement;
+        // Backdrop click, or a link inside the sheet was followed.
+        if (target === dialog.current || target.closest("a[href]")) dialog.current?.close();
+      }}
+      className={DIALOG}
+    >
+      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-surface px-4 py-2">
+        <h2 id={titleId} className="font-semibold">
+          {title}
+        </h2>
+        <button
+          type="button"
+          onClick={() => dialog.current?.close()}
+          aria-label={tu("ui.close")}
+          className="inline-flex size-11 items-center justify-center rounded-full text-muted hover:bg-surface-2 hover:text-fg"
+        >
+          <X aria-hidden className="size-5" />
+        </button>
+      </div>
+      <div className="p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">{children}</div>
+    </dialog>
+  );
+}
 
 /**
  * Modal sheet on the native <dialog> element: a bottom sheet on phones, a centred dialog on
@@ -29,8 +70,6 @@ export function Sheet({
   children: ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
-  const titleId = useId();
-
   return (
     <>
       <button
@@ -43,31 +82,25 @@ export function Sheet({
         {/* Hidden text rather than aria-label, so the accessible name always includes what's visible. */}
         {triggerLabel && <span className="sr-only">{triggerLabel}</span>}
       </button>
-      <dialog
-        ref={ref}
-        aria-labelledby={titleId}
-        onClick={(e) => {
-          const target = e.target as HTMLElement;
-          // Backdrop click, or a link inside the sheet was followed.
-          if (target === ref.current || target.closest("a[href]")) ref.current?.close();
-        }}
-        className="fixed inset-x-0 bottom-0 top-auto m-0 max-h-[85dvh] w-full max-w-none overflow-y-auto rounded-t-2xl border border-border bg-surface p-0 text-fg shadow-raised backdrop:bg-overlay open:animate-slide-up md:inset-0 md:m-auto md:max-w-md md:rounded-2xl"
-      >
-        <div className="sticky top-0 flex items-center justify-between border-b border-border bg-surface px-4 py-2">
-          <h2 id={titleId} className="font-semibold">
-            {title}
-          </h2>
-          <button
-            type="button"
-            onClick={() => ref.current?.close()}
-            aria-label={t("common.close")}
-            className="inline-flex size-11 items-center justify-center rounded-full text-muted hover:bg-surface-2 hover:text-fg"
-          >
-            <X aria-hidden className="size-5" />
-          </button>
-        </div>
-        <div className="p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">{children}</div>
-      </dialog>
+      <Frame dialog={ref} title={title}>
+        {children}
+      </Frame>
     </>
+  );
+}
+
+/** The same sheet, opened and closed by its parent (e.g. after fetching what it shows). */
+export function SheetDialog({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: ReactNode }) {
+  const ref = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const dialog = ref.current;
+    if (!dialog) return;
+    if (open && !dialog.open) dialog.showModal();
+    if (!open && dialog.open) dialog.close();
+  }, [open]);
+  return (
+    <Frame dialog={ref} title={title} onClose={onClose}>
+      {children}
+    </Frame>
   );
 }

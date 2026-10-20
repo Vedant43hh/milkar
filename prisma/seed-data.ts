@@ -335,7 +335,7 @@ export const ROUNDS = {
   open: {
     title: "This week's group drive",
     totals: {
-      rice: 42, basmati: 12, atta: 14, toor: 17, moong: 9, chana: 21, masoor: 6, besan: 11, sunflower: 20,
+      rice: 49, basmati: 12, atta: 14, toor: 17, moong: 9, chana: 21, masoor: 6, besan: 11, sunflower: 20,
       mustard: 8, groundnut: 13, sugar: 23, jaggery: 7, salt: 26, tea: 13, coffee: 5, poha: 16, rava: 10,
       turmeric: 15, chilli: 9, detergent: 6, dishwash: 18, floor: 7, toilet: 5, soap: 12, eggs: 31,
     },

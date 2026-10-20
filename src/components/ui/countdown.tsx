@@ -1,7 +1,7 @@
 "use client";
 
 import { Clock } from "lucide-react";
-import { t } from "@/i18n";
+import { tu } from "@/i18n/ui";
 import { formatIST, formatRemaining } from "@/lib/time";
 import { cn } from "./cn";
 import { useNow } from "./use-now";
@@ -17,10 +17,10 @@ export function Countdown({ to, prefix, className }: { to: string; prefix?: stri
   const urgent = left !== null && left > 0 && left < 3 * 3_600_000;
   const label =
     left === null
-      ? `${prefix ?? t("countdown.closes")} ${formatIST(new Date(target))}`
+      ? `${prefix ?? tu("countdown.closes")} ${formatIST(new Date(target))}`
       : left <= 0
-        ? t("countdown.closed")
-        : `${prefix ?? t("countdown.closesIn")} ${formatRemaining(left)}`;
+        ? tu("countdown.closed")
+        : `${prefix ?? tu("countdown.closesIn")} ${formatRemaining(left)}`;
 
   return (
     <time dateTime={to} className={cn("inline-flex items-center gap-1 tabular-nums", urgent ? "font-medium text-danger" : "text-muted", className)}>

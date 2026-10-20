@@ -6,15 +6,16 @@ import { demoLogin } from "./helpers";
 
 test("the bell shows unread notifications, and opening one marks it read", async ({ page }) => {
   await demoLogin(page, "Rahul Deshmukh");
-  const bell = page.getByRole("link", { name: /^Notifications, \d+ unread$/ });
+  const bell = page.getByRole("link", { name: /^Notifications, (\d|9\+) unread$/ });
   await expect(bell).toBeVisible();
-  const before = Number((await bell.getAttribute("aria-label"))?.match(/(\d+) unread/)?.[1]);
-  expect(before).toBeGreaterThan(0);
 
   await bell.click();
   await expect(page).toHaveURL("/notifications");
   await expect(page.getByRole("heading", { level: 1, name: "Notifications" })).toBeVisible();
-  await expect(page.getByText(`${before} unread`, { exact: true })).toBeVisible();
+  // The centre shows the exact count (the bell caps at 9+).
+  const subtitle = page.getByText(/^\d+ unread$/);
+  const before = Number((await subtitle.textContent())?.match(/(\d+) unread/)?.[1]);
+  expect(before).toBeGreaterThan(0);
 
   // The newest unread one opens its page and stops counting as unread.
   const unread = page.getByRole("listitem").filter({ hasText: "Unread" });

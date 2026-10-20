@@ -2,7 +2,7 @@
 
 import { Monitor, Moon, Sun } from "lucide-react";
 import { useSyncExternalStore } from "react";
-import { t } from "@/i18n";
+import { tu } from "@/i18n/ui";
 import { SegmentedControl } from "./ui/form";
 
 export type ThemeChoice = "system" | "light" | "dark";
@@ -50,13 +50,13 @@ export function ThemeToggle() {
   return (
     <SegmentedControl<ThemeChoice>
       name="theme"
-      label={t("theme.label")}
+      label={tu("theme.label")}
       value={choice}
       onChange={change}
       options={[
-        { value: "system", label: <><Monitor aria-hidden className="size-4" />{t("theme.system")}</> },
-        { value: "light", label: <><Sun aria-hidden className="size-4" />{t("theme.light")}</> },
-        { value: "dark", label: <><Moon aria-hidden className="size-4" />{t("theme.dark")}</> },
+        { value: "system", label: <><Monitor aria-hidden className="size-4" />{tu("theme.system")}</> },
+        { value: "light", label: <><Sun aria-hidden className="size-4" />{tu("theme.light")}</> },
+        { value: "dark", label: <><Moon aria-hidden className="size-4" />{tu("theme.dark")}</> },
       ]}
     />
   );

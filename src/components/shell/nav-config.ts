@@ -18,11 +18,11 @@ import {
   ChartColumn,
   type LucideIcon,
 } from "lucide-react";
-import type { MessageKey } from "@/i18n";
+import type { UiKey } from "@/i18n/ui";
 
 export type NavItem = {
   href: string;
-  label: MessageKey;
+  label: UiKey;
   icon: LucideIcon;
   /** Not built yet: shown greyed out with a "Soon" badge. */
   soon?: boolean;

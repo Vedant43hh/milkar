@@ -27,10 +27,12 @@ async function CommunityName() {
 }
 
 function BellLink({ href, count }: { href: string; count: number }) {
+  // The label uses the same number the badge shows ("9+"), so the visible text is part of the name.
+  const shown = count > 9 ? "9+" : String(count);
   return (
     <Link
       href={href}
-      aria-label={count > 0 ? t("notifications.bellUnread", { n: count }) : t("notifications.bell")}
+      aria-label={count > 0 ? t("notifications.bellUnread", { n: shown }) : t("notifications.bell")}
       className="relative inline-flex size-11 items-center justify-center rounded-full text-muted transition-colors hover:bg-surface-2 hover:text-fg"
     >
       <Bell aria-hidden className="size-5" />
@@ -40,7 +42,7 @@ function BellLink({ href, count }: { href: string; count: number }) {
           data-testid="unread-badge"
           className="absolute top-1.5 right-1.5 flex h-4.5 min-w-4.5 animate-pop items-center justify-center rounded-full bg-danger px-1 text-[0.65rem] leading-none font-bold text-white ring-2 ring-surface dark:text-surface"
         >
-          {count > 9 ? "9+" : count}
+          {shown}
         </span>
       )}
     </Link>

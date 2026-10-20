@@ -50,6 +50,16 @@ Browser tests need Chromium once: `npx playwright install chromium`. They change
 
 After a schema change (`prisma generate`), restart `npm run dev`: the dev server keeps its Prisma client across hot reloads.
 
+**Translations and the browser bundle:** `src/i18n/en.ts` holds every string, and server code uses `t()`. Client components must not import it; they use `tu()` with the small shared dictionary in `src/i18n/en-ui.ts` (navigation, timers, prices, meters…), or receive text from the server (a namespace such as `messages().shop` as a prop, or already-translated action results). `src/i18n/client-boundary.test.ts` fails if anything a client component imports reaches the full dictionary.
+
+## Residents
+
+- **Groceries** (`/groceries`): every product with its price now, MRP, the per-flat limit and a live meter. Steppers change the cart instantly and the meter previews the community total with your change; **Review** asks the server for an exact price. Reductions and cancellations work until the freeze (12 hours before cutoff), additions until the cutoff.
+- **Checkout:** if the wallet covers the change (or it only removes units) it is applied at once. Otherwise you pay the rest: on the built-in **test UPI screen** (`/pay/<id>`, pay or cancel, nothing is charged), or with **Razorpay in test mode** when `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET` are set (UPI shown first; the signature is verified on the server). A payment holds its price for 15 minutes. When the money arrives, everything is re-checked under the round lock and a per-resident wallet lock; if the order changed meanwhile (another tab, a family member hit the limit, the freeze started, the round closed or was cancelled), the money goes to the wallet instead.
+- **Price unlocks:** the order that takes a product into a better tier shows a celebration, and everyone holding that product is notified once.
+- **Polls** (`/polls`): "I'd join this" (one vote per flat, updated instantly), and **Suggest something** for the captain (up to 3 waiting).
+- **Home:** open rounds with countdowns, the nearest price unlock and your stake; money saved this month compared with MRP; wallet balance; upcoming visits with their completion code; a held weekly slot to confirm; the polls closest to their threshold.
+
 ## Captain tools (`/captain`)
 
 - **Open a grocery round:** pick products (all ticked by default), the per-flat limit for each, the cutoff and delivery time. Prices are snapshotted from the catalogue when the round opens.

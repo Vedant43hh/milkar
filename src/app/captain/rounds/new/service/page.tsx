@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, PageHeader } from "@/components/ui/card";
 import { PageSkeleton } from "@/components/ui/skeleton";
-import { t } from "@/i18n";
+import { messages, t } from "@/i18n";
 import { requireArea } from "@/lib/auth/current-user";
 import { defaultRoundDates } from "@/lib/polls";
 import { unitWordsFor } from "@/lib/rounds";
@@ -119,6 +119,7 @@ async function NewServiceRound({ searchParams }: { searchParams: PageProps<"/cap
         </p>
       </Card>
       <ServiceRoundForm
+        text={messages().captain}
         serviceId={chosen.id}
         defaults={{
           title: t("captain.form.serviceTitle", { service: chosen.name }),

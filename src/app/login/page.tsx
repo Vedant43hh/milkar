@@ -6,7 +6,7 @@ import { PublicShell } from "@/components/shell/shells";
 import { Card } from "@/components/ui/card";
 import { Banner } from "@/components/ui/display";
 import { Skeleton } from "@/components/ui/skeleton";
-import { t } from "@/i18n";
+import { messages, t } from "@/i18n";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { homePathFor, safeNextPath } from "@/lib/auth/rules";
 import { DEMO_USER_KEYS, DEMO_USERS, demoUserContext } from "@/lib/demo";
@@ -50,7 +50,7 @@ async function LoginSection({ searchParams }: { searchParams: PageProps<"/login"
         </Banner>
       )}
       <Card>
-        <LoginForm next={next} mockOtp={env.OTP_MODE === "mock"} />
+        <LoginForm next={next} mockOtp={env.OTP_MODE === "mock"} text={messages().auth} />
       </Card>
       {env.DEMO_MODE && <DemoLogins next={next} />}
     </div>

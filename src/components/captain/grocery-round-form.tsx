@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Field, Input, Switch } from "@/components/ui/form";
 import { FormErrors } from "@/components/ui/form-errors";
-import { t } from "@/i18n";
+import type { Messages } from "@/i18n";
+import { interpolate } from "@/i18n/interpolate";
 import { createGroceryRoundAction, type FormState } from "@/server/actions/captain";
 
 export type ProductChoice = {
@@ -20,7 +21,15 @@ export type ProductChoice = {
 
 export type ProductGroup = { label: string; products: ProductChoice[] };
 
-export function GroceryRoundForm({ groups, defaults }: { groups: ProductGroup[]; defaults: { title: string; cutoffAt: string; deliveryAt: string } }) {
+export function GroceryRoundForm({
+  groups,
+  defaults,
+  text,
+}: {
+  groups: ProductGroup[];
+  defaults: { title: string; cutoffAt: string; deliveryAt: string };
+  text: Messages["captain"];
+}) {
   const [state, formAction, pending] = useActionState(createGroceryRoundAction, {} as FormState);
   const values = state.values;
   const checked = state.checked ? new Set(state.checked) : null;
@@ -29,26 +38,26 @@ export function GroceryRoundForm({ groups, defaults }: { groups: ProductGroup[];
     <form action={formAction} className="space-y-5">
       <FormErrors errors={state.errors} />
       <Card className="space-y-4">
-        <Field id="title" label={t("captain.form.title")}>
-          {(aria) => <Input {...aria} name="title" required minLength={3} maxLength={80} placeholder={t("captain.form.groceryTitlePlaceholder")} defaultValue={values?.title ?? defaults.title} />}
+        <Field id="title" label={text.form.title}>
+          {(aria) => <Input {...aria} name="title" required minLength={3} maxLength={80} placeholder={text.form.groceryTitlePlaceholder} defaultValue={values?.title ?? defaults.title} />}
         </Field>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field id="cutoffAt" label={t("captain.form.cutoff")} hint={t("captain.form.cutoffHint")}>
+          <Field id="cutoffAt" label={text.form.cutoff} hint={text.form.cutoffHint}>
             {(aria) => <Input {...aria} type="datetime-local" name="cutoffAt" required defaultValue={values?.cutoffAt ?? defaults.cutoffAt} />}
           </Field>
-          <Field id="deliveryAt" label={t("captain.form.delivery")} hint={t("captain.form.deliveryHint")}>
+          <Field id="deliveryAt" label={text.form.delivery} hint={text.form.deliveryHint}>
             {(aria) => <Input {...aria} type="datetime-local" name="deliveryAt" required defaultValue={values?.deliveryAt ?? defaults.deliveryAt} />}
           </Field>
         </div>
-        <Switch name="requirePickupCode" label={t("captain.form.pickupCode")} defaultChecked={values ? values.requirePickupCode === "on" : true} />
+        <Switch name="requirePickupCode" label={text.form.pickupCode} defaultChecked={values ? values.requirePickupCode === "on" : true} />
       </Card>
 
       <section aria-labelledby="products-heading" className="space-y-3">
         <div>
           <h2 id="products-heading" className="text-base font-semibold">
-            {t("captain.form.products")}
+            {text.form.products}
           </h2>
-          <p className="text-sm text-muted">{t("captain.form.productsHint")}</p>
+          <p className="text-sm text-muted">{text.form.productsHint}</p>
         </div>
         {groups.map((group) => (
           <fieldset key={group.label} className="rounded-card border border-border bg-surface">
@@ -80,11 +89,11 @@ export function GroceryRoundForm({ groups, defaults }: { groups: ProductGroup[];
                       max={50}
                       inputMode="numeric"
                       defaultValue={values?.[`cap:${p.id}`] ?? p.defaultCap}
-                      aria-label={t("captain.form.capFor", { product: p.name })}
+                      aria-label={interpolate(text.form.capFor, { product: p.name })}
                       className="w-16 px-2 text-center"
                     />
                     <span aria-hidden className="mt-0.5 text-[0.65rem] text-subtle">
-                      {t("captain.form.perFlat")}
+                      {text.form.perFlat}
                     </span>
                   </span>
                 </li>
@@ -95,7 +104,7 @@ export function GroceryRoundForm({ groups, defaults }: { groups: ProductGroup[];
       </section>
 
       <Button block loading={pending}>
-        {t("captain.form.submitGrocery")}
+        {text.form.submitGrocery}
       </Button>
     </form>
   );

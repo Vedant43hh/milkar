@@ -593,7 +593,10 @@ export class SeedWorld {
   }
 }
 
-/** Spreads each product's community total across participants, respecting per-flat caps. */
+/**
+ * Spreads each product's community total across participants, respecting per-flat caps.
+ * `exclude` keeps a product away from some flats ("<flatId>:<product key>").
+ */
 export function planGroceryEvents(
   world: SeedWorld,
   round: SimRound,
@@ -601,6 +604,7 @@ export function planGroceryEvents(
   totals: Record<string, number>,
   from: Date,
   to: Date,
+  exclude: ReadonlySet<string> = new Set(),
 ): OrderEvent[] {
   const { random } = world;
   const alloc = new Map<string, Map<string, number>>();
@@ -611,7 +615,7 @@ export function planGroceryEvents(
       let progressed = false;
       for (const p of random.shuffle(participants)) {
         if (remaining === 0) break;
-        if (random.chance(0.3)) continue;
+        if (random.chance(0.3) || exclude.has(`${p.flatId}:${o.key}`)) continue;
         const flatKey = `${p.flatId}:${o.id}`;
         const room = o.maxQtyPerFlat - (flatUsed.get(flatKey) ?? 0);
         if (room <= 0) continue;
@@ -623,7 +627,7 @@ export function planGroceryEvents(
         remaining -= q;
         progressed = true;
       }
-      if (!progressed && participants.every((p) => (flatUsed.get(`${p.flatId}:${o.id}`) ?? 0) >= o.maxQtyPerFlat)) {
+      if (!progressed && participants.every((p) => exclude.has(`${p.flatId}:${o.key}`) || (flatUsed.get(`${p.flatId}:${o.id}`) ?? 0) >= o.maxQtyPerFlat)) {
         throw new Error(`Cannot place ${totals[o.key]} of ${o.key} within per-flat caps`);
       }
     }

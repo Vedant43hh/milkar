@@ -8,7 +8,7 @@ import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Banner } from "@/components/ui/display";
 import { PageSkeleton } from "@/components/ui/skeleton";
-import { t } from "@/i18n";
+import { messages, t } from "@/i18n";
 import { getCurrentUser, loginPath } from "@/lib/auth/current-user";
 import { getCommunityInvite } from "@/server/auth";
 import { JoinForm } from "./join-form";
@@ -94,6 +94,7 @@ async function Invite({ params, searchParams }: Pick<PageProps<"/join/[code]">, 
           blockLabel={community.blockLabel}
           unitLabel={community.unitLabel}
           flats={community.flats}
+          text={messages().join}
         />
       </Card>
     </>

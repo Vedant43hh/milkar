@@ -2,7 +2,6 @@
 
 import { useActionState, useRef, type ComponentProps, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
-import { t } from "@/i18n";
 import type { ActionResult } from "@/lib/action-result";
 import { Button } from "./button";
 import { useToast } from "./toast";
@@ -24,7 +23,7 @@ export function ActionForm({
   const form = useRef<HTMLFormElement>(null);
   const [, formAction] = useActionState(async (prev: ActionResult, formData: FormData) => {
     const result = await action(prev, formData);
-    if (result.message) toast({ tone: result.ok ? "success" : "error", title: t(result.message, result.vars) });
+    if (result.message) toast({ tone: result.ok ? "success" : "error", title: result.message });
     if (result.ok) form.current?.closest("dialog")?.close();
     return result;
   }, { ok: true });

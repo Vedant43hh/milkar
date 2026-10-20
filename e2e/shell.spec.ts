@@ -78,6 +78,8 @@ const PAGES: [path: string, user: string | null][] = [
   ["/", "Rahul Deshmukh"],
   ["/groceries", "Rahul Deshmukh"],
   ["/notifications", "Rahul Deshmukh"],
+  ["/polls", "Rahul Deshmukh"],
+  ["/polls/suggest", "Rahul Deshmukh"],
   ["/captain", "Sunita Kulkarni"],
   ["/captain/rounds", "Sunita Kulkarni"],
   ["/captain/polls", "Sunita Kulkarni"],

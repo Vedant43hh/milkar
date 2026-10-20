@@ -5,17 +5,18 @@ import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Banner } from "@/components/ui/display";
 import { Input, Label } from "@/components/ui/form";
-import { t } from "@/i18n";
+import type { Messages } from "@/i18n";
+import { interpolate } from "@/i18n/interpolate";
 import { maskPhone } from "@/lib/phone";
 import { loginAction, type LoginState } from "@/server/actions/auth";
 
 const initialState: LoginState = { step: "phone" };
 
-export function LoginForm({ next, mockOtp }: { next: string | null; mockOtp: boolean }) {
+export function LoginForm({ next, mockOtp, text }: { next: string | null; mockOtp: boolean; text: Messages["auth"] }) {
   const [state, formAction, pending] = useActionState(loginAction, initialState);
   const error = state.error && (
     <Banner tone="danger" role="alert" icon={<CircleAlert aria-hidden className="size-4" />}>
-      {t(state.error.key, state.error.vars)}
+      {state.error}
     </Banner>
   );
 
@@ -25,7 +26,7 @@ export function LoginForm({ next, mockOtp }: { next: string | null; mockOtp: boo
       {state.step === "phone" || !state.phone ? (
         <>
           <div>
-            <Label htmlFor="phone">{t("auth.phoneLabel")}</Label>
+            <Label htmlFor="phone">{text.phoneLabel}</Label>
             <div className="flex items-stretch gap-2">
               <span className="flex min-h-11 items-center rounded-control border border-border-strong bg-surface-2 px-3 text-muted">+91</span>
               <Input
@@ -34,7 +35,7 @@ export function LoginForm({ next, mockOtp }: { next: string | null; mockOtp: boo
                 type="tel"
                 inputMode="numeric"
                 autoComplete="tel-national"
-                placeholder={t("auth.phonePlaceholder")}
+                placeholder={text.phonePlaceholder}
                 defaultValue={state.phoneInput}
                 aria-invalid={state.error ? true : undefined}
                 required
@@ -44,15 +45,15 @@ export function LoginForm({ next, mockOtp }: { next: string | null; mockOtp: boo
           </div>
           {error}
           <Button name="intent" value="request" block loading={pending}>
-            {t("auth.sendCode")}
+            {text.sendCode}
           </Button>
         </>
       ) : (
         <>
           <input type="hidden" name="phone" value={state.phone} />
-          <p className="text-sm text-muted">{t("auth.codeSentTo", { phone: maskPhone(state.phone) })}</p>
+          <p className="text-sm text-muted">{interpolate(text.codeSentTo, { phone: maskPhone(state.phone) })}</p>
           <div>
-            <Label htmlFor="code">{t("auth.codeLabel")}</Label>
+            <Label htmlFor="code">{text.codeLabel}</Label>
             <Input
               id="code"
               name="code"
@@ -68,19 +69,19 @@ export function LoginForm({ next, mockOtp }: { next: string | null; mockOtp: boo
           </div>
           {mockOtp && (
             <Banner tone="accent" icon={<FlaskConical aria-hidden className="size-4" />}>
-              {t("auth.mockHint")}
+              {text.mockHint}
             </Banner>
           )}
           {error}
           <Button name="intent" value="verify" block loading={pending}>
-            {t("auth.verify")}
+            {text.verify}
           </Button>
           <div className="flex justify-between gap-2">
             <Button variant="ghost" size="sm" name="intent" value="request" formNoValidate disabled={pending}>
-              {t("auth.resend")}
+              {text.resend}
             </Button>
             <Button variant="ghost" size="sm" name="intent" value="change" formNoValidate disabled={pending}>
-              {t("auth.changeNumber")}
+              {text.changeNumber}
             </Button>
           </div>
         </>

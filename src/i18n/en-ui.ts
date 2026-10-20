@@ -1,0 +1,73 @@
+// Strings for shared interface pieces that also run in the browser (navigation, theme, timers,
+// steppers, prices, price meters, sharing). Client components may import only this file, through
+// `tu` in ./ui.ts, so the full dictionary never ships to the browser. Keep it small.
+
+export const enUi = {
+  ui: {
+    loading: "Loading…",
+    close: "Close",
+    dismiss: "Dismiss",
+    soon: "Soon",
+  },
+  nav: {
+    main: "Main",
+    home: "Home",
+    groceries: "Groceries",
+    services: "Services",
+    orders: "Orders",
+    wallet: "Wallet",
+    notifications: "Notifications",
+    captain: "Captain tools",
+    residentApp: "Resident app",
+    overview: "Overview",
+    rounds: "Rounds",
+    polls: "Interest polls",
+    distribution: "Distribution",
+    residents: "Residents",
+    vendorOrders: "Orders",
+    schedule: "Schedule",
+    catalogue: "Catalogue",
+    profile: "Profile",
+    communities: "Communities",
+    vendors: "Vendors",
+    settings: "Settings",
+    stats: "Stats",
+  },
+  theme: {
+    label: "Theme",
+    system: "System",
+    light: "Light",
+    dark: "Dark",
+  },
+  countdown: {
+    closes: "Closes",
+    closesIn: "Closes in",
+    closed: "Closed",
+  },
+  stepper: {
+    add: "Add {item}",
+    addShort: "Add",
+    increase: "One more {item}",
+    decrease: "One less {item}",
+  },
+  price: {
+    mrp: "MRP",
+  },
+  share: {
+    groceryIntro: "🛒 {round} is open for {community} on Milkar. The more we order together, the less everyone pays.",
+    serviceIntro: "🧰 {round} is open for {community} on Milkar. The more flats book, the less everyone pays.",
+    cutoff: "Closes {cutoff}.",
+    unlock: "Just {n} more {unit} to unlock {price} for {item}!",
+    whatsapp: "Share on WhatsApp",
+    copy: "Copy invite link",
+    copied: "Invite link copied",
+  },
+  meter: {
+    unlock: "{n} more {unit} to unlock {price}!",
+    qualify: "Needs {n} more {unit} to start",
+    best: "Best price unlocked",
+    joined: "{n} {unit} so far",
+    step: "{qty} · {price}",
+    ladder: "Price tiers",
+  },
+} as const;

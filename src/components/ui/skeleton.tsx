@@ -1,4 +1,4 @@
-import { t } from "@/i18n";
+import { tu } from "@/i18n/ui";
 import { cn } from "./cn";
 
 export function Skeleton({ className }: { className?: string }) {
@@ -8,7 +8,7 @@ export function Skeleton({ className }: { className?: string }) {
 /** Placeholder for a page while its data streams in. */
 export function PageSkeleton({ cards = 3 }: { cards?: number }) {
   return (
-    <div role="status" aria-label={t("common.loading")} className="space-y-4">
+    <div role="status" aria-label={tu("ui.loading")} className="space-y-4">
       <Skeleton className="h-8 w-2/3" />
       <Skeleton className="h-4 w-1/2" />
       {Array.from({ length: cards }, (_, i) => (
@@ -24,7 +24,7 @@ export function PageSkeleton({ cards = 3 }: { cards?: number }) {
 
 export function ListSkeleton({ rows = 4 }: { rows?: number }) {
   return (
-    <div role="status" aria-label={t("common.loading")} className="divide-y divide-border rounded-card border border-border bg-surface">
+    <div role="status" aria-label={tu("ui.loading")} className="divide-y divide-border rounded-card border border-border bg-surface">
       {Array.from({ length: rows }, (_, i) => (
         <div key={i} className="flex items-center gap-3 p-4">
           <Skeleton className="size-10 rounded-full" />

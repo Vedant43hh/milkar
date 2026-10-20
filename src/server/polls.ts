@@ -249,3 +249,30 @@ export async function listCommunityPolls(communityId: string) {
 }
 
 export type CaptainPoll = Awaited<ReturnType<typeof listCommunityPolls>>[number];
+
+/** Polls residents can see, with whether their flat has voted. Newest first. */
+export async function listResidentPolls(communityId: string, flatId: string) {
+  const polls = await prisma.interestPoll.findMany({
+    where: { communityId, status: { in: ["OPEN", "CONVERTED"] } },
+    orderBy: [{ createdAt: "desc" }],
+    include: {
+      _count: { select: { votes: true } },
+      votes: { where: { flatId }, select: { id: true } },
+      service: { select: { name: true, vendor: { select: { name: true } } } },
+      product: { select: { name: true } },
+      convertedRound: { select: { id: true, status: true } },
+    },
+  });
+  return polls.map(({ votes, ...poll }) => ({ ...poll, voted: votes.length > 0 }));
+}
+
+export type ResidentPoll = Awaited<ReturnType<typeof listResidentPolls>>[number];
+
+/** What this resident suggested, and what became of it. */
+export async function listMySuggestions(userId: string) {
+  return prisma.interestPoll.findMany({
+    where: { suggestedById: userId },
+    orderBy: { createdAt: "desc" },
+    select: { id: true, title: true, status: true, createdAt: true },
+  });
+}

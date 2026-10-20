@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import type { ReactNode } from "react";
-import { t } from "@/i18n";
+import { tu } from "@/i18n/ui";
 import { formatINR } from "@/lib/pricing/money";
 import { cn } from "./cn";
 
@@ -14,7 +14,7 @@ export function Price({ paise, mrpPaise, size = "md", suffix }: { paise: number;
       {suffix && <span className="text-xs text-muted">{suffix}</span>}
       {showMrp && (
         <span className="text-xs text-subtle tabular-nums">
-          <span className="sr-only">{t("price.mrp")} </span>
+          <span className="sr-only">{tu("price.mrp")} </span>
           <s>{formatINR(mrpPaise)}</s>
         </span>
       )}
@@ -100,7 +100,7 @@ export function Banner({
         {title && <p className="font-semibold">{title}</p>}
         {children && <div className={title ? "mt-0.5" : undefined}>{children}</div>}
       </div>
-      {action}
+      {action && <div className="shrink-0 self-center">{action}</div>}
     </div>
   );
 }

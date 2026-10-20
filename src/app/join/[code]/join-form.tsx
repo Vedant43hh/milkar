@@ -5,7 +5,8 @@ import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Banner } from "@/components/ui/display";
 import { Input, Label, Select } from "@/components/ui/form";
-import { t } from "@/i18n";
+import type { Messages } from "@/i18n";
+import { interpolate } from "@/i18n/interpolate";
 import { joinAction, type JoinState } from "@/server/actions/auth";
 
 type Flat = { id: string; tower: string; number: string };
@@ -20,9 +21,10 @@ type JoinFormProps = {
   blockLabel: string;
   unitLabel: string;
   flats: Flat[];
+  text: Messages["join"];
 };
 
-export function JoinForm({ code, round, communityName, blockLabel, unitLabel, flats }: JoinFormProps) {
+export function JoinForm({ code, round, communityName, blockLabel, unitLabel, flats, text }: JoinFormProps) {
   const [state, formAction, pending] = useActionState(joinAction, {} as JoinState);
   const [tower, setTower] = useState("");
   const towers = [...new Set(flats.map((f) => f.tower))].sort(natural.compare);
@@ -33,14 +35,14 @@ export function JoinForm({ code, round, communityName, blockLabel, unitLabel, fl
       <input type="hidden" name="code" value={code} />
       <input type="hidden" name="round" value={round ?? ""} />
       <div>
-        <Label htmlFor="name">{t("join.nameLabel")}</Label>
-        <Input id="name" name="name" autoComplete="name" placeholder={t("join.namePlaceholder")} defaultValue={state.name} required minLength={2} maxLength={60} />
+        <Label htmlFor="name">{text.nameLabel}</Label>
+        <Input id="name" name="name" autoComplete="name" placeholder={text.namePlaceholder} defaultValue={state.name} required minLength={2} maxLength={60} />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
           <Label htmlFor="tower">{blockLabel}</Label>
           <Select id="tower" value={tower} onChange={(e) => setTower(e.target.value)} required>
-            <option value="">{t("join.choose", { thing: blockLabel.toLowerCase() })}</option>
+            <option value="">{interpolate(text.choose, { thing: blockLabel.toLowerCase() })}</option>
             {towers.map((name) => (
               <option key={name} value={name}>
                 {name}
@@ -49,9 +51,9 @@ export function JoinForm({ code, round, communityName, blockLabel, unitLabel, fl
           </Select>
         </div>
         <div>
-          <Label htmlFor="flatId">{t("join.unitNumber", { unit: unitLabel })}</Label>
+          <Label htmlFor="flatId">{interpolate(text.unitNumber, { unit: unitLabel })}</Label>
           <Select id="flatId" name="flatId" key={tower} defaultValue="" required disabled={!tower}>
-            <option value="">{t("join.choose", { thing: unitLabel.toLowerCase() })}</option>
+            <option value="">{interpolate(text.choose, { thing: unitLabel.toLowerCase() })}</option>
             {towerFlats.map((f) => (
               <option key={f.id} value={f.id}>
                 {f.number}
@@ -62,11 +64,11 @@ export function JoinForm({ code, round, communityName, blockLabel, unitLabel, fl
       </div>
       {state.error && (
         <Banner tone="danger" role="alert" icon={<CircleAlert aria-hidden className="size-4" />}>
-          {t(state.error.key, state.error.vars)}
+          {state.error}
         </Banner>
       )}
       <Button block loading={pending}>
-        {t("join.submit", { community: communityName })}
+        {interpolate(text.submit, { community: communityName })}
       </Button>
     </form>
   );

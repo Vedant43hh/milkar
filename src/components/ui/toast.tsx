@@ -3,8 +3,9 @@
 import { CircleAlert, CircleCheck, Info, PartyPopper, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import { t, type MessageKey } from "@/i18n";
+import { tu } from "@/i18n/ui";
 import { FLASH_COOKIE, parseFlash } from "@/lib/flash-shared";
+import { Celebration } from "./celebrate";
 import { cn } from "./cn";
 
 export type ToastTone = "success" | "error" | "info" | "celebrate";
@@ -27,11 +28,18 @@ const icons = {
 /** Toast stack shown above the bottom tab bar. */
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
+  // A celebrate toast (a price unlock) gets the confetti overlay instead of a toast card.
+  const [celebration, setCelebration] = useState<string | null>(null);
+  const endCelebration = useCallback(() => setCelebration(null), []);
   const nextId = useRef(1);
 
   const dismiss = useCallback((id: number) => setToasts((list) => list.filter((item) => item.id !== id)), []);
   const push = useCallback<PushToast>(
     (toast) => {
+      if (toast.tone === "celebrate") {
+        setCelebration(toast.title);
+        return;
+      }
       const id = nextId.current++;
       setToasts((list) => [...list.slice(-2), { ...toast, id }]);
       setTimeout(() => dismiss(id), toast.tone === "error" ? 6000 : 4000);
@@ -42,6 +50,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext value={push}>
       {children}
+      {celebration && <Celebration message={celebration} onDone={endCelebration} />}
       <div
         role="status"
         aria-live="polite"
@@ -63,7 +72,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <button
               type="button"
               onClick={() => dismiss(toast.id)}
-              aria-label={t("common.dismiss")}
+              aria-label={tu("ui.dismiss")}
               className="-m-2 inline-flex size-11 shrink-0 items-center justify-center rounded-full text-subtle hover:text-fg"
             >
               <X aria-hidden className="size-4" />
@@ -89,7 +98,7 @@ export function FlashToasts() {
     if (!raw) return;
     document.cookie = `${FLASH_COOKIE}=; Max-Age=0; Path=/`;
     const flash = parseFlash(decodeURIComponent(raw.slice(FLASH_COOKIE.length + 1)));
-    if (flash) push({ tone: flash.tone, title: t(flash.key as MessageKey, flash.vars) });
+    if (flash) push({ tone: flash.tone, title: flash.text });
   }, [pathname, push]);
 
   return null;

@@ -1,6 +1,7 @@
 "use server";
 
 import { refresh } from "next/cache";
+import { t } from "@/i18n";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth/current-user";
 import { safeNotificationHref } from "@/lib/notifications";
@@ -13,14 +14,14 @@ function centrePath(role: string): string {
   return "/notifications";
 }
 
-export type MarkAllReadState = { runs: number; marked: number };
+export type MarkAllReadState = { runs: number; marked: number; message?: string };
 
 /** Stays on the page: refreshes it so the list and the bell update, and lets the button show a toast. */
 export async function markAllReadAction(prev: MarkAllReadState): Promise<MarkAllReadState> {
   const user = await requireUser();
   const marked = await markAllRead(user.id, new Date());
   refresh();
-  return { runs: prev.runs + 1, marked };
+  return { runs: prev.runs + 1, marked, message: t("notifications.markedAllRead") };
 }
 
 /** Opens a notification: marks it read, then follows its link (same-site paths only). */

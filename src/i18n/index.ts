@@ -1,4 +1,5 @@
 import { en } from "./en";
+import { interpolate } from "./interpolate";
 
 type Widen<T> = { readonly [K in keyof T]: T[K] extends string ? string : Widen<T[K]> };
 
@@ -15,13 +16,7 @@ export type Locale = "en";
 
 const dictionaries: Record<Locale, Messages> = { en };
 
-/** Replaces {name} placeholders. Unknown placeholders are left as-is so gaps are visible. */
-export function interpolate(template: string, vars?: Record<string, string | number>): string {
-  if (!vars) return template;
-  return template.replace(/\{(\w+)\}/g, (match, name: string) =>
-    name in vars ? String(vars[name]) : match,
-  );
-}
+export { interpolate };
 
 export function translate(locale: Locale, key: MessageKey, vars?: Record<string, string | number>): string {
   let node: unknown = dictionaries[locale];
@@ -30,7 +25,15 @@ export function translate(locale: Locale, key: MessageKey, vars?: Record<string,
   return interpolate(node, vars);
 }
 
-/** English for now; becomes locale-aware when a second language is added. */
+/** The whole dictionary for the current locale, for passing a namespace to client components. */
+export function messages(locale: Locale = "en"): Messages {
+  return dictionaries[locale];
+}
+
+/**
+ * English for now; becomes locale-aware when a second language is added. Server-side only:
+ * client components use `tu` from ./ui or receive their text from the server.
+ */
 export function t(key: MessageKey, vars?: Record<string, string | number>): string {
   return translate("en", key, vars);
 }

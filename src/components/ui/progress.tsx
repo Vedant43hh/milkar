@@ -1,5 +1,5 @@
 import { PartyPopper, TrendingDown, Users } from "lucide-react";
-import { t } from "@/i18n";
+import { tu } from "@/i18n/ui";
 import type { Meter } from "@/lib/pricing/meter";
 import { formatINR } from "@/lib/pricing/money";
 import { cn } from "./cn";
@@ -56,22 +56,22 @@ export function TierMeter({ meter, basisWords, compact = false }: { meter: Meter
     ? {
         tone: "warning" as const,
         icon: <Users aria-hidden className="size-4" />,
-        text: t("meter.qualify", { n: meter.toQualify, unit: unitWord(meter.toQualify, basisWords) }),
+        text: tu("meter.qualify", { n: meter.toQualify, unit: unitWord(meter.toQualify, basisWords) }),
       }
     : next
       ? {
           tone: "accent" as const,
           icon: <TrendingDown aria-hidden className="size-4" />,
-          text: t("meter.unlock", { n: next.needed, unit: unitWord(next.needed, basisWords), price: formatINR(next.unitPaise) }),
+          text: tu("meter.unlock", { n: next.needed, unit: unitWord(next.needed, basisWords), price: formatINR(next.unitPaise) }),
         }
-      : { tone: "success" as const, icon: <PartyPopper aria-hidden className="size-4" />, text: t("meter.best") };
+      : { tone: "success" as const, icon: <PartyPopper aria-hidden className="size-4" />, text: tu("meter.best") };
 
   const statusColor = { warning: "text-warning", accent: "text-accent-soft-fg", success: "text-success" }[status.tone];
 
   return (
     <div className="space-y-2">
       <div className="flex items-baseline justify-between gap-2 text-sm">
-        <span className="text-muted">{t("meter.joined", { n: meter.count, unit: unitWord(meter.count, basisWords) })}</span>
+        <span className="text-muted">{tu("meter.joined", { n: meter.count, unit: unitWord(meter.count, basisWords) })}</span>
         <span className={cn("flex items-center gap-1 font-medium", statusColor)}>
           {status.icon}
           {status.text}
@@ -79,7 +79,7 @@ export function TierMeter({ meter, basisWords, compact = false }: { meter: Meter
       </div>
       <ProgressBar value={meter.progressPct} tone={status.tone === "warning" ? "warning" : status.tone === "success" ? "success" : "accent"} label={status.text} />
       {!compact && (
-        <ol className="flex flex-wrap gap-1.5" aria-label={t("meter.ladder")}>
+        <ol className="flex flex-wrap gap-1.5" aria-label={tu("meter.ladder")}>
           {meter.ladder.map((step) => {
             const current = step.unitPaise === meter.currentUnitPaise && step.reached;
             return (
@@ -90,7 +90,7 @@ export function TierMeter({ meter, basisWords, compact = false }: { meter: Meter
                   current ? "border-brand bg-brand-soft font-semibold text-brand-soft-fg" : step.reached ? "border-border text-subtle line-through" : "border-border text-muted",
                 )}
               >
-                {t("meter.step", { qty: `${step.minQty}+`, price: formatINR(step.unitPaise) })}
+                {tu("meter.step", { qty: `${step.minQty}+`, price: formatINR(step.unitPaise) })}
               </li>
             );
           })}

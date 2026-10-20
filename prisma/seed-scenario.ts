@@ -332,11 +332,15 @@ export function buildWorld(now: Date) {
     keys: data.PRODUCTS.map((p) => p.key),
   });
   announce(openGrocery, gmUserIds);
-  const openEvents = planGroceryEvents(world, openGrocery, pick(15), data.ROUNDS.open.totals, plus(now, -2 * DAY), plus(now, -3 * HOUR));
+  // Rice stops one bag short of the 50-bag tier, and Rahul's flat has none: one bag from him
+  // unlocks ₹440 for everyone (the demo's tier-unlock moment).
+  const openEvents = planGroceryEvents(world, openGrocery, pick(15), data.ROUNDS.open.totals, plus(now, -2 * DAY), plus(now, -3 * HOUR), new Set([`${rahul.flatId}:rice`]));
   // One resident trims an order before the freeze, so the wallet shows a cancellation refund.
-  const trimmed = openEvents.find((e) => Object.values(e.targets).some((q) => q >= 2));
+  const riceId = world.offering(openGrocery, "rice").id;
+  const trimmable = ([id, q]: [string, number]) => q >= 2 && id !== riceId;
+  const trimmed = openEvents.find((e) => Object.entries(e.targets).some(trimmable));
   if (trimmed) {
-    const [offeringId, qty] = Object.entries(trimmed.targets).find(([, q]) => q >= 2)!;
+    const [offeringId, qty] = Object.entries(trimmed.targets).find(trimmable)!;
     openEvents.push({ ...trimmed, at: new Date(Math.max(trimmed.at.getTime() + HOUR, now.getTime() - 2 * HOUR)), targets: { [offeringId]: qty - 1 } });
   }
   schedule(openEvents);

@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { GroceryRoundForm, type ProductGroup } from "@/components/captain/grocery-round-form";
 import { PageHeader } from "@/components/ui/card";
 import { PageSkeleton } from "@/components/ui/skeleton";
-import { t } from "@/i18n";
+import { messages, t } from "@/i18n";
 import { requireArea } from "@/lib/auth/current-user";
 import { defaultRoundDates } from "@/lib/polls";
 import { formatINR } from "@/lib/pricing/money";
@@ -49,6 +49,7 @@ async function NewGroceryRound() {
     <div>
       <PageHeader title={t("captain.newGrocery")} subtitle={t("captain.groceryCardBody")} />
       <GroceryRoundForm
+        text={messages().captain}
         groups={[...groups.values()]}
         defaults={{ title: "", cutoffAt: utcToIstLocal(cutoffAt), deliveryAt: utcToIstLocal(new Date(startOfIstDay(now, 5).getTime() + 10 * HOUR)) }}
       />

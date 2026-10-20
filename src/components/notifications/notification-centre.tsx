@@ -55,7 +55,7 @@ export async function NotificationCentre({ area }: { area: Area }) {
       <PageHeader
         title={t("notifications.title")}
         subtitle={unread > 0 ? t("notifications.unreadCount", { n: unread }) : t("notifications.intro")}
-        action={unread > 0 && <MarkAllReadButton />}
+        action={unread > 0 && <MarkAllReadButton label={t("notifications.markAllRead")} />}
       />
       {items.length === 0 ? (
         <EmptyState icon={<Bell aria-hidden className="size-6" />} title={t("notifications.empty")} body={t("notifications.emptyBody")} />
