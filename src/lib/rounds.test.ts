@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import { AC, P400, P549, RICE } from "./pricing/test-fixtures";
 import {
   displayStatus,
+  isDueForFinalize,
+  isReminderDue,
   isTakingOrders,
   roundStats,
   unitWordsFor,
@@ -56,6 +58,35 @@ describe("extending a round", () => {
     expect(isTakingOrders({ status: "OPEN", cutoffAt: now }, now)).toBe(false);
     expect(displayStatus({ status: "OPEN", cutoffAt: hours(-1) }, now)).toBe("CLOSED");
     expect(displayStatus({ status: "FINALIZED", cutoffAt: hours(-1) }, now)).toBe("FINALIZED");
+  });
+
+  it("shows a finalized round where nothing reached its minimum as not going ahead", () => {
+    const finalized = { status: "FINALIZED", cutoffAt: hours(-1) };
+    expect(displayStatus({ ...finalized, offerings: [{ status: "DROPPED" }, { status: "DROPPED" }] }, now)).toBe("DROPPED");
+    expect(displayStatus({ ...finalized, offerings: [{ status: "DROPPED" }, { status: "CONFIRMED" }] }, now)).toBe("FINALIZED");
+    expect(displayStatus({ ...finalized, offerings: [] }, now)).toBe("FINALIZED");
+    expect(displayStatus({ status: "CANCELLED", cutoffAt: hours(-1), offerings: [{ status: "DROPPED" }] }, now)).toBe("CANCELLED");
+  });
+});
+
+describe("the cutoff job", () => {
+  it("finalizes open rounds once their cutoff has passed, and nothing else", () => {
+    expect(isDueForFinalize({ status: "OPEN", cutoffAt: now }, now)).toBe(true);
+    expect(isDueForFinalize({ status: "OPEN", cutoffAt: hours(-30) }, now)).toBe(true);
+    expect(isDueForFinalize({ status: "OPEN", cutoffAt: hours(0.01) }, now)).toBe(false);
+    expect(isDueForFinalize({ status: "FINALIZED", cutoffAt: hours(-1) }, now)).toBe(false);
+    expect(isDueForFinalize({ status: "CANCELLED", cutoffAt: hours(-1) }, now)).toBe(false);
+  });
+
+  it("reminds residents in the last 6 hours, unless the round opened inside them", () => {
+    const opened = hours(-48);
+    expect(isReminderDue({ status: "OPEN", cutoffAt: hours(6), createdAt: opened }, now)).toBe(true); // exactly 6 h out
+    expect(isReminderDue({ status: "OPEN", cutoffAt: hours(0.5), createdAt: opened }, now)).toBe(true);
+    expect(isReminderDue({ status: "OPEN", cutoffAt: hours(6.01), createdAt: opened }, now)).toBe(false); // not yet
+    expect(isReminderDue({ status: "OPEN", cutoffAt: now, createdAt: opened }, now)).toBe(false); // closed
+    expect(isReminderDue({ status: "OPEN", cutoffAt: hours(3), createdAt: hours(-4) }, now)).toBe(true); // opened 7 h before cutoff
+    expect(isReminderDue({ status: "OPEN", cutoffAt: hours(3), createdAt: hours(-2) }, now)).toBe(false); // opened 5 h before cutoff
+    expect(isReminderDue({ status: "CANCELLED", cutoffAt: hours(3), createdAt: opened }, now)).toBe(false);
   });
 });
 

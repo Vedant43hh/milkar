@@ -39,6 +39,7 @@ const ICONS: Record<NotificationType, { icon: LucideIcon; tone: string }> = {
   POLL_THRESHOLD: { icon: Megaphone, tone: "bg-accent-soft text-accent-soft-fg" },
   POLL_SUGGESTION: { icon: Lightbulb, tone: "bg-accent-soft text-accent-soft-fg" },
   SLOT_HELD: { icon: CalendarClock, tone: "bg-brand-soft text-brand-soft-fg" },
+  SLOT_AUTO_BOOKED: { icon: CalendarCheck, tone: "bg-success-soft text-success" },
   ISSUE_UPDATE: { icon: MessageSquareWarning, tone: "bg-surface-2 text-muted" },
   VENDOR_ORDER: { icon: Package, tone: "bg-brand-soft text-brand-soft-fg" },
 };

@@ -508,6 +508,8 @@ export class SeedWorld {
       const userId = key.slice(0, key.lastIndexOf(":"));
       this.notify([userId], { type: "REFUND_CREDITED", params: { amountPaise: amount, reason: type, round: round.title }, href: "/wallet" }, at, notificationKeys.refund(`${type}:${round.id}`));
     }
+    const confirmedUsers = result.offerings.filter((f) => f.status === "CONFIRMED").flatMap((f) => f.items.map((i) => i.userId));
+    this.notify(confirmedUsers, { type: "ROUND_FINALIZED", params: { round: round.title }, href: round.href }, at, notificationKeys.roundFinalized(round.id));
     round.record.status = "FINALIZED";
     round.record.finalizedAt = at;
     return { result, confirmed };

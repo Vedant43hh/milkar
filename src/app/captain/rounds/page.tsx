@@ -32,8 +32,8 @@ async function Rounds() {
   const groups: { key: MessageKey; rounds: typeof rounds; cards: boolean }[] = [
     { key: "captain.sectionOpen", rounds: rounds.filter((r) => displayStatus(r, now) === "OPEN"), cards: true },
     { key: "captain.sectionClosed", rounds: rounds.filter((r) => ["CLOSED", "FINALIZING"].includes(displayStatus(r, now))), cards: true },
-    { key: "captain.sectionConfirmed", rounds: rounds.filter((r) => r.status === "FINALIZED"), cards: false },
-    { key: "captain.sectionPast", rounds: rounds.filter((r) => r.status === "COMPLETED" || r.status === "CANCELLED"), cards: false },
+    { key: "captain.sectionConfirmed", rounds: rounds.filter((r) => displayStatus(r, now) === "FINALIZED"), cards: false },
+    { key: "captain.sectionPast", rounds: rounds.filter((r) => ["DROPPED", "COMPLETED", "CANCELLED"].includes(displayStatus(r, now))), cards: false },
   ];
 
   return (

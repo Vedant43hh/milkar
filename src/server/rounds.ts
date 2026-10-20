@@ -168,6 +168,8 @@ export type ServiceRoundInput = {
   /** IST day starts of the Service Day(s). */
   days: Date[];
   repeatWeekly: boolean;
+  /** Set when the cutoff job opens next week's round of a repeating Service Day. */
+  repeatOfRoundId?: string;
 };
 
 type ServicePlan = {
@@ -205,6 +207,7 @@ async function insertServiceRound(tx: Tx, actor: Actor, communityId: string, pla
       vendorId: service.vendorId,
       noAccessFeePaise: service.noAccessFeePaise,
       repeatWeekly: input.repeatWeekly,
+      repeatOfRoundId: input.repeatOfRoundId ?? null,
       ...settings,
       createdAt: now,
     },
@@ -358,7 +361,7 @@ const offeringInclude = {
   product: { select: { name: true, unit: true, packSize: true, category: true } },
   serviceOption: { select: { name: true, sortOrder: true } },
   vendor: { select: { name: true } },
-  orderItems: { select: { flatId: true, quantity: true, chargedPaise: true } },
+  orderItems: { select: { flatId: true, quantity: true, chargedPaise: true, refundPaise: true, absorbedPaise: true } },
 } satisfies Prisma.RoundOfferingInclude;
 
 /** Rounds for the captain's lists, newest first. */
@@ -388,6 +391,9 @@ export async function getRoundDashboard(actor: Actor, roundId: string) {
       slots: { orderBy: { startsAt: "asc" }, select: { id: true, startsAt: true, endsAt: true, capacity: true, bookedCount: true } },
       bookings: { where: { status: "HELD" }, select: { id: true } },
       fromPoll: { select: { id: true, title: true } },
+      vendorOrders: { orderBy: { number: "asc" }, select: { id: true, number: true, totalPaise: true, vendor: { select: { name: true } } } },
+      repeatNext: { select: { id: true } },
+      _count: { select: { visits: true, distributionRecords: true } },
     },
   });
   if (!round || !canManageCommunity(actor, round.communityId)) return null;

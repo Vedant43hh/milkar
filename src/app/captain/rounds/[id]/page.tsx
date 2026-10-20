@@ -1,4 +1,4 @@
-import { Ban, ChevronLeft, CircleCheck, Clock, IndianRupee, Megaphone, Package, Store, Users } from "lucide-react";
+import { ArrowRight, Ban, CalendarCheck, ChevronLeft, CircleCheck, CircleSlash, Clock, IndianRupee, KeyRound, Megaphone, Package, Repeat, ShieldCheck, Store, Truck, Users, Wallet } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -123,7 +123,9 @@ async function Dashboard({ params }: { params: PageProps<"/captain/rounds/[id]">
         {round.kind === "SERVICE" && <Stat label={t("captain.dashboard.held")} value={round.bookings.length} icon={<Clock aria-hidden className="size-5" />} />}
       </Card>
 
-      {round.kind === "SERVICE" ? (
+      {round.finalizedAt ? (
+        <Results round={round} offerings={offerings} />
+      ) : round.kind === "SERVICE" ? (
         <ServiceMeter round={round} offerings={offerings} stats={statById} />
       ) : (
         <GroceryMeters round={round} offerings={offerings} stats={statById} closest={stats.closeToUnlock} waiting={stats.belowMinimum} />
@@ -172,6 +174,9 @@ function StatusBanner({ round, status }: { round: RoundDashboard["round"]; statu
       </Banner>
     );
   }
+  if (status === "DROPPED") {
+    return <Banner tone="info" icon={<CircleSlash aria-hidden className="size-4" />}>{t("captain.dashboard.droppedBanner")}</Banner>;
+  }
   if (status === "FINALIZED" || status === "COMPLETED") {
     return (
       <Banner tone="success" icon={<CircleCheck aria-hidden className="size-4" />}>
@@ -180,6 +185,82 @@ function StatusBanner({ round, status }: { round: RoundDashboard["round"]; statu
     );
   }
   return null;
+}
+
+/** After the cutoff job: what was confirmed at what price, where the money went, and what happens next. */
+function Results({ round, offerings }: { round: RoundDashboard["round"]; offerings: CaptainOffering[] }) {
+  const items = round.offerings.flatMap((o) => o.orderItems);
+  const refunded = items.reduce((sum, i) => sum + (i.refundPaise ?? 0), 0);
+  const absorbed = items.reduce((sum, i) => sum + (i.absorbedPaise ?? 0), 0);
+  const owed = round.vendorOrders.reduce((sum, o) => sum + o.totalPaise, 0);
+  const isService = round.kind === "SERVICE";
+  return (
+    <section aria-labelledby="results" className="space-y-3">
+      <SectionTitle>
+        <span id="results">{t("captain.results.title")}</span>
+      </SectionTitle>
+      <Card className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <Stat label={t("captain.results.refunded")} value={formatINR(refunded)} icon={<Wallet aria-hidden className="size-5" />} tone="success" />
+        <Stat label={t("captain.results.vendorPayout")} value={formatINR(owed)} icon={<Truck aria-hidden className="size-5" />} />
+        <Stat label={t("captain.results.absorbed")} value={formatINR(absorbed)} icon={<ShieldCheck aria-hidden className="size-5" />} />
+        {isService ? (
+          <Stat label={t("captain.results.visits")} value={round._count.visits} icon={<CalendarCheck aria-hidden className="size-5" />} tone="brand" />
+        ) : (
+          <Stat label={t("captain.results.pickups")} value={round._count.distributionRecords} icon={<KeyRound aria-hidden className="size-5" />} tone="brand" />
+        )}
+      </Card>
+
+      <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
+        {offerings.map((o) => {
+          const confirmed = o.status === "CONFIRMED";
+          return (
+            <li key={o.id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
+              <span className="min-w-0">
+                <span className="block truncate font-medium text-fg">{offeringName(o)}</span>
+                {confirmed && o.finalUnitPricePaise != null && (
+                  <span className="block text-muted tabular-nums">{t("captain.results.finalLine", { qty: o.finalQty ?? 0, price: formatINR(o.finalUnitPricePaise) })}</span>
+                )}
+              </span>
+              <Badge tone={confirmed ? "success" : "neutral"}>
+                {confirmed ? t("captain.results.confirmed") : o.finalQty ? t("captain.results.dropped") : t("captain.results.noOrders")}
+              </Badge>
+            </li>
+          );
+        })}
+      </ul>
+
+      {round.vendorOrders.length > 0 && (
+        <Card className="space-y-2">
+          <h3 className="text-sm font-semibold text-fg">{t("captain.results.vendorOrders")}</h3>
+          <ul className="space-y-1 text-sm">
+            {round.vendorOrders.map((order) => (
+              <li key={order.id} className="flex items-center justify-between gap-3">
+                <span className="flex min-w-0 items-center gap-1.5 text-fg">
+                  <Package aria-hidden className="size-4 shrink-0 text-muted" />
+                  <span className="truncate">{t("captain.results.vendorOrder", { number: order.number, vendor: order.vendor.name })}</span>
+                </span>
+                <span className="shrink-0 font-medium tabular-nums">{formatINR(order.totalPaise)}</span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
+
+      {round.repeatNext && (
+        <Link
+          href={`/captain/rounds/${round.repeatNext.id}`}
+          className="flex items-center gap-3 rounded-card border border-border bg-surface p-4 shadow-card transition-colors hover:border-brand/50"
+        >
+          <Repeat aria-hidden className="size-5 shrink-0 text-brand" />
+          <span className="min-w-0 flex-1">
+            <span className="block font-medium text-fg">{t("captain.results.nextWeek")}</span>
+            <span className="block text-sm text-muted">{t("captain.results.nextWeekBody")}</span>
+          </span>
+          <ArrowRight aria-hidden className="size-5 shrink-0 text-subtle" />
+        </Link>
+      )}
+    </section>
+  );
 }
 
 function GroceryMeters({

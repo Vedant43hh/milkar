@@ -301,19 +301,7 @@ export async function startCheckout(shopper: Shopper, roundId: string, targets: 
   if (!preview.ok) return { status: "REJECTED", errors: preview.errors, names: preview.names };
 
   if (preview.quote.gatewayPaise === 0) {
-    return prisma.$transaction(async (tx): Promise<CheckoutResult> => {
-      await lockRound(tx, roundId);
-      await lockUser(tx, shopper.id);
-      const { result, round } = await quoteWith(tx, shopper, roundId, targets, now, intent);
-      if (!result.ok) return { status: "REJECTED", errors: result.errors, names: result.names };
-      if (result.quote.gatewayPaise > 0) return { status: "REJECTED", errors: [{ code: "PRICE_CHANGED" }], names: result.names };
-      const seat = await reserveSeat(tx, round!, shopper.flatId, shopper.id, result.quote, intent, now);
-      if (seat) return { status: "REJECTED", errors: [{ code: seat }], names: result.names };
-      const payment = await tx.payment.create({ data: paymentData(shopper.id, roundId, result.quote, "WALLET", now, intent) });
-      const unlocked = await applyPayment(tx, round!, payment, shopper.flatId, result.quote, now);
-      await releaseIfEmpty(tx, round!, shopper.flatId);
-      return { status: "PAID", paymentId: payment.id, roundId, unlocked };
-    });
+    return prisma.$transaction((tx) => checkoutFromWallet(tx, shopper, roundId, targets, now, intent));
   }
 
   const gateway = paymentGateway();
@@ -321,6 +309,32 @@ export async function startCheckout(shopper: Shopper, roundId: string, targets: 
   const { providerOrderId } = await gateway.createOrder({ paymentId: payment.id, amountPaise: preview.quote.gatewayPaise });
   await prisma.payment.update({ where: { id: payment.id }, data: { providerOrderId } });
   return { status: "AWAITING_PAYMENT", paymentId: payment.id, roundId, provider: gateway.provider, providerOrderId, gatewayPaise: preview.quote.gatewayPaise };
+}
+
+/**
+ * The wallet path of checkout, inside the caller's transaction: takes the round and wallet locks,
+ * prices the change again, takes the seat and applies it. Rejected with PRICE_CHANGED if the
+ * wallet no longer covers it. Weekly auto-pay uses this from the cutoff job.
+ */
+export async function checkoutFromWallet(
+  tx: Tx,
+  shopper: Shopper,
+  roundId: string,
+  targets: Record<string, number>,
+  now: Date,
+  intent?: BookingIntent,
+): Promise<CheckoutResult> {
+  await lockRound(tx, roundId);
+  await lockUser(tx, shopper.id);
+  const { result, round } = await quoteWith(tx, shopper, roundId, targets, now, intent);
+  if (!result.ok) return { status: "REJECTED", errors: result.errors, names: result.names };
+  if (result.quote.gatewayPaise > 0) return { status: "REJECTED", errors: [{ code: "PRICE_CHANGED" }], names: result.names };
+  const seat = await reserveSeat(tx, round!, shopper.flatId, shopper.id, result.quote, intent, now);
+  if (seat) return { status: "REJECTED", errors: [{ code: seat }], names: result.names };
+  const payment = await tx.payment.create({ data: paymentData(shopper.id, roundId, result.quote, "WALLET", now, intent) });
+  const unlocked = await applyPayment(tx, round!, payment, shopper.flatId, result.quote, now);
+  await releaseIfEmpty(tx, round!, shopper.flatId);
+  return { status: "PAID", paymentId: payment.id, roundId, unlocked };
 }
 
 /** What a payment stores: the quote it was priced from, plus the slot choice for a Service Day. */

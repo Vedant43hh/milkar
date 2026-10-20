@@ -64,3 +64,34 @@ export function isHoldExpired(expiresAt: Date, now: Date): boolean {
 export function oneWeekLater(date: Date): Date {
   return new Date(date.getTime() + WEEK);
 }
+
+/** Next week's Service Day(s): the IST days of this week's slots, a week on. */
+export function nextWeekDays(slotStarts: readonly Date[]): Date[] {
+  const days = new Map<number, Date>();
+  for (const start of slotStarts) {
+    const day = oneWeekLater(startOfIstDay(start));
+    days.set(day.getTime(), day);
+  }
+  return [...days.values()].sort((a, b) => a.getTime() - b.getTime());
+}
+
+export type Keeper = { bookingId: string; slotStartsAt: Date };
+export type NextSlot = { id: string; startsAt: Date; capacity: number; bookedCount: number };
+export type HoldPlan = { bookingId: string; slotId: string };
+
+/**
+ * Which of next week's slots each "keep my slot" booking is held in: the same time a week later,
+ * while it has room (first come, in the order given). A slot that no longer exists, or is full,
+ * gets no hold; that resident books again like anyone else.
+ */
+export function planHolds(keepers: readonly Keeper[], nextSlots: readonly NextSlot[]): HoldPlan[] {
+  const left = new Map(nextSlots.map((s) => [s.startsAt.getTime(), { id: s.id, seats: seatsLeft(s) }]));
+  const plans: HoldPlan[] = [];
+  for (const keeper of keepers) {
+    const slot = left.get(oneWeekLater(keeper.slotStartsAt).getTime());
+    if (!slot || slot.seats === 0) continue;
+    slot.seats--;
+    plans.push({ bookingId: keeper.bookingId, slotId: slot.id });
+  }
+  return plans;
+}

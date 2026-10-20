@@ -143,12 +143,37 @@ export function roundStats(offerings: readonly StatOffering[]): RoundStats {
 
 // ---------- presentation ----------
 
-export type DisplayStatus = "OPEN" | "CLOSED" | "FINALIZING" | "FINALIZED" | "COMPLETED" | "CANCELLED";
+export type DisplayStatus = "OPEN" | "CLOSED" | "FINALIZING" | "FINALIZED" | "DROPPED" | "COMPLETED" | "CANCELLED";
 
-/** What a captain sees: an open round whose cutoff has passed is "closed" until the cutoff job runs. */
-export function displayStatus(round: { status: string; cutoffAt: Date }, now: Date): DisplayStatus {
+/**
+ * What a captain sees: an open round whose cutoff has passed is "closed" until the cutoff job runs,
+ * and a finalized round where nothing reached its minimum "didn't go ahead".
+ */
+export function displayStatus(round: { status: string; cutoffAt: Date; offerings?: readonly { status: string }[] }, now: Date): DisplayStatus {
   if (round.status === "OPEN") return round.cutoffAt.getTime() > now.getTime() ? "OPEN" : "CLOSED";
+  if (round.status === "FINALIZED" && round.offerings?.length && round.offerings.every((o) => o.status === "DROPPED")) return "DROPPED";
   return round.status as DisplayStatus;
+}
+
+// ---------- the cutoff job ----------
+
+/** Residents are reminded this long before a round closes. */
+export const CUTOFF_REMINDER_LEAD_MS = 6 * 60 * 60 * 1000;
+
+/** An open round whose cutoff has passed is finalized by the next run of the cutoff job. */
+export function isDueForFinalize(round: { status: string; cutoffAt: Date }, now: Date): boolean {
+  return round.status === "OPEN" && round.cutoffAt.getTime() <= now.getTime();
+}
+
+/**
+ * The "closes soon" reminder goes out once the round is within 6 hours of its cutoff. A round
+ * opened inside that window skips it: its "round opened" message said the same thing.
+ */
+export function isReminderDue(round: { status: string; cutoffAt: Date; createdAt: Date }, now: Date): boolean {
+  if (round.status !== "OPEN") return false;
+  const cutoff = round.cutoffAt.getTime();
+  const windowStart = cutoff - CUTOFF_REMINDER_LEAD_MS;
+  return now.getTime() >= windowStart && now.getTime() < cutoff && round.createdAt.getTime() <= windowStart;
 }
 
 export type UnitWords = { one: string; other: string };

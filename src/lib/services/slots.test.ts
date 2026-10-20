@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { generateSlots, holdExpiresAt, isFull, isHoldExpired, oneWeekLater, seatDecision, seatsLeft } from "./slots";
+import { generateSlots, holdExpiresAt, isFull, isHoldExpired, nextWeekDays, oneWeekLater, planHolds, seatDecision, seatsLeft } from "./slots";
 
 describe("generateSlots", () => {
   const templates = [
@@ -57,5 +57,34 @@ describe("weekly holds", () => {
 
   it("move times forward exactly one week", () => {
     expect(oneWeekLater(opened)).toEqual(new Date("2026-10-31T14:31:00Z"));
+  });
+});
+
+describe("repeating weekly", () => {
+  const sat9 = new Date("2026-10-24T03:30:00Z"); // Sat 9 AM IST
+  const sat2 = new Date("2026-10-24T08:30:00Z"); // Sat 2 PM IST
+  const sun9 = new Date("2026-10-25T03:30:00Z");
+
+  it("puts next week's Service Day on the same IST days a week later", () => {
+    expect(nextWeekDays([sat2, sat9, sun9]).map((d) => d.toISOString())).toEqual(["2026-10-30T18:30:00.000Z", "2026-10-31T18:30:00.000Z"]); // Sat 31 Oct, Sun 1 Nov IST
+    expect(nextWeekDays([])).toEqual([]);
+  });
+
+  it("holds each kept slot at the same time next week while it has room", () => {
+    const next = [
+      { id: "n-sat9", startsAt: oneWeekLater(sat9), capacity: 2, bookedCount: 0 },
+      { id: "n-sat2", startsAt: oneWeekLater(sat2), capacity: 1, bookedCount: 1 }, // already full
+    ];
+    const keepers = [
+      { bookingId: "a", slotStartsAt: sat9 },
+      { bookingId: "b", slotStartsAt: sat9 },
+      { bookingId: "c", slotStartsAt: sat9 }, // third for a 2-seat slot
+      { bookingId: "d", slotStartsAt: sat2 },
+      { bookingId: "e", slotStartsAt: sun9 }, // that slot isn't offered next week
+    ];
+    expect(planHolds(keepers, next)).toEqual([
+      { bookingId: "a", slotId: "n-sat9" },
+      { bookingId: "b", slotId: "n-sat9" },
+    ]);
   });
 });

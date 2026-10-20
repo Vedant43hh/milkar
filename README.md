@@ -68,6 +68,22 @@ After a schema change (`prisma generate`), restart `npm run dev`: the dev server
 - **Live dashboard** (`/captain/rounds/<id>`, refreshes every 30 seconds): flats, units and money collected; the items closest to a better price; slot load; recent orders. Share it on WhatsApp with an invite link that also lets new neighbours join; extend the cutoff, close orders now, or cancel with a reason. Cancelling refunds everyone exactly what they paid, to their wallet, under the same row lock checkout uses.
 - **Interest polls:** publish a poll (the threshold defaults to the service's minimum flats), publish or dismiss residents' suggestions, and open a pre-filled round in one tap once enough flats vote. Votes count once per flat; the captain is notified once when the threshold is crossed, and a double tap opens only one round.
 - Every round has a stable link, `/round/<id>`, used in notifications and invites.
+- **Close now** stops orders and runs the cutoff for that round straight away. Once a round is finalized, its dashboard shows the results: what was confirmed and at what price, what fell short of its minimum, money back to wallets, what's owed to vendors, the cost of price protection, pickup codes or visits, the vendor orders, and next week's round for a weekly Service Day.
+
+## Cutoff and scheduled jobs
+
+When a round's cutoff passes, the cutoff job finalizes it in one transaction under the round lock:
+
+- Final prices come from the pure engine. Anyone who paid more than the final price gets the difference back in their wallet; anything that didn't reach its minimum (a grocery item, or a whole Service Day short of flats) is refunded in full. Each refund is one wallet entry per order item with a unique key, so a retried or overlapping run can never pay twice.
+- Each vendor gets one order (a purchase order for goods, a job sheet for services) at their tier price plus GST, and is notified.
+- **Groceries:** every flat with something confirmed gets a 4-digit pickup code for distribution.
+- **Service Days:** every booked flat gets a visit in its slot with its own 4-digit completion code, sent to everyone in the flat with units. Holds nobody confirmed are cancelled and their seats freed.
+- **Weekly Service Days** open next week's round (same service, same days and times a week later; only once per round). Flats that ticked "keep my slot" get that slot held for 24 hours, prefilled with last week's order. With auto-pay on and enough in the wallet (this week's refunds count) it's booked and paid there and then; otherwise the resident is asked to confirm and pay. A kept slot that's gone or full is skipped.
+- Residents hear about refunds, confirmed rounds, visits and held or auto-booked slots; payments still waiting at the gateway expire, and money that arrives later goes to the wallet.
+
+Alongside it, residents get a "closes soon" reminder 6 hours before cutoff (once per round; not for rounds opened inside that window), and weekly holds that ran out are released.
+
+**How the jobs run:** with `CRON_TICK_SECONDS` set (60 in `.env.example`), the server runs them itself every that many seconds, which suits one long-running server and local development. On serverless hosting, set it to 0 and have a scheduler call `GET /api/cron` with `Authorization: Bearer $CRON_SECRET` (Vercel Cron sends this header automatically). Every step is idempotent and takes the same locks as checkout, so overlapping runs are safe.
 
 ## Login
 

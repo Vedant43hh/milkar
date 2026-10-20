@@ -694,8 +694,15 @@ export function buildWorld(now: Date) {
           }, 0);
           const svcName = service("carwash").seed.name;
           if (previous.autoPayFromWallet && world.balance(previous.userId) >= price) {
-            world.order({ round: w2, userId: previous.userId, flatId: previous.flatId, at: openedAt, targets, booking: { slot, keepSlotWeekly: true, autoPayFromWallet: true } });
-            bookingMeta.set(w2.bookings.get(previous.flatId)!.id, { repeatOfBookingId: previous.id, createdAt: openedAt });
+            const quote = world.order({ round: w2, userId: previous.userId, flatId: previous.flatId, at: openedAt, targets, booking: { slot, keepSlotWeekly: true, autoPayFromWallet: true } });
+            const booked = w2.bookings.get(previous.flatId)!;
+            bookingMeta.set(booked.id, { repeatOfBookingId: previous.id, createdAt: openedAt });
+            world.notify(
+              [previous.userId],
+              { type: "SLOT_AUTO_BOOKED", params: { service: svcName, startsAt: slot.startsAt.toISOString(), amountPaise: quote.walletAppliedPaise }, href: w2.href },
+              openedAt,
+              notificationKeys.slotAutoBooked(booked.id),
+            );
           } else {
             const hold = world.hold(w2, { flatId: previous.flatId, userId: previous.userId, slot, repeatOf: previous });
             const expires = holdExpiresAt(openedAt);

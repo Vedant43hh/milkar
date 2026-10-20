@@ -1,7 +1,8 @@
 import "server-only";
+import type { Prisma, PrismaClient } from "@/generated/prisma/client";
 import { prisma } from "@/lib/db";
 import { isTakingOrders } from "@/lib/rounds";
-import { quoteCart, startCheckout, type Shopper } from "./checkout";
+import { checkoutFromWallet, type Shopper } from "./checkout";
 import { lockRound } from "./round-lock";
 import { moveSeat } from "./slots";
 
@@ -34,20 +35,21 @@ export async function setBookingPreferences(shopper: Shopper, roundId: string, p
   return count === 1;
 }
 
+type Db = PrismaClient | Prisma.TransactionClient;
+
 /** Last week's units for this resident, mapped onto the same options in the new round. */
-export async function lastWeekTargets(bookingId: string, userId: string): Promise<Record<string, number>> {
-  const booking = await prisma.serviceBooking.findUnique({
+export async function lastWeekTargets(db: Db, bookingId: string, userId: string): Promise<Record<string, number>> {
+  const booking = await db.serviceBooking.findUnique({
     where: { id: bookingId },
     select: { roundId: true, flatId: true, repeatOf: { select: { roundId: true } } },
   });
   if (!booking?.repeatOf) return {};
-  const [previous, current] = await Promise.all([
-    prisma.orderItem.findMany({
-      where: { roundId: booking.repeatOf.roundId, flatId: booking.flatId, userId, quantity: { gt: 0 } },
-      select: { quantity: true, offering: { select: { serviceOptionId: true } } },
-    }),
-    prisma.roundOffering.findMany({ where: { roundId: booking.roundId }, select: { id: true, serviceOptionId: true } }),
-  ]);
+  // One query at a time: inside a transaction they share a single connection.
+  const previous = await db.orderItem.findMany({
+    where: { roundId: booking.repeatOf.roundId, flatId: booking.flatId, userId, quantity: { gt: 0 } },
+    select: { quantity: true, offering: { select: { serviceOptionId: true } } },
+  });
+  const current = await db.roundOffering.findMany({ where: { roundId: booking.roundId }, select: { id: true, serviceOptionId: true } });
   const byOption = new Map(current.map((o) => [o.serviceOptionId, o.id]));
   return Object.fromEntries(previous.flatMap((i) => (byOption.has(i.offering.serviceOptionId) ? [[byOption.get(i.offering.serviceOptionId)!, i.quantity]] : [])));
 }
@@ -57,22 +59,30 @@ export type AutoPayResult = "PAID" | "NOT_ENOUGH" | "SKIPPED";
 /**
  * For a slot held from last week with auto-pay on: books the same units again if the wallet
  * covers them, without touching any card or UPI. Otherwise the hold stays for the resident to
- * confirm and pay. Called when next week's round opens.
+ * confirm and pay. Runs inside the caller's transaction (the cutoff job opening next week's round).
  */
-export async function autoPayHold(bookingId: string, now: Date): Promise<AutoPayResult> {
-  const booking = await prisma.serviceBooking.findUnique({
+export async function autoPayHoldIn(tx: Prisma.TransactionClient, bookingId: string, now: Date): Promise<{ status: AutoPayResult; paidPaise: number }> {
+  const skipped = { status: "SKIPPED" as const, paidPaise: 0 };
+  const booking = await tx.serviceBooking.findUnique({
     where: { id: bookingId },
     select: { status: true, autoPayFromWallet: true, holdExpiresAt: true, roundId: true, flatId: true, userId: true, round: { select: { communityId: true } } },
   });
-  if (!booking || booking.status !== "HELD" || !booking.autoPayFromWallet) return "SKIPPED";
-  if (!booking.holdExpiresAt || booking.holdExpiresAt.getTime() <= now.getTime()) return "SKIPPED";
-  const targets = await lastWeekTargets(bookingId, booking.userId);
-  if (Object.keys(targets).length === 0) return "SKIPPED";
+  if (!booking || booking.status !== "HELD" || !booking.autoPayFromWallet) return skipped;
+  if (!booking.holdExpiresAt || booking.holdExpiresAt.getTime() <= now.getTime()) return skipped;
+  const targets = await lastWeekTargets(tx, bookingId, booking.userId);
+  if (Object.keys(targets).length === 0) return skipped;
 
   const shopper = { id: booking.userId, flatId: booking.flatId, communityId: booking.round.communityId };
-  const intent = { keepSlotWeekly: true, autoPayFromWallet: true };
-  const quote = await quoteCart(shopper, booking.roundId, targets, now, intent);
-  if (!quote.ok || quote.quote.gatewayPaise > 0) return "NOT_ENOUGH";
-  const result = await startCheckout(shopper, booking.roundId, targets, now, intent);
-  return result.status === "PAID" ? "PAID" : "NOT_ENOUGH";
+  const result = await checkoutFromWallet(tx, shopper, booking.roundId, targets, now, { keepSlotWeekly: true, autoPayFromWallet: true });
+  if (result.status === "PAID") {
+    const payment = await tx.payment.findUniqueOrThrow({ where: { id: result.paymentId }, select: { walletAppliedPaise: true } });
+    return { status: "PAID", paidPaise: payment.walletAppliedPaise };
+  }
+  const short = result.status === "REJECTED" && result.errors.some((e) => e.code === "PRICE_CHANGED");
+  return short ? { status: "NOT_ENOUGH", paidPaise: 0 } : skipped;
+}
+
+/** The same in a transaction of its own. */
+export async function autoPayHold(bookingId: string, now: Date): Promise<AutoPayResult> {
+  return (await prisma.$transaction((tx) => autoPayHoldIn(tx, bookingId, now))).status;
 }

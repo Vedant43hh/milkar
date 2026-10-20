@@ -18,6 +18,9 @@ const envSchema = z.object({
   OTP_LIMIT_IP_15M: limit(30),
   OTP_LIMIT_IP_DAY: limit(200),
   CRON_SECRET: optionalString,
+  // Runs the scheduled jobs inside the server every N seconds (0 = off). Use it on a single
+  // long-running server; serverless deployments call /api/cron from a scheduler instead.
+  CRON_TICK_SECONDS: z.coerce.number().int().min(0).default(0),
   RAZORPAY_KEY_ID: optionalString,
   RAZORPAY_KEY_SECRET: optionalString,
   PLATFORM_GSTIN: optionalString,

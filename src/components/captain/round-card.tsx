@@ -15,6 +15,7 @@ export const STATUS_TONE: Record<DisplayStatus, Tone> = {
   CLOSED: "warning",
   FINALIZING: "warning",
   FINALIZED: "success",
+  DROPPED: "neutral",
   COMPLETED: "neutral",
   CANCELLED: "danger",
 };

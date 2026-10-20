@@ -124,3 +124,25 @@ test("residents cannot reach captain pages or another community's rounds", async
     await expect(page).toHaveURL("/");
   }
 });
+
+test("closing a round early runs the cutoff at once and shows the results", async ({ page }) => {
+  await demoLogin(page, CAPTAIN);
+  await page.goto("/captain/rounds/new/grocery");
+  await page.getByLabel("Name").fill("E2E early close");
+  await page.getByRole("button", { name: "Open grocery round" }).click();
+  await expect(page).toHaveURL(/\/captain\/rounds\/[\w-]+$/, { timeout: 60_000 });
+
+  await page.getByRole("button", { name: "Close now" }).click();
+  await page.getByRole("dialog", { name: "Close orders now?" }).getByRole("button", { name: "Close orders now" }).click();
+  await expect(page.getByText("Orders closed and finalized. ₹0 back to wallets.")).toBeVisible({ timeout: 60_000 });
+  // Nobody ordered, so nothing reached its minimum.
+  await expect(page.getByText(/^Didn't go ahead: not enough orders/)).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Results" })).toBeVisible();
+  await expect(page.getByText("No orders").first()).toBeVisible();
+  await expect(page.getByRole("button", { name: "Close now" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Cancel round" })).toHaveCount(0);
+  await expectNoSeriousA11yIssues(page);
+
+  await page.goto("/captain/rounds");
+  await expect(page.getByRole("link", { name: /E2E early close.*Didn.t go ahead/ })).toBeVisible();
+});

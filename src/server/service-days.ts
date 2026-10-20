@@ -137,7 +137,7 @@ export async function getServiceDay(shopper: Shopper, roundId: string, unitLabel
           autoPayFromWallet: booking.autoPayFromWallet,
         }
       : null,
-    prefill: booking?.status === "HELD" ? await lastWeekTargets(booking.id, shopper.id) : null,
+    prefill: booking?.status === "HELD" ? await lastWeekTargets(prisma, booking.id, shopper.id) : null,
     flatWords: unitWordsFor(unitLabel),
     walletPaise: await walletBalance(prisma, shopper.id),
   };

@@ -216,6 +216,7 @@ enum NotificationType {
   POLL_THRESHOLD
   POLL_SUGGESTION
   SLOT_HELD
+  SLOT_AUTO_BOOKED // a held weekly slot paid from the wallet automatically
   ISSUE_UPDATE
   VENDOR_ORDER
 }

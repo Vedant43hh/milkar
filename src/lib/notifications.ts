@@ -17,6 +17,7 @@ export const NOTIFICATION_TYPES = [
   "POLL_THRESHOLD",
   "POLL_SUGGESTION",
   "SLOT_HELD",
+  "SLOT_AUTO_BOOKED",
   "ISSUE_UPDATE",
   "VENDOR_ORDER",
 ] as const;
@@ -55,6 +56,7 @@ export type NotificationParams = {
   POLL_THRESHOLD: { poll: string; votes: number };
   POLL_SUGGESTION: { poll: string; by: string };
   SLOT_HELD: { service: string; startsAt: string; expiresAt: string };
+  SLOT_AUTO_BOOKED: { service: string; startsAt: string; amountPaise: number };
   ISSUE_UPDATE: { service: string; status: IssueStatus };
   VENDOR_ORDER: { round: string; community: string };
 };
@@ -133,6 +135,7 @@ export const notificationKeys = {
   pollThreshold: (pollId: string) => `POLL_THRESHOLD:${pollId}`,
   pollSuggestion: (pollId: string) => `POLL_SUGGESTION:${pollId}`,
   slotHeld: (bookingId: string) => `SLOT_HELD:${bookingId}`,
+  slotAutoBooked: (bookingId: string) => `SLOT_AUTO_BOOKED:${bookingId}`,
   issue: (issueId: string, status: string) => `ISSUE:${issueId}:${status}`,
   vendorOrder: (vendorOrderId: string) => `VENDOR_ORDER:${vendorOrderId}`,
 };

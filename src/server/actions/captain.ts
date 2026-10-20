@@ -8,6 +8,7 @@ import { requireArea } from "@/lib/auth/current-user";
 import { setFlash } from "@/lib/flash";
 import { formatINR } from "@/lib/pricing/money";
 import { istDateToUtc, istLocalToUtc } from "@/lib/time";
+import { finalizeRound } from "@/server/finalize";
 import { closePoll, convertPollToRound, createPoll, publishSuggestion, type PollError } from "@/server/polls";
 import {
   actorOf,
@@ -109,11 +110,21 @@ export async function extendCutoffAction(_prev: ActionResult, formData: FormData
   return { ok: true, message: t("captain.actions.extended") };
 }
 
+/** Stops orders and runs the cutoff job for this round straight away, so the results show at once. */
 export async function closeRoundAction(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
   const user = await requireArea("captain");
-  const result = await closeRoundNow(actorOf(user), String(formData.get("roundId") ?? ""), new Date());
+  const roundId = String(formData.get("roundId") ?? "");
+  const closedAt = new Date();
+  const result = await closeRoundNow(actorOf(user), roundId, closedAt);
   if (!result.ok) return { ok: false, message: errorText(result.error) };
   refresh();
+  try {
+    const outcome = await finalizeRound(roundId, closedAt);
+    if (outcome.status === "FINALIZED") return { ok: true, message: t("captain.actions.closedFinalized", { amount: formatINR(outcome.refundsPaise) }) };
+  } catch (error) {
+    // Orders are closed either way; the scheduled cutoff job finalizes it on its next run.
+    console.error(`[milkar] finalizing round ${roundId} after closing it failed:`, error);
+  }
   return { ok: true, message: t("captain.actions.closed") };
 }
 
