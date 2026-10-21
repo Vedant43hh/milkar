@@ -90,7 +90,7 @@ describe("the cutoff job", () => {
   });
 });
 
-describe("roundStats (the captain's dashboard)", () => {
+describe("roundStats (the manager's dashboard)", () => {
   const rice: StatOffering = {
     id: "rice",
     tierGroupKey: "product:rice",

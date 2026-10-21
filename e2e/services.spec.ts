@@ -31,8 +31,8 @@ async function payReview(page: Page) {
 }
 
 test("a resident books a Service Day: options, a slot with room, and checkout", async ({ page }) => {
-  await demoLogin(page, "Sunita Kulkarni"); // her flat hasn't booked the AC Service Day
-  await page.goto("/services");
+  await demoLogin(page, "Kavya Deshpande"); // her flat hasn't booked the AC Service Day
+  await page.goto("/app/services");
   await expect(page.getByRole("heading", { level: 1, name: "Services" })).toBeVisible();
   await expectNoSeriousA11yIssues(page);
   await page.getByRole("link", { name: /AC servicing Service Day/ }).click();
@@ -53,13 +53,13 @@ test("a resident books a Service Day: options, a slot with room, and checkout", 
 
   await expect(page.getByRole("heading", { name: "Your time slot" })).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText(/In your booking: 1/)).toBeVisible();
-  await page.goto("/services");
+  await page.goto("/app/services");
   await expect(page.getByText(/^Booked: /)).toBeVisible();
 });
 
 test("a booked resident changes slot for free", async ({ page }) => {
   await demoLogin(page, "Rahul Deshmukh"); // already booked for the AC Service Day
-  await page.goto("/services");
+  await page.goto("/app/services");
   await page.getByRole("link", { name: /AC servicing Service Day/ }).click();
   const slot = page.getByRole("region", { name: "Your time slot" });
   const before = await slot.textContent();

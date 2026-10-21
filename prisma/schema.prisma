@@ -10,11 +10,37 @@ datasource db {
   provider = "postgresql"
 }
 
+// One portal per account: /app, /manager, /vendor, /tech, /admin.
 enum Role {
   RESIDENT
-  CAPTAIN // a resident who can also run rounds and polls for their community
+  MANAGER // a Society Manager (or assistant) running one community; see CommunityStaff
   VENDOR
-  ADMIN
+  TECHNICIAN // a vendor's staff member doing visits; created by the vendor
+  ADMIN // never self-registered: seeded, or created by another admin
+}
+
+enum CommunityStatus {
+  PENDING // registered by a Society Manager, waiting for a platform admin
+  APPROVED
+  REJECTED
+}
+
+enum StaffKind {
+  PRIMARY // the Society Manager who registered or runs the community
+  ASSISTANT // can do everything except manage the team and community settings
+}
+
+enum JoinRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum VendorCategory {
+  GROCERIES
+  HOME_SERVICES
+  REPAIRS
 }
 
 enum CommunityType {
@@ -197,7 +223,7 @@ enum PollKind {
 }
 
 enum PollStatus {
-  SUGGESTED // proposed by a resident, waiting for the captain
+  SUGGESTED // proposed by a resident, waiting for the manager
   OPEN
   CONVERTED // a round was opened from it
   CLOSED
@@ -219,24 +245,76 @@ enum NotificationType {
   SLOT_AUTO_BOOKED // a held weekly slot paid from the wallet automatically
   ISSUE_UPDATE
   VENDOR_ORDER
+  JOIN_REQUEST
+  JOIN_DECIDED
+  COMMUNITY_DECIDED
+  VENDOR_DECIDED
 }
 
 // A residential community: apartment society, gated community, PG, hostel or office campus.
 model Community {
-  id         String        @id @default(cuid())
-  name       String
-  code       String        @unique // join code used in invite links
-  type       CommunityType @default(APARTMENT_SOCIETY)
-  blockLabel String        @default("Tower") // what a Flat.tower is called here: Tower, Wing, Block, Floor
-  unitLabel  String        @default("Flat") // what a Flat is called here: Flat, Villa, Room
-  address    String
-  city       String
-  pincode    String
-  createdAt  DateTime      @default(now()) @db.Timestamptz(3)
+  id             String          @id @default(cuid())
+  name           String
+  code           String          @unique // join code used in invite links
+  type           CommunityType   @default(APARTMENT_SOCIETY)
+  blockLabel     String          @default("Tower") // what a Flat.tower is called here: Tower, Wing, Block, Floor
+  unitLabel      String          @default("Flat") // what a Flat is called here: Flat, Villa, Room
+  address        String
+  city           String
+  pincode        String
+  status         CommunityStatus @default(PENDING)
+  registeredById String?
+  reviewedAt     DateTime?       @db.Timestamptz(3)
+  reviewNote     String? // what the admin checked, or why it was rejected
+  createdAt      DateTime        @default(now()) @db.Timestamptz(3)
 
-  flats  Flat[]
-  rounds OrderRound[]
-  polls  InterestPoll[]
+  registeredBy User?            @relation("CommunityRegistrant", fields: [registeredById], references: [id], onDelete: SetNull)
+  flats        Flat[]
+  rounds       OrderRound[]
+  polls        InterestPoll[]
+  staff        CommunityStaff[]
+  joinRequests JoinRequest[]
+
+  @@index([status])
+}
+
+// Who runs a community: one primary Society Manager and any assistants. One community per manager.
+model CommunityStaff {
+  id          String    @id @default(cuid())
+  userId      String    @unique
+  communityId String
+  kind        StaffKind
+  addedById   String?
+  createdAt   DateTime  @default(now()) @db.Timestamptz(3)
+
+  user      User      @relation("StaffMember", fields: [userId], references: [id], onDelete: Cascade)
+  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  addedBy   User?     @relation("StaffAddedBy", fields: [addedById], references: [id], onDelete: SetNull)
+
+  @@index([communityId])
+}
+
+// A resident asking to join a community's flat. Approval sets User.flatId. One open request per user:
+// pendingUserId equals userId while PENDING and is null otherwise (a check constraint keeps them in step).
+model JoinRequest {
+  id            String            @id @default(cuid())
+  userId        String
+  communityId   String
+  flatId        String
+  status        JoinRequestStatus @default(PENDING)
+  pendingUserId String?           @unique
+  note          String? // the manager's reason, shown to the resident
+  decidedById   String?
+  decidedAt     DateTime?         @db.Timestamptz(3)
+  createdAt     DateTime          @default(now()) @db.Timestamptz(3)
+
+  user      User      @relation("JoinRequester", fields: [userId], references: [id], onDelete: Cascade)
+  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  flat      Flat      @relation(fields: [flatId], references: [id], onDelete: Cascade)
+  decidedBy User?     @relation("JoinDecider", fields: [decidedById], references: [id], onDelete: SetNull)
+
+  @@index([communityId, status])
+  @@index([userId])
 }
 
 // One household: a flat, villa or room. Shown with the community's unitLabel.
@@ -255,6 +333,7 @@ model Flat {
   visits              ServiceVisit[]
   serviceIssues       ServiceIssue[]
   pollVotes           PollVote[]
+  joinRequests        JoinRequest[]
 
   @@unique([communityId, tower, number])
 }
@@ -265,8 +344,9 @@ model User {
   name      String?
   role      Role     @default(RESIDENT)
   flatId    String?
-  vendorId  String?
-  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  vendorId    String?
+  onboardedAt DateTime? @db.Timestamptz(3) // saw (or skipped) the first-login tour
+  createdAt   DateTime  @default(now()) @db.Timestamptz(3)
 
   flat                   Flat?                @relation(fields: [flatId], references: [id])
   vendor                 Vendor?              @relation(fields: [vendorId], references: [id])
@@ -285,8 +365,15 @@ model User {
   pollsPublished         InterestPoll[]       @relation("PollPublisher")
   pollVotes              PollVote[]
   notifications          Notification[]
+  staffRole              CommunityStaff?      @relation("StaffMember")
+  staffAdded             CommunityStaff[]     @relation("StaffAddedBy")
+  communitiesRegistered  Community[]          @relation("CommunityRegistrant")
+  joinRequests           JoinRequest[]        @relation("JoinRequester")
+  joinDecisions          JoinRequest[]        @relation("JoinDecider")
+  technicianVisits       ServiceVisit[]       @relation("TechnicianVisits")
 
   @@index([flatId])
+  @@index([vendorId])
 }
 
 model Session {
@@ -328,6 +415,8 @@ model Vendor {
   verificationStatus VerificationStatus @default(PENDING)
   verifiedAt         DateTime?          @db.Timestamptz(3)
   verificationNote   String? // what the admin checked (GST certificate, trade licence, police verification …)
+  categories          VendorCategory[] @default([])
+  serviceAreaPincodes String[]         @default([])
   ratingCount        Int                @default(0) // maintained in the same transaction as each rating
   ratingSum          Int                @default(0)
   createdAt          DateTime           @default(now()) @db.Timestamptz(3)
@@ -776,6 +865,7 @@ model ServiceVisit {
   bookingId      String
   flatId         String
   slotId         String? // revisits are scheduled outside the round's slots
+  technicianId   String? // the vendor's technician doing this visit
   kind           VisitKind   @default(STANDARD)
   revisitOfId    String?     @unique // at most one free revisit per visit
   status         VisitStatus @default(SCHEDULED)
@@ -796,6 +886,7 @@ model ServiceVisit {
   booking     ServiceBooking     @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   flat        Flat               @relation(fields: [flatId], references: [id])
   slot        ServiceSlot?       @relation(fields: [slotId], references: [id], onDelete: Restrict)
+  technician  User?              @relation("TechnicianVisits", fields: [technicianId], references: [id], onDelete: SetNull)
   revisitOf   ServiceVisit?      @relation("Revisit", fields: [revisitOfId], references: [id])
   revisit     ServiceVisit?      @relation("Revisit")
   rating      VisitRating?
@@ -804,6 +895,7 @@ model ServiceVisit {
 
   @@unique([bookingId, kind])
   @@index([roundId, status])
+  @@index([technicianId, startsAt])
 }
 
 model VisitRating {
@@ -847,7 +939,7 @@ model ServiceIssue {
   @@index([roundId, status])
 }
 
-// "Would you join this?" Votes count once per flat. Crossing the threshold prompts the captain.
+// "Would you join this?" Votes count once per flat. Crossing the threshold prompts the manager.
 model InterestPoll {
   id                  String     @id @default(cuid())
   communityId         String

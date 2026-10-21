@@ -127,5 +127,5 @@ export async function joinAction(prev: JoinState, formData: FormData): Promise<J
     return { name, error: t(key) };
   }
   await setFlash("success", "join.joined", { community: result.communityName });
-  redirect(ROUND_ID.test(round) ? `/round/${round}` : "/");
+  redirect(ROUND_ID.test(round) ? `/round/${round}` : "/app");
 }

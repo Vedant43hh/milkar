@@ -2,9 +2,11 @@ import { Bell, CalendarClock, CircleAlert, CircleCheck, Info, PiggyBank, Plus, S
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
-import { PublicShell } from "@/components/shell/shells";
+import { PublicShell } from "@/components/shell/public-shell";
 import { ThemeToggle } from "@/components/theme";
 import { Badge, Chip } from "@/components/ui/badge";
+import { ChipScroller } from "@/components/ui/chip-scroller";
+import { NeighbourFlats } from "@/components/ui/neighbours";
 import { Button, buttonClasses, IconButton } from "@/components/ui/button";
 import { Card, CardHeader, PageHeader } from "@/components/ui/card";
 import { Banner, EmptyState, ListRow, Price, Stat } from "@/components/ui/display";
@@ -15,7 +17,7 @@ import { ListSkeleton, Skeleton } from "@/components/ui/skeleton";
 import { t } from "@/i18n";
 import { getEnv } from "@/lib/env";
 import { computeMeter } from "@/lib/pricing/meter";
-import { CountdownDemo, FeedbackDemo, StepperDemo, TabsDemo } from "./demos";
+import { CountdownDemo, FeedbackDemo, StepperDemo, TabsDemo, WizardDemo } from "./demos";
 
 export const metadata: Metadata = { title: t("design.title") };
 
@@ -244,8 +246,44 @@ export default function DesignPage() {
           </Sheet>
         </Section>
 
+        <Section title="Portal accents">
+          <p className="text-sm text-muted">Each portal re-points the brand colour, so people always know where they are.</p>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+            {(["app", "manager", "vendor", "tech", "admin"] as const).map((portal) => (
+              <div key={portal} data-portal={portal} className="space-y-2 rounded-card border border-border bg-surface p-3">
+                <span className="block h-2 rounded-full bg-brand" />
+                <span className="inline-flex h-6 items-center rounded-full bg-brand-soft px-2.5 text-xs font-semibold text-brand-soft-fg">{t(`portals.${portal}`)}</span>
+                <Button type="button" size="sm" block>
+                  Action
+                </Button>
+              </div>
+            ))}
+          </div>
+        </Section>
+
+        <Section title="Neighbours and category chips">
+          <Card className="space-y-3">
+            <NeighbourFlats flats={["A-101", "B-402", "C-202", "D-301", "A-502"]} total={14} />
+            <NeighbourFlats flats={["A-101", "B-402"]} total={2} />
+            <NeighbourFlats flats={[]} total={0} />
+          </Card>
+          <ChipScroller label="Categories">
+            {["Groceries", "Home services", "Repairs", "Subscriptions", "Polls"].map((c, i) => (
+              <button key={c} type="button" aria-pressed={i === 0} className="rounded-full">
+                <Chip selected={i === 0}>{c}</Chip>
+              </button>
+            ))}
+          </ChipScroller>
+        </Section>
+
+        <Section title="Step-by-step form">
+          <Card>
+            <WizardDemo />
+          </Card>
+        </Section>
+
         <Section title="Empty and loading states">
-          <EmptyState icon={<ShoppingBasket aria-hidden className="size-6" />} title="No group orders are open right now" body="When your captain opens a round, live prices show up here." action={<Button type="button" size="sm">Suggest a product</Button>} />
+          <EmptyState icon={<ShoppingBasket aria-hidden className="size-6" />} title="No group orders are open right now" body="When your manager opens a round, live prices show up here." action={<Button type="button" size="sm">Suggest a product</Button>} />
           <Skeleton className="h-6 w-1/3" />
           <ListSkeleton rows={2} />
         </Section>

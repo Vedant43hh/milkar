@@ -20,6 +20,10 @@ export const NOTIFICATION_TYPES = [
   "SLOT_AUTO_BOOKED",
   "ISSUE_UPDATE",
   "VENDOR_ORDER",
+  "JOIN_REQUEST",
+  "JOIN_DECIDED",
+  "COMMUNITY_DECIDED",
+  "VENDOR_DECIDED",
 ] as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
@@ -37,6 +41,7 @@ type RefundReason =
   | "ADJUSTMENT";
 
 type IssueStatus = "OPEN" | "REVISIT_SCHEDULED" | "REFUNDED" | "REJECTED" | "RESOLVED";
+type Decision = "APPROVED" | "REJECTED";
 
 /**
  * Params per type. Convention: `…At` fields are ISO instants shown in IST, `…Paise` fields are
@@ -59,6 +64,11 @@ export type NotificationParams = {
   SLOT_AUTO_BOOKED: { service: string; startsAt: string; amountPaise: number };
   ISSUE_UPDATE: { service: string; status: IssueStatus };
   VENDOR_ORDER: { round: string; community: string };
+  /** To a community's Society Managers: someone asked to join. `flat` is e.g. "Flat A-101". */
+  JOIN_REQUEST: { name: string; flat: string };
+  JOIN_DECIDED: { community: string; decision: Decision };
+  COMMUNITY_DECIDED: { community: string; decision: Decision };
+  VENDOR_DECIDED: { vendor: string; decision: Decision };
 };
 
 export type NotificationMessage<T extends NotificationType = NotificationType> = {
@@ -99,6 +109,12 @@ export function renderNotification(type: string, params: unknown): { title: stri
   if (type === "ISSUE_UPDATE" && typeof raw.status === "string") {
     vars.status = t(`notifications.issueStatus.${raw.status}` as MessageKey);
   }
+  if ((type === "JOIN_DECIDED" || type === "COMMUNITY_DECIDED" || type === "VENDOR_DECIDED") && (raw.decision === "APPROVED" || raw.decision === "REJECTED")) {
+    return {
+      title: t(`notifications.types.${type}.${raw.decision}.title`, vars),
+      body: t(`notifications.types.${type}.${raw.decision}.body`, vars),
+    };
+  }
   return {
     title: t(`notifications.types.${type}.title`, vars),
     body: t(`notifications.types.${type}.body`, vars),
@@ -107,7 +123,7 @@ export function renderNotification(type: string, params: unknown): { title: stri
 
 /** Only same-site paths are followed; anything else opens the notification centre. */
 export function safeNotificationHref(href: string | null | undefined): string {
-  if (!href || !href.startsWith("/") || href.startsWith("//") || href.includes("\\")) return "/notifications";
+  if (!href || !href.startsWith("/") || href.startsWith("//") || href.includes("\\")) return "/app/notifications";
   return href;
 }
 
@@ -138,4 +154,8 @@ export const notificationKeys = {
   slotAutoBooked: (bookingId: string) => `SLOT_AUTO_BOOKED:${bookingId}`,
   issue: (issueId: string, status: string) => `ISSUE:${issueId}:${status}`,
   vendorOrder: (vendorOrderId: string) => `VENDOR_ORDER:${vendorOrderId}`,
+  joinRequest: (requestId: string) => `JOIN_REQUEST:${requestId}`,
+  joinDecided: (requestId: string) => `JOIN_DECIDED:${requestId}`,
+  communityDecided: (communityId: string, decision: Decision) => `COMMUNITY_DECIDED:${communityId}:${decision}`,
+  vendorDecided: (vendorId: string, decision: Decision) => `VENDOR_DECIDED:${vendorId}:${decision}`,
 };

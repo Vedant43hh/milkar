@@ -3,14 +3,21 @@
 import Link from "next/link";
 import { tu } from "@/i18n/ui";
 import { cn } from "../ui/cn";
-import { isActive, RESIDENT_NAV, type NavItem } from "./nav-config";
+import { isActive, PORTAL_NAV, type NavItem, type TabPortal } from "./nav-config";
 
-/** Bottom tab bar on phones. */
-export function ResidentTabList({ pathname }: { pathname: string }) {
+const COLUMNS: Record<number, string> = { 3: "grid-cols-3", 4: "grid-cols-4", 5: "grid-cols-5" };
+
+/** Bottom tab bar on phones (residents and technicians). Technicians get taller, one-thumb targets. */
+export function TabList({ portal, pathname }: { portal: TabPortal; pathname: string }) {
+  const items = PORTAL_NAV[portal];
+  const tall = portal === "tech";
   return (
-    <nav aria-label={tu("nav.main")} className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
-      <ul className="mx-auto grid max-w-md grid-cols-5">
-        {RESIDENT_NAV.map((item) => {
+    <nav
+      aria-label={tu("nav.main")}
+      className={cn("fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur", portal === "app" && "md:hidden")}
+    >
+      <ul className={cn("mx-auto grid max-w-md", COLUMNS[items.length])}>
+        {items.map((item) => {
           const active = isActive(pathname, item);
           const Icon = item.icon;
           return (
@@ -18,9 +25,14 @@ export function ResidentTabList({ pathname }: { pathname: string }) {
               <Link
                 href={item.href}
                 aria-current={active ? "page" : undefined}
-                className={cn("flex min-h-14 flex-col items-center justify-center gap-0.5 text-[0.7rem] transition-colors", active ? "font-semibold text-brand" : "text-muted hover:text-fg")}
+                className={cn(
+                  "relative flex flex-col items-center justify-center gap-0.5 transition-colors",
+                  tall ? "min-h-16 text-xs" : "min-h-14 text-[0.7rem]",
+                  active ? "font-semibold text-brand" : "text-muted hover:text-fg",
+                )}
               >
-                <Icon aria-hidden className={cn("size-5", active && "stroke-[2.5]")} />
+                {active && <span aria-hidden className="absolute top-0 h-0.5 w-8 rounded-full bg-brand" />}
+                <Icon aria-hidden className={cn(tall ? "size-6" : "size-5", active && "stroke-[2.5]")} />
                 {tu(item.label)}
               </Link>
             </li>
@@ -56,7 +68,7 @@ function SideItem({ item, pathname }: { item: NavItem; pathname: string }) {
   );
 }
 
-/** Vertical list for the desktop sidebar (residents) or any staff area. */
+/** Vertical list for a sidebar (staff portals, and residents on wide screens). */
 export function SideNavList({ items, pathname }: { items: NavItem[]; pathname: string }) {
   return (
     <nav aria-label={tu("nav.main")}>

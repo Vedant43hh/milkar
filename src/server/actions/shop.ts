@@ -3,7 +3,7 @@
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import { t, type MessageKey } from "@/i18n";
-import { requireArea } from "@/lib/auth/current-user";
+import { requirePortal } from "@/lib/auth/current-user";
 import { getEnv } from "@/lib/env";
 import { setFlash } from "@/lib/flash";
 import { formatINR } from "@/lib/pricing/money";
@@ -41,7 +41,7 @@ function cleanBooking(input: unknown): BookingIntent | undefined {
 }
 
 /** Where a resident goes back to after paying: the grocery list or the Service Day. */
-const roundPage = (round: { kind: string }, roundId: string) => (round.kind === "SERVICE" ? `/services/${roundId}` : `/groceries?round=${roundId}`);
+const roundPage = (round: { kind: string }, roundId: string) => (round.kind === "SERVICE" ? `/app/services/${roundId}` : `/app/groceries?round=${roundId}`);
 
 function errorTexts(errors: CheckoutErrors, names: Record<string, string>): string[] {
   return [
@@ -71,7 +71,7 @@ export type CartQuote =
 
 /** Prices the cart for the review sheet. Nothing is saved. */
 export async function quoteCartAction(roundId: string, targets: Record<string, number>, booking?: BookingIntent): Promise<CartQuote> {
-  const user = await requireArea("resident");
+  const user = await requirePortal("app");
   const result = await quoteCart(shopperOf(user), roundId, cleanTargets(targets), new Date(), cleanBooking(booking));
   if (!result.ok) return { ok: false, errors: errorTexts(result.errors, result.names) };
   const { quote, names } = result;
@@ -112,7 +112,7 @@ function confirmedText(result: ConfirmResult): { message: string; celebrate: str
 
 /** Places the change. Wallet-covered changes are done at once; otherwise the resident goes to pay. */
 export async function checkoutAction(roundId: string, targets: Record<string, number>, booking?: BookingIntent): Promise<CheckoutOutcome> {
-  const user = await requireArea("resident");
+  const user = await requirePortal("app");
   const result = await startCheckout(shopperOf(user), roundId, cleanTargets(targets), new Date(), cleanBooking(booking));
   if (result.status === "REJECTED") return { status: "ERROR", errors: errorTexts(result.errors, result.names) };
   if (result.status === "PAID") {
@@ -131,12 +131,12 @@ export async function checkoutAction(roundId: string, targets: Record<string, nu
       contact: user.phone,
     };
   }
-  return { status: "REDIRECT", url: `/pay/${result.paymentId}` };
+  return { status: "REDIRECT", url: `/app/pay/${result.paymentId}` };
 }
 
 /** Razorpay Checkout's success handler: verify the signature, then confirm. */
 export async function confirmRazorpayAction(input: { paymentId: string; razorpayOrderId: string; razorpayPaymentId: string; signature: string }): Promise<CheckoutOutcome> {
-  const user = await requireArea("resident");
+  const user = await requirePortal("app");
   const payment = await getPaymentForUser(input.paymentId, user.id);
   const secret = getEnv().RAZORPAY_KEY_SECRET;
   const valid =
@@ -152,10 +152,10 @@ export async function confirmRazorpayAction(input: { paymentId: string; razorpay
 
 /** The test UPI screen's "Pay" button. */
 export async function payMockAction(formData: FormData): Promise<void> {
-  const user = await requireArea("resident");
+  const user = await requirePortal("app");
   const paymentId = String(formData.get("paymentId") ?? "");
   const payment = await getPaymentForUser(paymentId, user.id);
-  if (!payment || payment.provider !== "MOCK") redirect("/groceries");
+  if (!payment || payment.provider !== "MOCK") redirect("/app/groceries");
   const result = await confirmPayment(paymentId, `mock_pay_${crypto.randomUUID().slice(0, 12)}`, new Date());
   const text = confirmedText(result);
   if (text.celebrate) await setFlash("celebrate", "shop.flashText", { text: text.celebrate });
@@ -165,10 +165,10 @@ export async function payMockAction(formData: FormData): Promise<void> {
 
 /** The test UPI screen's "Cancel payment" button. */
 export async function declineMockAction(formData: FormData): Promise<void> {
-  const user = await requireArea("resident");
+  const user = await requirePortal("app");
   const paymentId = String(formData.get("paymentId") ?? "");
   const payment = await getPaymentForUser(paymentId, user.id);
   if (payment) await failPayment(paymentId, user.id, "Declined by the resident");
   await setFlash("info", "pay.declined");
-  redirect(payment ? roundPage(payment.round, payment.roundId) : "/");
+  redirect(payment ? roundPage(payment.round, payment.roundId) : "/app");
 }

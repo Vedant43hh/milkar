@@ -49,11 +49,11 @@ describe("visit transitions", () => {
     expect(ALL.filter(isFinal)).toEqual(["COMPLETED", "NO_ACCESS", "CANCELLED"]);
   });
 
-  it("lets captains and admins cancel but not run the visit", () => {
-    expect(transitionVisit(visit("SCHEDULED"), { to: "CANCELLED", actor: "CAPTAIN", now }).ok).toBe(true);
+  it("lets managers and admins cancel but not run the visit", () => {
+    expect(transitionVisit(visit("SCHEDULED"), { to: "CANCELLED", actor: "MANAGER", now }).ok).toBe(true);
     expect(transitionVisit(visit("ON_THE_WAY"), { to: "CANCELLED", actor: "ADMIN", now }).ok).toBe(true);
-    expect(transitionVisit(visit("SCHEDULED"), { to: "ON_THE_WAY", actor: "CAPTAIN", now })).toEqual({ ok: false, error: "NOT_ALLOWED" });
-    expect(transitionVisit(visit("ON_THE_WAY"), { to: "NO_ACCESS", actor: "CAPTAIN", now })).toEqual({ ok: false, error: "NOT_ALLOWED" });
+    expect(transitionVisit(visit("SCHEDULED"), { to: "ON_THE_WAY", actor: "MANAGER", now })).toEqual({ ok: false, error: "NOT_ALLOWED" });
+    expect(transitionVisit(visit("ON_THE_WAY"), { to: "NO_ACCESS", actor: "MANAGER", now })).toEqual({ ok: false, error: "NOT_ALLOWED" });
   });
 });
 
@@ -83,9 +83,9 @@ describe("completion code", () => {
     });
   });
 
-  it("lets a captain confirm completion only once the code is locked", () => {
-    expect(transitionVisit(visit("IN_PROGRESS", 4), { to: "COMPLETED", actor: "CAPTAIN", now })).toEqual({ ok: false, error: "NOT_ALLOWED" });
-    expect(transitionVisit(visit("IN_PROGRESS", 5), { to: "COMPLETED", actor: "CAPTAIN", now }).ok).toBe(true);
+  it("lets a manager confirm completion only once the code is locked", () => {
+    expect(transitionVisit(visit("IN_PROGRESS", 4), { to: "COMPLETED", actor: "MANAGER", now })).toEqual({ ok: false, error: "NOT_ALLOWED" });
+    expect(transitionVisit(visit("IN_PROGRESS", 5), { to: "COMPLETED", actor: "MANAGER", now }).ok).toBe(true);
   });
 
   it("formats 4 digits with leading zeros", () => {

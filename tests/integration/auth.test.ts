@@ -153,7 +153,7 @@ describe("demo login", () => {
     const admin = await prisma.user.create({ data: { phone: DEMO_USERS.admin.phone, role: "ADMIN" } });
     expect(await resolveDemoLogin("admin", true)).toEqual({ ok: true, user: { id: admin.id, role: "ADMIN", flatId: null } });
     expect(await resolveDemoLogin("nobody", true)).toEqual({ ok: false, error: "UNKNOWN_DEMO_USER" });
-    expect(await resolveDemoLogin("captain", true)).toEqual({ ok: false, error: "UNKNOWN_DEMO_USER" }); // not seeded here
+    expect(await resolveDemoLogin("manager", true)).toEqual({ ok: false, error: "UNKNOWN_DEMO_USER" }); // not seeded here
   });
 });
 

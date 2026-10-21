@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/display";
 import { PageSkeleton } from "@/components/ui/skeleton";
 import { t } from "@/i18n";
-import { requireArea } from "@/lib/auth/current-user";
+import { requirePortal } from "@/lib/auth/current-user";
 
 export default function VendorPage() {
   return (
@@ -15,11 +15,11 @@ export default function VendorPage() {
 }
 
 async function VendorHome() {
-  const user = await requireArea("vendor");
+  const user = await requirePortal("vendor");
   return (
     <>
       <PageHeader title={`${t("areas.vendorTitle")} · ${user.vendor?.name ?? ""}`} subtitle={t("areas.signedInAs", { name: user.name ?? user.phone, role: t(`roles.${user.role}`) })} />
-      <EmptyState icon={<Package aria-hidden className="size-6" />} title={t("nav.vendorOrders")} body={t("placeholder.staffBody", { phase: 9 })} />
+      <EmptyState icon={<Package aria-hidden className="size-6" />} title={t("nav.vendorOrders")} body={t("placeholder.staffBody", { phase: 14 })} />
     </>
   );
 }

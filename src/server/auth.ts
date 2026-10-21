@@ -1,6 +1,7 @@
 import "server-only";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
+import type { Role } from "@/lib/auth/rules";
 import { DEMO_USERS, type DemoUserKey } from "@/lib/demo";
 
 /** Finds the user for a verified phone number, creating a resident account on first login. */
@@ -14,7 +15,7 @@ export async function findOrCreateUserByPhone(phone: string) {
 }
 
 export type DemoLoginResult =
-  | { ok: true; user: { id: string; role: "RESIDENT" | "CAPTAIN" | "VENDOR" | "ADMIN"; flatId: string | null } }
+  | { ok: true; user: { id: string; role: Role; flatId: string | null } }
   | { ok: false; error: "DEMO_DISABLED" | "UNKNOWN_DEMO_USER" };
 
 /** Resolves a seeded demo account. Refuses unless demo mode is on; callers pass the live setting. */
@@ -59,7 +60,7 @@ export async function joinCommunity(input: { userId: string; communityCode: stri
   if (!flat) return { ok: false, error: "UNKNOWN_FLAT" };
 
   const user = await prisma.user.findUnique({ where: { id: input.userId }, select: { role: true, flatId: true } });
-  if (!user || (user.role !== "RESIDENT" && user.role !== "CAPTAIN")) return { ok: false, error: "NOT_RESIDENT" };
+  if (!user || user.role !== "RESIDENT") return { ok: false, error: "NOT_RESIDENT" };
   if (user.flatId) return { ok: false, error: "ALREADY_MEMBER" };
 
   // Conditional update so two concurrent joins can't both succeed.

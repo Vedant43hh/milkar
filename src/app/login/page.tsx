@@ -1,8 +1,8 @@
-import { ChevronRight, CircleAlert, ShieldCheck, Store, UserRound, Users } from "lucide-react";
+import { ChevronRight, CircleAlert, ShieldCheck, Store, UserRound, Users, Wrench } from "lucide-react";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import { PublicShell } from "@/components/shell/shells";
+import { PublicShell } from "@/components/shell/public-shell";
 import { Card } from "@/components/ui/card";
 import { Banner } from "@/components/ui/display";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -57,7 +57,7 @@ async function LoginSection({ searchParams }: { searchParams: PageProps<"/login"
   );
 }
 
-const DEMO_ICONS = { ADMIN: ShieldCheck, CAPTAIN: Users, RESIDENT: UserRound, VENDOR: Store } as const;
+const DEMO_ICONS = { ADMIN: ShieldCheck, MANAGER: Users, RESIDENT: UserRound, VENDOR: Store, TECHNICIAN: Wrench } as const;
 
 function DemoLogins({ next }: { next: string | null }) {
   return (

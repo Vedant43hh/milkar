@@ -33,7 +33,7 @@ async function main() {
     console.log(`Polls: ${rec.polls.length}, ${rec.votes.length} votes. Notifications: ${rec.notifications.length} (${unread} unread).`);
     console.log(`Wallet credit outstanding: ${formatINR([...world.wallet.values()].reduce((a, b) => a + b, 0))}`);
     console.log("\nDemo logins (any 6-digit OTP in mock mode):");
-    for (const u of Object.values(DEMO_USERS)) console.log(`  ${u.role.padEnd(9)} ${u.phone.slice(3)}  ${u.name}`);
+    for (const u of Object.values(DEMO_USERS)) console.log(`  ${u.role.padEnd(10)} ${u.phone.slice(3)}  ${u.name}`);
   } finally {
     await prisma.$disconnect();
   }

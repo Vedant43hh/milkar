@@ -1,5 +1,9 @@
 import {
+  BadgeCheck,
   BadgePercent,
+  Building2,
+  UserPlus,
+  Users,
   Bell,
   CalendarCheck,
   CalendarClock,
@@ -19,8 +23,8 @@ import { PageHeader } from "@/components/ui/card";
 import { cn } from "@/components/ui/cn";
 import { EmptyState } from "@/components/ui/display";
 import { t } from "@/i18n";
-import { requireArea } from "@/lib/auth/current-user";
-import type { Area } from "@/lib/auth/rules";
+import { requirePortal } from "@/lib/auth/current-user";
+import type { Portal } from "@/lib/auth/rules";
 import { relativeTime, renderNotification, type NotificationType } from "@/lib/notifications";
 import { openNotificationAction } from "@/server/actions/notifications";
 import { listNotifications } from "@/server/notifications";
@@ -42,11 +46,15 @@ const ICONS: Record<NotificationType, { icon: LucideIcon; tone: string }> = {
   SLOT_AUTO_BOOKED: { icon: CalendarCheck, tone: "bg-success-soft text-success" },
   ISSUE_UPDATE: { icon: MessageSquareWarning, tone: "bg-surface-2 text-muted" },
   VENDOR_ORDER: { icon: Package, tone: "bg-brand-soft text-brand-soft-fg" },
+  JOIN_REQUEST: { icon: UserPlus, tone: "bg-accent-soft text-accent-soft-fg" },
+  JOIN_DECIDED: { icon: Users, tone: "bg-success-soft text-success" },
+  COMMUNITY_DECIDED: { icon: Building2, tone: "bg-success-soft text-success" },
+  VENDOR_DECIDED: { icon: BadgeCheck, tone: "bg-success-soft text-success" },
 };
 
 /** The notification list for the signed-in user. Reads the session: render inside <Suspense>. */
-export async function NotificationCentre({ area }: { area: Area }) {
-  const user = await requireArea(area);
+export async function NotificationCentre({ portal }: { portal: Portal }) {
+  const user = await requirePortal(portal);
   const now = new Date();
   const items = await listNotifications(user.id);
   const unread = items.filter((n) => !n.readAt).length;

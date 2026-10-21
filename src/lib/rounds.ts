@@ -1,4 +1,4 @@
-// Rules for opening and running rounds, and the numbers on the captain's dashboard. Pure.
+// Rules for opening and running rounds, and the numbers on the manager's dashboard. Pure.
 import { groupBasis, type TierBasis } from "./pricing/basis";
 import { computeMeter, type Meter, type MeterInput } from "./pricing/meter";
 
@@ -49,9 +49,9 @@ export function validateServiceTimes({
 export type ExtensionError = "ROUND_CLOSED" | "NOT_LATER" | "TOO_LATE";
 
 /**
- * A captain can push the cutoff later while the round is still taking orders. It must stay before
+ * A manager can push the cutoff later while the round is still taking orders. It must stay before
  * delivery (groceries) or the first slot (services). Moving the cutoff also moves the reduction
- * freeze, which is the captain's call.
+ * freeze, which is the manager's call.
  */
 export function validateExtension({
   round,
@@ -146,7 +146,7 @@ export function roundStats(offerings: readonly StatOffering[]): RoundStats {
 export type DisplayStatus = "OPEN" | "CLOSED" | "FINALIZING" | "FINALIZED" | "DROPPED" | "COMPLETED" | "CANCELLED";
 
 /**
- * What a captain sees: an open round whose cutoff has passed is "closed" until the cutoff job runs,
+ * What a manager sees: an open round whose cutoff has passed is "closed" until the cutoff job runs,
  * and a finalized round where nothing reached its minimum "didn't go ahead".
  */
 export function displayStatus(round: { status: string; cutoffAt: Date; offerings?: readonly { status: string }[] }, now: Date): DisplayStatus {

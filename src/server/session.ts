@@ -8,6 +8,8 @@ export type SessionUser = {
   name: string | null;
   phone: string;
   role: Role;
+  onboardedAt: Date | null;
+  /** Residents: the flat they were approved into. */
   flatId: string | null;
   flat: {
     id: string;
@@ -15,7 +17,10 @@ export type SessionUser = {
     number: string;
     community: SessionCommunity;
   } | null;
-  vendor: { id: string; name: string; kind: "GOODS" | "SERVICES" } | null;
+  /** Society Managers: the community they run. */
+  staff: { kind: "PRIMARY" | "ASSISTANT"; community: SessionCommunity } | null;
+  /** Vendors and their technicians. */
+  vendor: { id: string; name: string; kind: "GOODS" | "SERVICES"; verificationStatus: "PENDING" | "VERIFIED" | "REJECTED" } | null;
 };
 
 export type SessionCommunity = {
@@ -23,12 +28,17 @@ export type SessionCommunity = {
   name: string;
   code: string;
   city: string;
+  status: "PENDING" | "APPROVED" | "REJECTED";
   /** What a flat and a tower are called here, e.g. "Room" and "Wing" in a PG. */
   unitLabel: string;
   blockLabel: string;
 };
 
 export type ResidentUser = SessionUser & { flatId: string; flat: NonNullable<SessionUser["flat"]> };
+export type ManagerUser = SessionUser & { staff: NonNullable<SessionUser["staff"]> };
+export type VendorUser = SessionUser & { vendor: NonNullable<SessionUser["vendor"]> };
+
+const communitySelect = { id: true, name: true, code: true, city: true, status: true, unitLabel: true, blockLabel: true } as const;
 
 export function hashSessionToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
@@ -48,12 +58,9 @@ export async function findSessionUser(token: string, now: Date): Promise<Session
     include: {
       user: {
         include: {
-          flat: {
-            include: {
-              community: { select: { id: true, name: true, code: true, city: true, unitLabel: true, blockLabel: true } },
-            },
-          },
-          vendor: { select: { id: true, name: true, kind: true } },
+          flat: { include: { community: { select: communitySelect } } },
+          staffRole: { select: { kind: true, community: { select: communitySelect } } },
+          vendor: { select: { id: true, name: true, kind: true, verificationStatus: true } },
         },
       },
     },
@@ -65,10 +72,12 @@ export async function findSessionUser(token: string, now: Date): Promise<Session
     name: user.name,
     phone: user.phone,
     role: user.role,
+    onboardedAt: user.onboardedAt,
     flatId: user.flatId,
     flat: user.flat
       ? { id: user.flat.id, tower: user.flat.tower, number: user.flat.number, community: user.flat.community }
       : null,
+    staff: user.staffRole,
     vendor: user.vendor,
   };
 }

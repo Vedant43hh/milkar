@@ -74,7 +74,7 @@ describe("checkChange", () => {
   });
 
   it("lets a resident reduce even if the flat is over the cap", () => {
-    // e.g. the captain lowered the cap after orders were placed
+    // e.g. the manager lowered the cap after orders were placed
     expect(checkChange({ ...base, flatOthersQty: 10, currentQty: 4, targetQty: 2 })).toBeNull();
   });
 

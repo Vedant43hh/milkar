@@ -2,7 +2,7 @@ import { CircleAlert } from "lucide-react";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import { PublicShell } from "@/components/shell/shells";
+import { PublicShell } from "@/components/shell/public-shell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Banner } from "@/components/ui/display";
@@ -30,7 +30,7 @@ export default function JoinPage({ searchParams }: PageProps<"/join">) {
 async function JoinCodeSection({ searchParams }: { searchParams: PageProps<"/join">["searchParams"] }) {
   const [params, user] = await Promise.all([searchParams, getCurrentUser()]);
   // Members, vendors and admins have nothing to join here.
-  if (user && (user.flatId || user.role === "VENDOR" || user.role === "ADMIN")) redirect(homePathFor(user));
+  if (user && (user.role !== "RESIDENT" || user.flatId)) redirect(homePathFor(user));
 
   return (
     <Card>

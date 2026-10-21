@@ -264,6 +264,7 @@ export const SERVICES: SeedService[] = [
 
 /** Technicians shown on visits, per service vendor. */
 export const TECHNICIANS: Record<SeedService["vendor"], string[]> = {
+  // The first name of a vendor's list may be a demo technician account (DEMO_USERS); visits then link to it.
   coolcare: ["Santosh Gaikwad", "Irfan Shaikh", "Ganesh More"],
   sparkle: ["Lata Pawar", "Rekha Jadhav", "Anil Kamble", "Sunil Waghmare"],
   washwell: ["Raju Thapa", "Dinesh Rawat"],
@@ -311,7 +312,7 @@ export const RESIDENTS: { name: string; flat: string }[] = [
 /** Sunrise Co-living: Wings A and B, rooms 101–106. */
 export const PG_WINGS = ["A", "B"];
 export const PG_ROOMS = ["101", "102", "103", "104", "105", "106"];
-export const PG_CAPTAIN = { name: "Meera Iyer", flat: "A-101" };
+export const PG_MANAGER = { name: "Meera Iyer", flat: "A-101" };
 export const PG_RESIDENTS: { name: string; flat: string }[] = [
   { name: "Rhea Kapoor", flat: "A-102" },
   { name: "Siddharth Rao", flat: "A-104" },

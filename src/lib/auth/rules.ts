@@ -1,6 +1,7 @@
-// Pure auth rules: rate limits, where each role lands, and safe redirects.
+// Pure auth rules: rate limits, which portal each role uses, and safe redirects.
 
-export type Role = "RESIDENT" | "CAPTAIN" | "VENDOR" | "ADMIN";
+export type Role = "RESIDENT" | "MANAGER" | "VENDOR" | "TECHNICIAN" | "ADMIN";
+export const ROLES: readonly Role[] = ["RESIDENT", "MANAGER", "VENDOR", "TECHNICIAN", "ADMIN"];
 
 export const SESSION_COOKIE = "milkar_session";
 export const OTP_TTL_MS = 10 * 60 * 1000;
@@ -29,38 +30,52 @@ export function otpRateLimit(counts: OtpCounts, limits: OtpLimits): RateLimitHit
   return null;
 }
 
-export type HomeUser = { role: Role; flatId: string | null };
+// ---------- portals ----------
 
-/** Where a user lands after login. Residents without a flat must join a community first. */
-export function homePathFor(user: HomeUser): string {
-  switch (user.role) {
-    case "ADMIN":
-      return "/admin";
-    case "VENDOR":
-      return "/vendor";
-    default:
-      return user.flatId ? "/" : "/join";
-  }
+/** Each role has exactly one portal, and nobody can enter another role's portal. */
+export type Portal = "app" | "manager" | "vendor" | "tech" | "admin";
+export const PORTALS: readonly Portal[] = ["app", "manager", "vendor", "tech", "admin"];
+
+const PORTAL_OF_ROLE: Record<Role, Portal> = {
+  RESIDENT: "app",
+  MANAGER: "manager",
+  VENDOR: "vendor",
+  TECHNICIAN: "tech",
+  ADMIN: "admin",
+};
+
+export const PORTAL_PATH: Record<Portal, string> = {
+  app: "/app",
+  manager: "/manager",
+  vendor: "/vendor",
+  tech: "/tech",
+  admin: "/admin",
+};
+
+export function portalFor(role: Role): Portal {
+  return PORTAL_OF_ROLE[role];
 }
 
-export type Area = "resident" | "captain" | "vendor" | "admin";
-
-export function canAccess(user: HomeUser, area: Area): boolean {
-  switch (area) {
-    case "resident":
-      return (user.role === "RESIDENT" || user.role === "CAPTAIN") && user.flatId !== null;
-    case "captain":
-      return user.role === "CAPTAIN" && user.flatId !== null;
-    case "vendor":
-      return user.role === "VENDOR";
-    case "admin":
-      return user.role === "ADMIN";
-  }
+export function canEnter(user: { role: Role }, portal: Portal): boolean {
+  return portalFor(user.role) === portal;
 }
 
-/** Who runs a community's rounds and polls: its captains, and platform admins. */
+/** Where a user lands after login: their own portal. */
+export function homePathFor(user: { role: Role }): string {
+  return PORTAL_PATH[portalFor(user.role)];
+}
+
+/** The portal a path belongs to, or null for public pages (landing, login, join). */
+export function portalOfPath(pathname: string): Portal | null {
+  return PORTALS.find((p) => pathname === PORTAL_PATH[p] || pathname.startsWith(`${PORTAL_PATH[p]}/`)) ?? null;
+}
+
+/**
+ * Who runs a community's rounds, polls and residents: its Society Managers (primary or assistant),
+ * and platform admins. `communityId` is the community the user manages, not where they live.
+ */
 export function canManageCommunity(user: { role: Role; communityId: string | null }, communityId: string): boolean {
-  return user.role === "ADMIN" || (user.role === "CAPTAIN" && user.communityId === communityId);
+  return user.role === "ADMIN" || (user.role === "MANAGER" && user.communityId === communityId);
 }
 
 /** Only same-site paths are allowed as post-login destinations (no open redirects). */

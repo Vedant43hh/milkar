@@ -53,7 +53,7 @@ export function buildWorld(now: Date) {
   // ---------- communities and flats ----------
   function addCommunity(key: DemoCommunityKey, blocks: readonly string[], numbers: readonly string[]) {
     const communityId = id();
-    rec.communities.push({ id: communityId, ...DEMO_COMMUNITIES[key], createdAt: plus(now, -150 * DAY) });
+    rec.communities.push({ id: communityId, ...DEMO_COMMUNITIES[key], status: "APPROVED", reviewedAt: plus(now, -149 * DAY), createdAt: plus(now, -150 * DAY) });
     const flats = new Map<string, string>();
     for (const tower of blocks) {
       for (const number of numbers) {
@@ -180,8 +180,21 @@ export function buildWorld(now: Date) {
   // ---------- people ----------
   const people = new Map<string, Participant & { communityId: string }>();
   const userIdOfVendor = {} as Record<DemoVendorKey, string>;
-  const addUser = (input: { phone: string; name: string; role: "RESIDENT" | "CAPTAIN" | "VENDOR" | "ADMIN"; flatId?: string; vendorId?: string; communityId?: string; joinedDaysAgo: number }) => {
+  /** Society Managers by name, and the technicians' accounts by name (to link their visits). */
+  const managers = new Map<string, string>();
+  const technicianIds = new Map<string, string>();
+  const addUser = (input: {
+    phone: string;
+    name: string;
+    role: "RESIDENT" | "MANAGER" | "VENDOR" | "TECHNICIAN" | "ADMIN";
+    flatId?: string;
+    vendorId?: string;
+    communityId?: string;
+    manages?: { communityId: string; kind: "PRIMARY" | "ASSISTANT" };
+    joinedDaysAgo: number;
+  }) => {
     const userId = id();
+    const createdAt = plus(now, -input.joinedDaysAgo * DAY);
     rec.users.push({
       id: userId,
       phone: input.phone,
@@ -189,9 +202,15 @@ export function buildWorld(now: Date) {
       role: input.role,
       flatId: input.flatId ?? null,
       vendorId: input.vendorId ?? null,
-      createdAt: plus(now, -input.joinedDaysAgo * DAY),
+      onboardedAt: createdAt,
+      createdAt,
     });
     if (input.flatId && input.communityId) people.set(input.name, { userId, flatId: input.flatId, name: input.name, communityId: input.communityId });
+    if (input.manages) {
+      rec.communityStaff.push({ id: id(), userId, communityId: input.manages.communityId, kind: input.manages.kind, createdAt });
+      managers.set(input.name, userId);
+    }
+    if (input.role === "TECHNICIAN") technicianIds.set(input.name, userId);
     return userId;
   };
   for (const u of Object.values(DEMO_USERS)) {
@@ -203,14 +222,15 @@ export function buildWorld(now: Date) {
       flatId: community && u.home ? community.flatId(u.home.flat) : undefined,
       communityId: community?.id,
       vendorId: u.vendor ? vendorIds[u.vendor] : undefined,
+      manages: u.manages ? { communityId: communities[u.manages.community].id, kind: u.manages.kind } : undefined,
       joinedDaysAgo: 120,
     });
-    if (u.vendor) userIdOfVendor[u.vendor] = userId;
+    if (u.vendor && u.role === "VENDOR") userIdOfVendor[u.vendor] = userId;
   }
   data.RESIDENTS.forEach((r, i) =>
     addUser({ phone: `+9190000010${String(i + 1).padStart(2, "0")}`, name: r.name, role: "RESIDENT", flatId: gm.flatId(r.flat), communityId: gm.id, joinedDaysAgo: 110 - i }),
   );
-  addUser({ phone: "+919000002001", name: data.PG_CAPTAIN.name, role: "CAPTAIN", flatId: pg.flatId(data.PG_CAPTAIN.flat), communityId: pg.id, joinedDaysAgo: 60 });
+  addUser({ phone: "+919000002001", name: data.PG_MANAGER.name, role: "MANAGER", manages: { communityId: pg.id, kind: "PRIMARY" }, joinedDaysAgo: 60 });
   data.PG_RESIDENTS.forEach((r, i) =>
     addUser({ phone: `+9190000020${String(i + 2).padStart(2, "0")}`, name: r.name, role: "RESIDENT", flatId: pg.flatId(r.flat), communityId: pg.id, joinedDaysAgo: 50 - i }),
   );
@@ -219,13 +239,20 @@ export function buildWorld(now: Date) {
     if (!p) throw new Error(`Unknown person ${name}`);
     return p;
   };
+  const manager = (name: string) => {
+    const userId = managers.get(name);
+    if (!userId) throw new Error(`Unknown manager ${name}`);
+    return { userId, name };
+  };
   const rahul = person(DEMO_USERS.resident.name);
-  const sunita = person(DEMO_USERS.captain.name);
-  const meera = person(data.PG_CAPTAIN.name);
+  // Kavya's household (B-402) orders, votes and books like any resident; Sunita runs the community.
+  const kavya = person(DEMO_USERS.neighbour.name);
+  const sunita = manager(DEMO_USERS.manager.name);
+  const meera = manager(data.PG_MANAGER.name);
   const gmPeople = [...people.values()].filter((p) => p.communityId === gm.id);
   const pgPeople = [...people.values()].filter((p) => p.communityId === pg.id);
   const gmUserIds = gmPeople.map((p) => p.userId);
-  const othersInGm = gmPeople.filter((p) => p !== rahul && p !== sunita);
+  const othersInGm = gmPeople.filter((p) => p !== rahul && p !== kavya);
   const vendorUserOf = (vendorId: string) => {
     const key = (Object.keys(vendorIds) as DemoVendorKey[]).find((k) => vendorIds[k] === vendorId)!;
     return userIdOfVendor[key];
@@ -254,7 +281,7 @@ export function buildWorld(now: Date) {
   };
   // Vikram keeps his no-access refund in the wallet for car-wash auto-pay, so he skips grocery rounds.
   const reserved = new Set(["Vikram Joshi"]);
-  const pick = (n: number) => [rahul, sunita, ...random.shuffle(othersInGm.filter((p) => !reserved.has(p.name))).slice(0, n)];
+  const pick = (n: number) => [rahul, kavya, ...random.shuffle(othersInGm.filter((p) => !reserved.has(p.name))).slice(0, n)];
 
   const pastGrocery = [
     { spec: data.ROUNDS.first, cutoffDay: -20, people: pick(16) },
@@ -315,7 +342,7 @@ export function buildWorld(now: Date) {
             });
             const key2 = shortDeliveryRefundKey(item.id, 1);
             world.credit(item.userId, refund, "SHORT_DELIVERY_REFUND", key2, reportedAt, { roundId: round.id, orderItemId: item.id });
-            world.notify([item.userId], { type: "REFUND_CREDITED", params: { amountPaise: refund, reason: "SHORT_DELIVERY_REFUND", round: round.title }, href: "/wallet" }, reportedAt, notificationKeys.refund(key2));
+            world.notify([item.userId], { type: "REFUND_CREDITED", params: { amountPaise: refund, reason: "SHORT_DELIVERY_REFUND", round: round.title }, href: "/app/wallet" }, reportedAt, notificationKeys.refund(key2));
           }
         });
       }
@@ -429,6 +456,7 @@ export function buildWorld(now: Date) {
           startsAt: booking.slot.startsAt,
           endsAt: booking.slot.endsAt,
           technicianName: technicians[i % technicians.length],
+          technicianId: technicianIds.get(technicians[i % technicians.length]) ?? null,
           completionCode: random.code(),
           createdAt: at,
         };
@@ -522,7 +550,7 @@ export function buildWorld(now: Date) {
     const bookers: [Participant, string][] = [
       [rahul, "2bhk"],
       [person("Ananya Iyer"), "1bhk"],
-      [sunita, "3bhk"],
+      [kavya, "3bhk"],
       [person("Kavita Patil"), "2bhk"],
       [vikram, "2bhk"],
       [person("Deepa Krishnan"), "3bhk"],
@@ -760,7 +788,7 @@ export function buildWorld(now: Date) {
         rec.votes.push({ id: id(), pollId, flatId: voter.flatId, userId: voter.userId, createdAt: times[i] });
         if (i + 1 === input.threshold) {
           record.thresholdNotifiedAt = times[i];
-          world.notify([sunita.userId], { type: "POLL_THRESHOLD", params: { poll: input.title, votes: i + 1 }, href: "/captain/polls" }, times[i], notificationKeys.pollThreshold(pollId));
+          world.notify([sunita.userId], { type: "POLL_THRESHOLD", params: { poll: input.title, votes: i + 1 }, href: "/manager/polls" }, times[i], notificationKeys.pollThreshold(pollId));
         }
       });
     });
@@ -788,7 +816,7 @@ export function buildWorld(now: Date) {
     threshold: pest.threshold,
     status: "OPEN",
     createdAt: plus(now, -12 * DAY),
-    voters: voters(pest.votes, [rahul, sunita]),
+    voters: voters(pest.votes, [rahul, kavya]),
   });
   poll({
     kind: "SERVICE",
@@ -798,7 +826,7 @@ export function buildWorld(now: Date) {
     threshold: tank.threshold,
     status: "OPEN",
     createdAt: plus(now, -6 * DAY),
-    voters: voters(tank.votes, [sunita], [rahul]),
+    voters: voters(tank.votes, [kavya], [rahul]),
   });
   poll({ kind: "PRODUCT", title: veg.title, description: veg.description, threshold: veg.threshold, status: "OPEN", createdAt: plus(now, -4 * DAY), voters: voters(veg.votes, [rahul]) });
   const kavita = person(data.POLLS.suggestion.by);
@@ -814,7 +842,7 @@ export function buildWorld(now: Date) {
     suggestedBy: kavita,
   });
   world.at(suggestionAt, () =>
-    world.notify([sunita.userId], { type: "POLL_SUGGESTION", params: { poll: suggestion.title, by: kavita.name }, href: "/captain/polls" }, suggestionAt, notificationKeys.pollSuggestion(suggestion.id as string)),
+    world.notify([sunita.userId], { type: "POLL_SUGGESTION", params: { poll: suggestion.title, by: kavita.name }, href: "/manager/polls" }, suggestionAt, notificationKeys.pollSuggestion(suggestion.id as string)),
   );
 
   // ---------- run everything in time order ----------
@@ -844,6 +872,7 @@ export async function writeWorld(prisma: PrismaClient, world: SeedWorld): Promis
   await prisma.flat.createMany({ data: rec.flats });
   await prisma.vendor.createMany({ data: rec.vendors });
   await prisma.user.createMany({ data: rec.users });
+  await prisma.communityStaff.createMany({ data: rec.communityStaff });
   await prisma.product.createMany({ data: rec.products });
   await prisma.priceTier.createMany({ data: rec.priceTiers });
   await prisma.service.createMany({ data: rec.services });

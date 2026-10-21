@@ -281,7 +281,7 @@ describe("repeating weekly", () => {
 describe("cutoff reminders", () => {
   it("go to the whole community once, in the last 6 hours", async () => {
     const s = await groceryRound(4);
-    const community = s.residents.length + 1; // residents and the captain
+    const community = s.residents.length; // every resident; the Society Manager runs the round
     expect(await sendCutoffReminders(at(41))).toBe(0); // 7 hours out
     expect(await sendCutoffReminders(at(43))).toBe(community); // 5 hours out
     expect(await sendCutoffReminders(at(44))).toBe(0);

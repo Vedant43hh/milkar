@@ -2,13 +2,13 @@
 // the proxy only redirects requests that have no session cookie at all.
 import "server-only";
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import { forbidden, redirect } from "next/navigation";
 import { connection } from "next/server";
 import { cache } from "react";
-import { canAccess, homePathFor, SESSION_COOKIE, type Area } from "@/lib/auth/rules";
-import { createSession, deleteSession, findSessionUser, type ResidentUser, type SessionUser } from "@/server/session";
+import { canEnter, PORTAL_PATH, SESSION_COOKIE, type Portal } from "@/lib/auth/rules";
+import { createSession, deleteSession, findSessionUser, type ManagerUser, type ResidentUser, type SessionUser, type VendorUser } from "@/server/session";
 
-export type { ResidentUser, SessionUser };
+export type { ManagerUser, ResidentUser, SessionUser, VendorUser };
 
 /** The signed-in user for this request, or null. Memoised per request. */
 export const getCurrentUser = cache(async (): Promise<SessionUser | null> => {
@@ -29,20 +29,31 @@ export async function requireUser(next?: string): Promise<SessionUser> {
   return user;
 }
 
-/** Signed-in user allowed in `area`; anyone else is sent to their own home page. */
-export async function requireArea(area: "resident" | "captain"): Promise<ResidentUser>;
-export async function requireArea(area: Area): Promise<SessionUser>;
-export async function requireArea(area: Area): Promise<SessionUser> {
-  const user = await requireUser();
-  if (!canAccess(user, area)) redirect(homePathFor(user));
+/**
+ * The signed-in user of this portal's role, or a 403: the portal's forbidden.tsx tells them whose
+ * area this is and links to their own. Signed-out visitors go to the login page. Call it in every
+ * page, server action and route handler of the portal.
+ */
+export async function requirePortalUser(portal: Portal): Promise<SessionUser> {
+  const user = await requireUser(PORTAL_PATH[portal]);
+  if (!canEnter(user, portal)) forbidden();
   return user;
 }
 
-/** Admins may see any community; residents and captains only their own. */
-export async function requireCommunityAccess(communityId: string): Promise<SessionUser> {
-  const user = await requireUser();
-  if (user.role === "ADMIN") return user;
-  if (user.flat?.community.id !== communityId) redirect(homePathFor(user));
+/**
+ * The same, for an account that is fully set up for its portal. Accounts still being set up are
+ * sent to the step that finishes it: residents to joining a community, Society Managers to the
+ * status of their community's approval.
+ */
+export async function requirePortal(portal: "app"): Promise<ResidentUser>;
+export async function requirePortal(portal: "manager"): Promise<ManagerUser>;
+export async function requirePortal(portal: "vendor" | "tech"): Promise<VendorUser>;
+export async function requirePortal(portal: Portal): Promise<SessionUser>;
+export async function requirePortal(portal: Portal): Promise<SessionUser> {
+  const user = await requirePortalUser(portal);
+  if (portal === "app" && !user.flat) redirect("/join");
+  if (portal === "manager" && user.staff?.community.status !== "APPROVED") redirect("/manager/pending");
+  if ((portal === "vendor" || portal === "tech") && !user.vendor) forbidden();
   return user;
 }
 

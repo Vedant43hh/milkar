@@ -138,7 +138,7 @@ describe("checkout", () => {
     expect(await startCheckout(s.shopper(me), s.roundId, { [s.riceId]: 2 }, frozen)).toMatchObject({ status: "PAID" }); // adding is still fine
   });
 
-  it("credits the wallet if the captain cancels the round while the resident is paying", async () => {
+  it("credits the wallet if the manager cancels the round while the resident is paying", async () => {
     const s = await setup();
     const me = s.residents[1];
     const started = await startCheckout(s.shopper(me), s.roundId, { [s.riceId]: 2 }, now);

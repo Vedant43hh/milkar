@@ -43,10 +43,10 @@ describe("renderNotification", () => {
 
 describe("safeNotificationHref", () => {
   it("follows same-site paths only", () => {
-    expect(safeNotificationHref("/services/abc")).toBe("/services/abc");
-    expect(safeNotificationHref("https://evil.example")).toBe("/notifications");
-    expect(safeNotificationHref("//evil.example")).toBe("/notifications");
-    expect(safeNotificationHref(null)).toBe("/notifications");
+    expect(safeNotificationHref("/app/services/abc")).toBe("/app/services/abc");
+    expect(safeNotificationHref("https://evil.example")).toBe("/app/notifications");
+    expect(safeNotificationHref("//evil.example")).toBe("/app/notifications");
+    expect(safeNotificationHref(null)).toBe("/app/notifications");
   });
 });
 

@@ -22,7 +22,7 @@ afterAll(async () => {
 });
 
 const users = (n: number) => Promise.all(Array.from({ length: n }, () => prisma.user.create({ data: { phone: nextPhone() } })));
-const unlocked = { type: "TIER_UNLOCKED" as const, params: { item: "Sona Masoori Rice", pricePaise: 44000 }, href: "/groceries" };
+const unlocked = { type: "TIER_UNLOCKED" as const, params: { item: "Sona Masoori Rice", pricePaise: 44000 }, href: "/app/groceries" };
 const key = notificationKeys.tierUnlocked("round-1", "product:rice", 50);
 
 describe("notify", () => {

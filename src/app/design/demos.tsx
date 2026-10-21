@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Celebration } from "@/components/ui/celebrate";
 import { Countdown } from "@/components/ui/countdown";
 import { QuantityStepper } from "@/components/ui/stepper";
+import { Field, Input, Select } from "@/components/ui/form";
 import { Tabs } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/toast";
+import { Wizard } from "@/components/ui/wizard";
 
 export function StepperDemo() {
   const [rice, setRice] = useState(2);
@@ -75,5 +77,58 @@ export function TabsDemo() {
         { id: "mon", label: "Mon 26 Oct", content: <p className="text-sm text-muted">No visits.</p> },
       ]}
     />
+  );
+}
+
+export function WizardDemo() {
+  const toast = useToast();
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        toast({ tone: "success", title: "Community registered (demo)" });
+      }}
+    >
+      <Wizard
+        steps={[
+          {
+            id: "name",
+            title: "Your community",
+            content: (
+              <Field id="wiz-name" label="Name" hint="As residents know it">
+                {(aria) => <Input {...aria} name="name" required minLength={3} placeholder="Green Meadows CHS" />}
+              </Field>
+            ),
+          },
+          {
+            id: "type",
+            title: "What kind of place is it?",
+            content: (
+              <Field id="wiz-type" label="Type">
+                {(aria) => (
+                  <Select {...aria} name="type" required defaultValue="">
+                    <option value="" disabled>
+                      Choose one
+                    </option>
+                    <option>Apartment society</option>
+                    <option>PG or co-living</option>
+                  </Select>
+                )}
+              </Field>
+            ),
+          },
+          {
+            id: "flats",
+            title: "How many flats?",
+            content: (
+              <Field id="wiz-flats" label="Flats">
+                {(aria) => <Input {...aria} name="flats" type="number" required min={1} max={2000} inputMode="numeric" />}
+              </Field>
+            ),
+          },
+        ]}
+        submit={<Button>Register</Button>}
+      />
+    </form>
   );
 }

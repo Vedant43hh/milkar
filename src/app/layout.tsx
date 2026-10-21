@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
-import { THEME_SCRIPT } from "@/components/theme-script";
+import { THEME_SCRIPT, VIEW_TRANSITION_SCRIPT } from "@/components/theme-script";
 import { FlashToasts, ToastProvider } from "@/components/ui/toast";
 import { t } from "@/i18n";
 import "./globals.css";
@@ -16,7 +16,7 @@ export const viewport: Viewport = {
   viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#1a1917" },
+    { media: "(prefers-color-scheme: dark)", color: "#1d1914" },
   ],
 };
 
@@ -26,6 +26,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: VIEW_TRANSITION_SCRIPT }} />
       </head>
       <body className="min-h-dvh antialiased">
         <ToastProvider>

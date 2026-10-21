@@ -22,11 +22,12 @@ import { lockRound } from "./round-lock";
 type Db = PrismaClient | Prisma.TransactionClient;
 type Tx = Prisma.TransactionClient;
 
-/** Who is acting, and the community they belong to (captains act for their own community). */
+/** Who is acting, and the community they belong to (managers act for their own community). */
 export type Actor = { id: string; role: Role; communityId: string | null };
 
+/** The community a Society Manager runs (not where anyone lives). */
 export function actorOf(user: SessionUser): Actor {
-  return { id: user.id, role: user.role, communityId: user.flat?.community.id ?? null };
+  return { id: user.id, role: user.role, communityId: user.staff?.community.id ?? null };
 }
 
 async function platformSettings(db: Db) {
@@ -39,15 +40,16 @@ export function currentSettings() {
   return platformSettings(prisma);
 }
 
-/** Residents (and captains) living in a community. */
+/** Residents living in a community. */
 export async function communityResidentIds(db: Db, communityId: string): Promise<string[]> {
-  const users = await db.user.findMany({ where: { flat: { communityId }, role: { in: ["RESIDENT", "CAPTAIN"] } }, select: { id: true } });
+  const users = await db.user.findMany({ where: { flat: { communityId }, role: "RESIDENT" }, select: { id: true } });
   return users.map((u) => u.id);
 }
 
-export async function communityCaptainIds(db: Db, communityId: string): Promise<string[]> {
-  const users = await db.user.findMany({ where: { flat: { communityId }, role: "CAPTAIN" }, select: { id: true } });
-  return users.map((u) => u.id);
+/** The Society Managers (primary and assistants) who run a community. */
+export async function communityManagerIds(db: Db, communityId: string): Promise<string[]> {
+  const staff = await db.communityStaff.findMany({ where: { communityId }, select: { userId: true } });
+  return staff.map((s) => s.userId);
 }
 
 function snapshotTiers(tiers: Tier[]): Prisma.InputJsonValue {
@@ -347,7 +349,7 @@ export async function cancelRound(actor: Actor, roundId: string, reason: string,
       await notify(
         tx,
         [userId],
-        { type: "REFUND_CREDITED", params: { amountPaise, reason: "ROUND_CANCEL_REFUND", round: round.title }, href: "/wallet" },
+        { type: "REFUND_CREDITED", params: { amountPaise, reason: "ROUND_CANCEL_REFUND", round: round.title }, href: "/app/wallet" },
         { dedupeKey: notificationKeys.refund(`ROUND_CANCEL_REFUND:${roundId}`), now },
       );
     }
@@ -364,7 +366,7 @@ const offeringInclude = {
   orderItems: { select: { flatId: true, quantity: true, chargedPaise: true, refundPaise: true, absorbedPaise: true } },
 } satisfies Prisma.RoundOfferingInclude;
 
-/** Rounds for the captain's lists, newest first. */
+/** Rounds for the manager's lists, newest first. */
 export async function listCommunityRounds(communityId: string) {
   return prisma.orderRound.findMany({
     where: { communityId },
@@ -377,7 +379,7 @@ export async function listCommunityRounds(communityId: string) {
   });
 }
 
-export type CaptainRound = Awaited<ReturnType<typeof listCommunityRounds>>[number];
+export type ManagerRound = Awaited<ReturnType<typeof listCommunityRounds>>[number];
 
 /** Everything the round dashboard shows, or null if the round isn't the actor's to manage. */
 export async function getRoundDashboard(actor: Actor, roundId: string) {
@@ -414,7 +416,7 @@ export async function getRoundDashboard(actor: Actor, roundId: string) {
 
 export type RoundDashboard = NonNullable<Awaited<ReturnType<typeof getRoundDashboard>>>;
 
-/** Products a captain can put in a grocery round, with their tiers, grouped by the caller. */
+/** Products a manager can put in a grocery round, with their tiers, grouped by the caller. */
 export async function listCatalogue() {
   return prisma.product.findMany({
     where: { active: true, vendor: { active: true } },
@@ -423,7 +425,7 @@ export async function listCatalogue() {
   });
 }
 
-/** Services a captain can run a Service Day for. */
+/** Services a manager can run a Service Day for. */
 export async function listServices() {
   return prisma.service.findMany({
     where: { active: true, vendor: { active: true } },

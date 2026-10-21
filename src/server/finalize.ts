@@ -173,7 +173,7 @@ export async function finalizeRound(roundId: string, now: Date): Promise<Finaliz
         await notify(
           tx,
           [userId],
-          { type: "REFUND_CREDITED", params: { amountPaise: sums[reason], reason, round: round.title }, href: "/wallet" },
+          { type: "REFUND_CREDITED", params: { amountPaise: sums[reason], reason, round: round.title }, href: "/app/wallet" },
           { dedupeKey: notificationKeys.refund(`${reason}:${roundId}`), now },
         );
       }
@@ -287,7 +287,7 @@ async function openNextWeek(tx: Tx, round: FinalizeRound, now: Date): Promise<{ 
 
   const opened = await openRoundInTx(
     tx,
-    { id: round.createdById, role: "CAPTAIN", communityId: round.communityId },
+    { id: round.createdById, role: "MANAGER", communityId: round.communityId },
     round.communityId,
     {
       kind: "SERVICE",

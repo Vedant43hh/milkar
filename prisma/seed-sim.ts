@@ -133,6 +133,7 @@ function emptyRecords() {
     flats: [] as Prisma.FlatCreateManyInput[],
     vendors: [] as Prisma.VendorCreateManyInput[],
     users: [] as Prisma.UserCreateManyInput[],
+    communityStaff: [] as Prisma.CommunityStaffCreateManyInput[],
     products: [] as Prisma.ProductCreateManyInput[],
     priceTiers: [] as Prisma.PriceTierCreateManyInput[],
     services: [] as Prisma.ServiceCreateManyInput[],
@@ -300,7 +301,7 @@ export class SeedWorld {
       slots: [],
       bookings: new Map(),
       record,
-      href: input.kind === "GROCERY" ? "/groceries" : `/services/${roundId}`,
+      href: input.kind === "GROCERY" ? "/app/groceries" : `/app/services/${roundId}`,
     };
     return round;
   }
@@ -506,7 +507,7 @@ export class SeedWorld {
     }
     for (const [key, { amount, type }] of refunds) {
       const userId = key.slice(0, key.lastIndexOf(":"));
-      this.notify([userId], { type: "REFUND_CREDITED", params: { amountPaise: amount, reason: type, round: round.title }, href: "/wallet" }, at, notificationKeys.refund(`${type}:${round.id}`));
+      this.notify([userId], { type: "REFUND_CREDITED", params: { amountPaise: amount, reason: type, round: round.title }, href: "/app/wallet" }, at, notificationKeys.refund(`${type}:${round.id}`));
     }
     const confirmedUsers = result.offerings.filter((f) => f.status === "CONFIRMED").flatMap((f) => f.items.map((i) => i.userId));
     this.notify(confirmedUsers, { type: "ROUND_FINALIZED", params: { round: round.title }, href: round.href }, at, notificationKeys.roundFinalized(round.id));

@@ -37,13 +37,13 @@ describe("database constraints", () => {
   });
 
   it("numbers rounds sequentially", async () => {
-    const captain = await makeUser();
+    const manager = await makeUser();
     const community = await prisma.community.create({
       data: { name: "Test CHS", code: "TEST2", address: "x", city: "Pune", pincode: "411001" },
     });
     const base = {
       communityId: community.id,
-      createdById: captain.id,
+      createdById: manager.id,
       kind: "GROCERY" as const,
       title: "Round",
       cutoffAt: new Date(),

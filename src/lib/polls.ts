@@ -9,7 +9,7 @@ export function crossesThreshold(previousVotes: number, votes: number, threshold
 }
 
 /**
- * Whether the captain should be told now. Idempotent: once thresholdNotifiedAt is set it stays
+ * Whether the manager should be told now. Idempotent: once thresholdNotifiedAt is set it stays
  * false, so a retried or concurrent vote never sends a second prompt.
  */
 export function shouldNotifyThreshold(poll: { threshold: number; thresholdNotifiedAt: Date | null }, votes: number): boolean {

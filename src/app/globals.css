@@ -4,27 +4,29 @@
    from the saved choice (system / light / dark) before first paint. */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* ---------- Semantic colour tokens (light) ---------- */
+/* ---------- Semantic colour tokens (light) ----------
+   Warm and friendly: cream and clay neutrals, Milkar teal for actions, saffron for savings and
+   unlocks. Every text/background pair here is checked for WCAG AA (4.5:1) in both themes. */
 :root {
-  --bg: #f7f7f5;
+  --bg: #faf6ef;
   --surface: #ffffff;
-  --surface-2: #f1f0ed;
-  --fg: #1c1917;
-  --muted: #57534e;
-  --subtle: #6b645e;
-  --border: #e7e5e4;
-  --border-strong: #d6d3d1;
+  --surface-2: #f3ece1;
+  --fg: #211b14;
+  --muted: #5c5145;
+  --subtle: #6b6053;
+  --border: #e8dfd2;
+  --border-strong: #d6cab9;
 
   --brand: #0f766e;
   --brand-hover: #115e59;
   --brand-fg: #ffffff;
-  --brand-soft: #e6f4f1;
+  --brand-soft: #e3f3ef;
   --brand-soft-fg: #115e59;
 
   --accent: #f59e0b;
   --accent-fg: #1c1917;
-  --accent-soft: #fff6e0;
-  --accent-soft-fg: #92400e;
+  --accent-soft: #fff3dc;
+  --accent-soft-fg: #8a4b06;
 
   --success: #166534;
   --success-soft: #e9f7ee;
@@ -34,25 +36,25 @@
   --danger-soft: #fdecec;
 
   --focus: #14b8a6;
-  --overlay: rgb(12 10 9 / 0.45);
+  --overlay: rgb(20 14 8 / 0.45);
   color-scheme: light;
 }
 
 /* ---------- Semantic colour tokens (dark) ---------- */
 .dark {
-  --bg: #0e0d0c;
-  --surface: #1a1917;
-  --surface-2: #24221f;
-  --fg: #f5f5f4;
-  --muted: #b5afa9;
-  --subtle: #8f8983;
-  --border: #33302c;
-  --border-strong: #46423d;
+  --bg: #14110d;
+  --surface: #1d1914;
+  --surface-2: #28231c;
+  --fg: #f6efe6;
+  --muted: #bfb3a5;
+  --subtle: #9a8e80;
+  --border: #382f26;
+  --border-strong: #4b4136;
 
   --brand: #2dd4bf;
   --brand-hover: #5eead4;
   --brand-fg: #042f2e;
-  --brand-soft: #0f2d2a;
+  --brand-soft: #10302c;
   --brand-soft-fg: #99f6e4;
 
   --accent: #fbbf24;
@@ -70,6 +72,79 @@
   --focus: #5eead4;
   --overlay: rgb(0 0 0 / 0.6);
   color-scheme: dark;
+}
+
+/* ---------- Portal accents ----------
+   Each portal re-points the brand colour, so its buttons, links, active tabs and focus rings
+   carry its own accent and people always know where they are. Residents keep Milkar teal. */
+[data-portal="manager"] {
+  --brand: #4338ca;
+  --brand-hover: #3730a3;
+  --brand-fg: #ffffff;
+  --brand-soft: #eceefe;
+  --brand-soft-fg: #3730a3;
+  --focus: #6366f1;
+}
+[data-portal="vendor"] {
+  --brand: #b13a09;
+  --brand-hover: #9a3412;
+  --brand-fg: #ffffff;
+  --brand-soft: #fdeee4;
+  --brand-soft-fg: #9a3412;
+  --focus: #f97316;
+}
+[data-portal="tech"] {
+  --brand: #0369a1;
+  --brand-hover: #075985;
+  --brand-fg: #ffffff;
+  --brand-soft: #e2f2fb;
+  --brand-soft-fg: #075985;
+  --focus: #0ea5e9;
+}
+[data-portal="admin"] {
+  --brand: #86198f;
+  --brand-hover: #701a75;
+  --brand-fg: #ffffff;
+  --brand-soft: #f9ebfa;
+  --brand-soft-fg: #701a75;
+  --focus: #c026d3;
+}
+.dark [data-portal="manager"] {
+  --brand: #a5b4fc;
+  --brand-hover: #c7d2fe;
+  --brand-fg: #1e1b4b;
+  --brand-soft: #22214a;
+  --brand-soft-fg: #c7d2fe;
+  --focus: #a5b4fc;
+}
+.dark [data-portal="vendor"] {
+  --brand: #fdba74;
+  --brand-hover: #fed7aa;
+  --brand-fg: #431407;
+  --brand-soft: #3b210f;
+  --brand-soft-fg: #fed7aa;
+  --focus: #fdba74;
+}
+.dark [data-portal="tech"] {
+  --brand: #7dd3fc;
+  --brand-hover: #bae6fd;
+  --brand-fg: #082f49;
+  --brand-soft: #0d2d40;
+  --brand-soft-fg: #bae6fd;
+  --focus: #7dd3fc;
+}
+.dark [data-portal="admin"] {
+  --brand: #f0abfc;
+  --brand-hover: #f5d0fe;
+  --brand-fg: #4a044e;
+  --brand-soft: #3a1540;
+  --brand-soft-fg: #f5d0fe;
+  --focus: #f0abfc;
+}
+
+/* On the "this area is for …" page, a portal's frame hides the controls meant for its own users. */
+[data-portal]:has([data-wrong-portal]) [data-owner-only] {
+  display: none;
 }
 
 /* Expose the semantic tokens as Tailwind utilities: bg-surface, text-muted, border-border, … */
@@ -104,15 +179,17 @@
 /* ---------- Scale tokens ---------- */
 @theme {
   --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif;
-  --radius-control: 0.75rem;
-  --radius-card: 1rem;
-  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.04), 0 1px 3px rgb(0 0 0 / 0.06);
-  --shadow-raised: 0 8px 24px rgb(0 0 0 / 0.12);
+  --radius-control: 0.875rem;
+  --radius-card: 1.25rem;
+  --shadow-card: 0 1px 2px rgb(60 40 20 / 0.05), 0 2px 6px rgb(60 40 20 / 0.06);
+  --shadow-raised: 0 10px 28px rgb(40 24 10 / 0.16);
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
 
   --animate-fade-in: fade-in 160ms var(--ease-out-soft);
   --animate-slide-up: slide-up 220ms var(--ease-out-soft);
+  --animate-slide-in-left: slide-in-left 240ms var(--ease-out-soft);
   --animate-pop: pop 420ms var(--ease-out-soft);
+  --animate-grow-x: grow-x 700ms var(--ease-out-soft);
 
   @keyframes fade-in {
     from { opacity: 0; }
@@ -121,6 +198,14 @@
   @keyframes slide-up {
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slide-in-left {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
+  }
+  @keyframes grow-x {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
   }
   @keyframes pop {
     0% { transform: scale(0.9); opacity: 0; }
@@ -161,6 +246,20 @@
   }
 }
 
+/* ---------- Page transitions (React <ViewTransition default="page-fade">) ---------- */
+@keyframes page-out {
+  to { opacity: 0; }
+}
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(6px); }
+}
+::view-transition-old(.page-fade) {
+  animation: 120ms var(--ease-out-soft) both page-out;
+}
+::view-transition-new(.page-fade) {
+  animation: 220ms var(--ease-out-soft) both page-in;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -169,5 +268,10 @@
     animation-iteration-count: 1 !important;
     transition-duration: 1ms !important;
     scroll-behavior: auto !important;
+  }
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
 }

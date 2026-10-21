@@ -28,7 +28,7 @@ async function reviewAndPay(page: Page) {
 
 test("a resident buys the bag that unlocks a better price for everyone", async ({ page }) => {
   await demoLogin(page, "Rahul Deshmukh");
-  await page.goto("/groceries");
+  await page.goto("/app/groceries");
   await expect(page.getByRole("heading", { level: 1, name: "Groceries" })).toBeVisible();
   await expectNoSeriousA11yIssues(page);
 
@@ -49,7 +49,7 @@ test("a resident buys the bag that unlocks a better price for everyone", async (
 
 test("reducing an order before the freeze refunds the wallet", async ({ page }) => {
   await demoLogin(page, "Rahul Deshmukh");
-  await page.goto("/groceries");
+  await page.goto("/app/groceries");
   const mine = page.getByRole("listitem").filter({ hasText: /In your order: \d/ }).filter({ hasNotText: "Sona Masoori" }).filter({ visible: true }).first();
   await mine.getByRole("button", { name: /^One less/ }).click();
   await page.getByRole("button", { name: /^Review changes/ }).click();
@@ -61,7 +61,7 @@ test("reducing an order before the freeze refunds the wallet", async ({ page }) 
 
 test("declining at the test UPI screen leaves the order as it was", async ({ page }) => {
   await demoLogin(page, "Arnav Sinha"); // a PG resident with an empty wallet
-  await page.goto("/groceries");
+  await page.goto("/app/groceries");
   await expect(page.getByRole("heading", { level: 2, name: "Room essentials" })).toBeVisible();
   await page.getByRole("button", { name: /^(Add|One more) /, disabled: false }).filter({ visible: true }).first().click();
   await page.getByRole("button", { name: /^Review changes/ }).click();
@@ -78,7 +78,7 @@ test("declining at the test UPI screen leaves the order as it was", async ({ pag
 
 test("a resident votes on a poll and takes the vote back", async ({ page }) => {
   await demoLogin(page, "Rahul Deshmukh");
-  await page.goto("/polls");
+  await page.goto("/app/polls");
   await expectNoSeriousA11yIssues(page);
   const tank = page.getByRole("article").filter({ hasText: "Water tank cleaning" }).filter({ visible: true });
   await expect(tank.getByText("12 of 20 flats")).toBeVisible();
@@ -92,18 +92,18 @@ test("a resident votes on a poll and takes the vote back", async ({ page }) => {
   await expect(page.getByText("You're out of this poll.")).toBeVisible({ timeout: 30_000 });
 });
 
-test("a resident suggests a poll for the captain", async ({ page }) => {
+test("a resident suggests a poll for the Society Manager", async ({ page }) => {
   await demoLogin(page, "Rahul Deshmukh");
-  await page.goto("/polls/suggest");
+  await page.goto("/app/polls/suggest");
   await expectNoSeriousA11yIssues(page);
   await page.getByLabel("What would you like?").fill("E2E chimney cleaning");
   await page.getByLabel("Is it one of these?").selectOption({ label: "Kitchen chimney cleaning" });
-  await page.getByRole("button", { name: "Send to your captain" }).click();
-  await expect(page).toHaveURL("/polls", { timeout: 30_000 });
-  await expect(page.getByText("Thanks! Your captain will review your suggestion.")).toBeVisible();
+  await page.getByRole("button", { name: "Send to your Society Manager" }).click();
+  await expect(page).toHaveURL("/app/polls", { timeout: 30_000 });
+  await expect(page.getByText("Thanks! Your Society Manager will review your suggestion.")).toBeVisible();
   const mine = page.getByRole("region", { name: "Your suggestions" });
   await expect(mine.getByText("E2E chimney cleaning")).toBeVisible();
-  await expect(mine.getByText("Waiting for your captain").first()).toBeVisible();
+  await expect(mine.getByText("Waiting for your Society Manager").first()).toBeVisible();
 });
 
 test("the home screen shows open rounds, savings, the visit code, the held slot and polls", async ({ page }) => {

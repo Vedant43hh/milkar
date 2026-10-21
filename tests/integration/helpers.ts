@@ -8,6 +8,7 @@ export async function makeCommunity(code: string, flats: [tower: string, number:
       address: "Test Road",
       city: "Pune",
       pincode: "411001",
+      status: "APPROVED",
       flats: { create: flats.map(([tower, number]) => ({ tower, number })) },
     },
     include: { flats: { orderBy: [{ tower: "asc" }, { number: "asc" }] } },
@@ -20,13 +21,18 @@ export function nextPhone(): string {
   return `+9198${String(phoneSeq).padStart(8, "0")}`;
 }
 
+/** A Society Manager running `communityId` (one portal per account: they have no flat). */
+export async function makeManager(communityId: string, name: string, kind: "PRIMARY" | "ASSISTANT" = "PRIMARY") {
+  return prisma.user.create({ data: { phone: nextPhone(), name, role: "MANAGER", staffRole: { create: { communityId, kind } } } });
+}
+
 let codeSeq = 0;
 
 /** A community with a Service Day: one service, one option and slots with the given capacities. */
 export async function makeServiceDay({ capacities }: { capacities: number[] }) {
   codeSeq += 1;
   const community = await makeCommunity(`SVC${codeSeq}`, [["A", "101"], ["A", "102"], ["A", "103"]]);
-  const user = await prisma.user.create({ data: { phone: nextPhone(), name: "Asha", role: "CAPTAIN", flatId: community.flats[0].id } });
+  const user = await makeManager(community.id, "Asha");
   const vendor = await prisma.vendor.create({ data: { name: "CoolCare", kind: "SERVICES", phone: "+912024000013", city: "Pune" } });
   const service = await prisma.service.create({
     data: {
@@ -64,14 +70,14 @@ export async function makeServiceDay({ capacities }: { capacities: number[] }) {
   return { communityId: community.id, flats: community.flats, userId: user.id, vendorId: vendor.id, serviceId: service.id, round, slots };
 }
 
-/** A community with `flats` flats, one resident in each, plus a captain in the first flat. */
+/** A community with `flats` flats, one resident in each, plus a manager in the first flat. */
 export async function makeNeighbourhood(code: string, flats: number) {
   const numbers = Array.from({ length: flats }, (_, i) => ["A", String(101 + i)] as [string, string]);
   const community = await makeCommunity(code, numbers);
-  const captain = await prisma.user.create({ data: { phone: nextPhone(), name: "Captain", role: "CAPTAIN", flatId: community.flats[0].id } });
+  const manager = await makeManager(community.id, "Manager");
   const residents = [];
   for (const flat of community.flats) residents.push(await prisma.user.create({ data: { phone: nextPhone(), name: `Resident ${flat.number}`, flatId: flat.id } }));
-  return { community, captain, residents, actor: { id: captain.id, role: "CAPTAIN" as const, communityId: community.id } };
+  return { community, manager, residents, actor: { id: manager.id, role: "MANAGER" as const, communityId: community.id } };
 }
 
 /** One grocery product (₹500 / ₹465 / ₹440 rice) and one AC service with two time slots. */

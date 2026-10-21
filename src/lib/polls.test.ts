@@ -8,7 +8,7 @@ describe("poll threshold", () => {
     expect(crossesThreshold(20, 21, 20)).toBe(false);
   });
 
-  it("notifies the captain once: never again after thresholdNotifiedAt is set", () => {
+  it("notifies the manager once: never again after thresholdNotifiedAt is set", () => {
     const poll = { threshold: 20, thresholdNotifiedAt: null };
     expect(shouldNotifyThreshold(poll, 19)).toBe(false);
     expect(shouldNotifyThreshold(poll, 20)).toBe(true);

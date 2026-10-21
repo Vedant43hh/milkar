@@ -7,11 +7,10 @@ test.describe("resident shell", () => {
     await demoLogin(page, "Rahul Deshmukh");
     const tabs = page.getByRole("navigation", { name: "Main" });
     const stops: [tab: string, path: string, heading: string][] = [
-      ["Groceries", "/groceries", "Groceries"],
-      ["Services", "/services", "Services"],
-      ["Orders", "/orders", "Your orders"],
-      ["Wallet", "/wallet", "Wallet"],
-      ["Home", "/", "Namaste, Rahul"],
+      ["Group buys", "/app/buys", "Group buys"],
+      ["Orders", "/app/orders", "Your orders"],
+      ["Wallet", "/app/wallet", "Wallet"],
+      ["Home", "/app", "Namaste, Rahul"],
     ];
     for (const [tab, path, heading] of stops) {
       await tabs.getByRole("link", { name: tab }).click();
@@ -27,7 +26,7 @@ test.describe("resident shell", () => {
     const nav = page.getByRole("navigation", { name: "Main" });
     await expect(nav).toHaveCount(1); // the bottom bar is hidden, not just covered
     await nav.getByRole("link", { name: "Wallet" }).click();
-    await expect(page).toHaveURL("/wallet");
+    await expect(page).toHaveURL("/app/wallet");
     await expect(page.getByText("Green Meadows CHS").first()).toBeVisible(); // community name in the top bar
   });
 
@@ -63,28 +62,33 @@ test.describe("theme", () => {
 
 test("staff areas use a menu sheet on phones", async ({ page }) => {
   await demoLogin(page, "Sunita Kulkarni");
-  await page.goto("/captain");
+  await page.goto("/manager");
   await page.getByRole("button", { name: "Menu", exact: true }).click();
-  const menu = page.getByRole("dialog", { name: "Captain" });
+  const menu = page.getByRole("dialog", { name: "Society Manager" });
   await expect(menu.getByRole("link", { name: "Overview" })).toHaveAttribute("aria-current", "page");
   await expect(menu.getByText("Interest polls")).toBeVisible();
 });
 
 // Pages to check, with the demo user to log in as (null = signed out). None of them redirect.
 const PAGES: [path: string, user: string | null][] = [
+  ["/", null],
   ["/login", null],
   ["/join/GREENMDW", null],
   ["/design", null],
-  ["/", "Rahul Deshmukh"],
-  ["/groceries", "Rahul Deshmukh"],
-  ["/notifications", "Rahul Deshmukh"],
-  ["/polls", "Rahul Deshmukh"],
-  ["/polls/suggest", "Rahul Deshmukh"],
-  ["/services", "Rahul Deshmukh"],
-  ["/captain", "Sunita Kulkarni"],
-  ["/captain/rounds", "Sunita Kulkarni"],
-  ["/captain/polls", "Sunita Kulkarni"],
-  ["/captain/rounds/new/service", "Sunita Kulkarni"],
+  ["/app", "Rahul Deshmukh"],
+  ["/app/buys", "Rahul Deshmukh"],
+  ["/app/groceries", "Rahul Deshmukh"],
+  ["/app/notifications", "Rahul Deshmukh"],
+  ["/app/polls", "Rahul Deshmukh"],
+  ["/app/polls/suggest", "Rahul Deshmukh"],
+  ["/app/services", "Rahul Deshmukh"],
+  ["/manager", "Sunita Kulkarni"],
+  ["/manager/rounds", "Sunita Kulkarni"],
+  ["/manager/polls", "Sunita Kulkarni"],
+  ["/manager/rounds/new/service", "Sunita Kulkarni"],
+  ["/manager/notifications", "Sunita Kulkarni"],
+  ["/tech", "Raju Thapa"],
+  ["/tech/upcoming", "Raju Thapa"],
   ["/vendor", "Ramesh Agarwal"],
   ["/vendor/notifications", "Manoj Yadav"],
   ["/admin", "Priya Nair"],
@@ -96,7 +100,7 @@ async function visitAs(page: Page, path: string, user: string | null) {
 }
 
 test("reload-loop guard: each page loads exactly once", async ({ page }) => {
-  test.setTimeout(240_000);
+  test.setTimeout(420_000);
   for (const [path, user] of PAGES) {
     await visitAs(page, path, user);
     // Count real document loads (not same-document history updates the router makes).
@@ -114,7 +118,7 @@ test("reload-loop guard: each page loads exactly once", async ({ page }) => {
 
 for (const scheme of ["light", "dark"] as const) {
   test(`no serious accessibility problems (${scheme} theme)`, async ({ page }) => {
-    test.setTimeout(240_000);
+    test.setTimeout(420_000);
     // Reduced motion: no fade-in mid-scan (axe would measure half-transparent text).
     await page.emulateMedia({ colorScheme: scheme, reducedMotion: "reduce" });
     const problems: { page: string; rule: string; help: string; nodes: string[] }[] = [];

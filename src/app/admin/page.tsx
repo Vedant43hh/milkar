@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/display";
 import { PageSkeleton } from "@/components/ui/skeleton";
 import { t } from "@/i18n";
-import { requireArea } from "@/lib/auth/current-user";
+import { requirePortal } from "@/lib/auth/current-user";
 
 export default function AdminPage() {
   return (
@@ -15,11 +15,11 @@ export default function AdminPage() {
 }
 
 async function AdminHome() {
-  const user = await requireArea("admin");
+  const user = await requirePortal("admin");
   return (
     <>
       <PageHeader title={t("areas.adminTitle")} subtitle={t("areas.signedInAs", { name: user.name ?? user.phone, role: t(`roles.${user.role}`) })} />
-      <EmptyState icon={<ChartColumn aria-hidden className="size-6" />} title={t("nav.stats")} body={t("placeholder.staffBody", { phase: 12 })} />
+      <EmptyState icon={<ChartColumn aria-hidden className="size-6" />} title={t("nav.stats")} body={t("placeholder.staffBody", { phase: 15 })} />
     </>
   );
 }

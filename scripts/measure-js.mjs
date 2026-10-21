@@ -4,15 +4,17 @@ import { chromium } from "@playwright/test";
 
 const base = process.argv[2] ?? "http://localhost:3000";
 const PAGES = [
+  { path: "/", as: null },
   { path: "/login", as: null },
   { path: "/join/GREENMDW", as: null },
-  { path: "/", as: "Rahul Deshmukh" },
-  { path: "/groceries", as: "Rahul Deshmukh" },
-  { path: "/notifications", as: "Rahul Deshmukh" },
-  { path: "/services", as: "Rahul Deshmukh" },
+  { path: "/app", as: "Rahul Deshmukh" },
+  { path: "/app/groceries", as: "Rahul Deshmukh" },
+  { path: "/app/notifications", as: "Rahul Deshmukh" },
+  { path: "/app/services", as: "Rahul Deshmukh" },
   // A Service Day's id comes from the seed, so follow the link to it.
-  { path: "/services/[roundId]", as: "Sunita Kulkarni", from: "/services", link: /AC servicing Service Day/ },
-  { path: "/captain", as: "Sunita Kulkarni" },
+  { path: "/app/services/[roundId]", as: "Kavya Deshpande", from: "/app/services", link: /AC servicing Service Day/ },
+  { path: "/tech", as: "Raju Thapa" },
+  { path: "/manager", as: "Sunita Kulkarni" },
 ];
 
 const browser = await chromium.launch();

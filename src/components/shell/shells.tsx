@@ -1,27 +1,50 @@
-import { Bell, Building2, Menu } from "lucide-react";
+import { Bell, Building2, Menu, Store } from "lucide-react";
 import Link from "next/link";
-import { Suspense, type ReactNode } from "react";
-import { t } from "@/i18n";
+import { Suspense, ViewTransition, type ReactNode } from "react";
+import { t, type MessageKey } from "@/i18n";
 import { getCurrentUser } from "@/lib/auth/current-user";
+import { canEnter, PORTAL_PATH, type Portal } from "@/lib/auth/rules";
 import { unreadCount } from "@/server/notifications";
+import { cn } from "../ui/cn";
 import { InlineSkeleton } from "../ui/skeleton";
 import { Sheet } from "../ui/sheet";
-import { AccountMenu, ThemeMenu } from "./account-menu";
+import { AccountMenu } from "./account-menu";
 import { Logo } from "./logo";
-import { ActiveResidentSideNav, ActiveResidentTabBar, ActiveStaffNav } from "./nav-active";
-import { RESIDENT_NAV, STAFF_NAV, type StaffArea } from "./nav-config";
-import { ResidentTabList, SideNavList } from "./nav-lists";
+import { ActiveSideNav, ActiveTabBar } from "./nav-active";
+import { PORTAL_NAV, type StaffPortal, type TabPortal } from "./nav-config";
+import { SideNavList, TabList } from "./nav-lists";
 
-// Layout shells. They are static; anything that depends on the signed-in user is a small
-// <Suspense> island, so the frame renders instantly and the islands stream in.
+// Layout shells, one look per portal. They are static; anything that depends on the signed-in user
+// is a small <Suspense> island, so the frame renders instantly and the islands stream in. The frame
+// sets data-portal, which switches the brand colour to the portal's accent (see globals.css).
 
-async function CommunityName() {
+export const PORTAL_NAME: Record<Portal, MessageKey> = {
+  app: "portals.app",
+  manager: "portals.manager",
+  vendor: "portals.vendor",
+  tech: "portals.tech",
+  admin: "portals.admin",
+};
+
+/** The portal's name as a coloured pill, so people always know which area they're in. */
+function PortalBadge({ portal }: { portal: Portal }) {
+  return (
+    <span className="inline-flex h-6 items-center rounded-full bg-brand-soft px-2.5 text-xs font-semibold text-brand-soft-fg">{t(PORTAL_NAME[portal])}</span>
+  );
+}
+
+/** Whose space this is: the resident's community, the community a manager runs, or the vendor. */
+async function ContextName({ portal }: { portal: Portal }) {
   const user = await getCurrentUser();
-  if (!user?.flat) return null;
+  if (!user || !canEnter(user, portal)) return null;
+  const community = portal === "app" ? user.flat?.community : portal === "manager" ? user.staff?.community : undefined;
+  const name = community?.name ?? (portal === "vendor" || portal === "tech" ? user.vendor?.name : undefined);
+  if (!name) return null;
+  const Icon = community ? Building2 : Store;
   return (
     <span className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-fg">
-      <Building2 aria-hidden className="size-4 shrink-0 text-brand" />
-      <span className="truncate">{user.flat.community.name}</span>
+      <Icon aria-hidden className="size-4 shrink-0 text-brand" />
+      <span className="truncate">{name}</span>
     </span>
   );
 }
@@ -50,123 +73,148 @@ function BellLink({ href, count }: { href: string; count: number }) {
 }
 
 /** The bell with the signed-in user's unread count. Reads the session: render inside <Suspense>. */
-async function UnreadBell({ href }: { href: string }) {
+async function UnreadBell({ portal }: { portal: Portal }) {
   const user = await getCurrentUser();
-  return <BellLink href={href} count={user ? await unreadCount(user.id) : 0} />;
+  if (!user || !canEnter(user, portal)) return null;
+  return <BellLink href={`${PORTAL_PATH[portal]}/notifications`} count={await unreadCount(user.id)} />;
 }
 
-function NotificationBell({ href }: { href: string }) {
+function NotificationBell({ portal }: { portal: Portal }) {
   return (
-    <Suspense fallback={<BellLink href={href} count={0} />}>
-      <UnreadBell href={href} />
+    <Suspense fallback={<BellLink href={`${PORTAL_PATH[portal]}/notifications`} count={0} />}>
+      <UnreadBell portal={portal} />
     </Suspense>
   );
 }
 
-export function ResidentShell({ children }: { children: ReactNode }) {
+/**
+ * Navigation only for people of this portal's role. Anyone else is looking at the friendly
+ * "this area is for …" page and gets no links into it. The static fallback is the full nav, so
+ * the people who belong here see it at once.
+ */
+async function OwnersOnly({ portal, children }: { portal: Portal; children: ReactNode }) {
+  const user = await getCurrentUser();
+  return user && canEnter(user, portal) ? children : null;
+}
+
+function PortalNav({ portal, fallback, children }: { portal: Portal; fallback: ReactNode; children: ReactNode }) {
   return (
-    <div className="md:flex">
-      <aside className="hidden md:sticky md:top-0 md:flex md:h-dvh md:w-60 md:shrink-0 md:flex-col md:gap-4 md:border-r md:border-border md:bg-surface md:px-3 md:py-3">
-        <div className="px-2">
-          <Logo />
-        </div>
-        <Suspense fallback={<SideNavList items={RESIDENT_NAV} pathname="" />}>
-          <ActiveResidentSideNav />
-        </Suspense>
-      </aside>
+    <Suspense fallback={fallback}>
+      <OwnersOnly portal={portal}>{children}</OwnersOnly>
+    </Suspense>
+  );
+}
+
+function Account({ portal }: { portal: Portal }) {
+  return (
+    <Suspense fallback={<span className="size-11" />}>
+      <AccountMenu portal={portal} />
+    </Suspense>
+  );
+}
+
+/** Page transitions: a soft cross-fade between pages (none with reduced motion, see globals.css). */
+function PageContent({ className, children }: { className: string; children: ReactNode }) {
+  return (
+    <ViewTransition default="page-fade">
+      <main className={className}>{children}</main>
+    </ViewTransition>
+  );
+}
+
+/** Residents and technicians: a bottom tab bar for one-handed use. Residents get a sidebar on wide screens. */
+export function TabShell({ portal, children }: { portal: TabPortal; children: ReactNode }) {
+  const wideSidebar = portal === "app";
+  const width = portal === "tech" ? "max-w-xl" : "max-w-3xl";
+  return (
+    <div data-portal={portal} className="min-h-dvh bg-bg md:flex">
+      {wideSidebar && (
+        <aside className="hidden md:sticky md:top-0 md:flex md:h-dvh md:w-60 md:shrink-0 md:flex-col md:gap-4 md:border-r md:border-border md:bg-surface md:px-3 md:py-3">
+          <div className="flex items-center gap-2 px-2">
+            <Logo href={PORTAL_PATH[portal]} />
+          </div>
+          <PortalNav portal={portal} fallback={<SideNavList items={PORTAL_NAV[portal]} pathname="" />}>
+            <ActiveSideNav portal={portal} />
+          </PortalNav>
+        </aside>
+      )}
       <div className="min-w-0 flex-1">
-        <header className="sticky top-0 z-30 border-b border-border bg-surface/90 backdrop-blur">
-          <div className="mx-auto flex h-14 max-w-3xl items-center gap-2 px-3 md:px-6">
-            <span className="md:hidden">
-              <Logo />
+        <header className="sticky top-0 z-30 border-t-[3px] border-b border-t-brand border-b-border bg-surface/90 backdrop-blur">
+          <div className={cn("mx-auto flex h-14 items-center gap-2 px-3 md:px-6", width)}>
+            <span className={cn(wideSidebar && "md:hidden")}>
+              <Logo href={PORTAL_PATH[portal]} compact />
             </span>
-            <span className="hidden min-w-0 md:block">
+            <PortalBadge portal={portal} />
+            <span className="hidden min-w-0 sm:block">
               <Suspense fallback={<InlineSkeleton />}>
-                <CommunityName />
+                <ContextName portal={portal} />
               </Suspense>
             </span>
             <div className="ml-auto flex items-center gap-1">
-              <NotificationBell href="/notifications" />
-              <Suspense fallback={<span className="size-11" />}>
-                <AccountMenu context="resident" />
-              </Suspense>
+              <NotificationBell portal={portal} />
+              <Account portal={portal} />
             </div>
           </div>
         </header>
-        <main className="mx-auto w-full max-w-3xl animate-fade-in px-4 pt-5 pb-[calc(6rem+env(safe-area-inset-bottom))] md:px-6 md:pb-12">{children}</main>
+        <PageContent className={cn("mx-auto w-full animate-fade-in px-4 pt-5 pb-[calc(6.5rem+env(safe-area-inset-bottom))]", width, wideSidebar && "md:px-6 md:pb-12")}>
+          {children}
+        </PageContent>
       </div>
-      <Suspense fallback={<ResidentTabList pathname="" />}>
-        <ActiveResidentTabBar />
-      </Suspense>
+      <PortalNav portal={portal} fallback={<TabList portal={portal} pathname="" />}>
+        <ActiveTabBar portal={portal} />
+      </PortalNav>
     </div>
   );
 }
 
-const AREA_TITLES: Record<StaffArea, "areas.captainTitle" | "areas.vendorTitle" | "areas.adminTitle"> = {
-  captain: "areas.captainTitle",
-  vendor: "areas.vendorTitle",
-  admin: "areas.adminTitle",
-};
-
-/** Captains are residents, so their notifications live in the resident app. */
-const NOTIFICATIONS_PATH: Record<StaffArea, string> = {
-  captain: "/notifications",
-  vendor: "/vendor/notifications",
-  admin: "/admin/notifications",
-};
-
-export function StaffShell({ area, children }: { area: StaffArea; children: ReactNode }) {
+/** Society Managers, vendors and admins: a sidebar on wide screens that becomes a drawer on phones. */
+export function StaffShell({ portal, children }: { portal: StaffPortal; children: ReactNode }) {
   const nav = (
-    <Suspense fallback={<SideNavList items={STAFF_NAV[area]} pathname="" />}>
-      <ActiveStaffNav area={area} />
-    </Suspense>
+    <PortalNav portal={portal} fallback={<SideNavList items={PORTAL_NAV[portal]} pathname="" />}>
+      <ActiveSideNav portal={portal} />
+    </PortalNav>
+  );
+  const drawer = (
+    <Sheet title={t(PORTAL_NAME[portal])} triggerLabel={t("common.menu")} trigger={<Menu aria-hidden className="size-5" />} side="left">
+      {nav}
+    </Sheet>
   );
   return (
-    <div className="md:flex">
-      <aside className="hidden md:sticky md:top-0 md:flex md:h-dvh md:w-60 md:shrink-0 md:flex-col md:gap-4 md:border-r md:border-border md:bg-surface md:px-3 md:py-3">
-        <div className="px-2">
-          <Logo href={`/${area}`} />
-          <p className="mt-1 px-1 text-xs font-medium tracking-wide text-muted uppercase">{t(AREA_TITLES[area])}</p>
+    <div data-portal={portal} className="min-h-dvh bg-bg md:flex">
+      <aside className="hidden md:sticky md:top-0 md:flex md:h-dvh md:w-64 md:shrink-0 md:flex-col md:gap-4 md:border-r md:border-border md:bg-surface md:px-3 md:py-3">
+        <div className="space-y-2 px-2">
+          <Logo href={PORTAL_PATH[portal]} />
+          <PortalBadge portal={portal} />
         </div>
         {nav}
       </aside>
       <div className="min-w-0 flex-1">
-        <header className="sticky top-0 z-30 border-b border-border bg-surface/90 backdrop-blur">
+        <header className="sticky top-0 z-30 border-t-[3px] border-b border-t-brand border-b-border bg-surface/90 backdrop-blur">
           <div className="mx-auto flex h-14 max-w-5xl items-center gap-2 px-3 md:px-6">
-            <span className="md:hidden">
-              <Sheet title={t(AREA_TITLES[area])} triggerLabel={t("common.menu")} trigger={<Menu aria-hidden className="size-5" />}>
-                {nav}
-              </Sheet>
+            {/* Static, so a tap never lands on a copy that is about to be replaced; hidden by CSS on the
+                wrong-portal page (see [data-owner-only] in globals.css). */}
+            <span className="md:hidden" data-owner-only>
+              {drawer}
             </span>
-            <span className="font-semibold md:hidden">{t(AREA_TITLES[area])}</span>
-            <div className="ml-auto flex items-center gap-1">
-              <NotificationBell href={NOTIFICATIONS_PATH[area]} />
-              <Suspense fallback={<span className="size-11" />}>
-                <AccountMenu context="staff" />
+            <span className="md:hidden">
+              <PortalBadge portal={portal} />
+            </span>
+            <span className="hidden min-w-0 sm:block">
+              <Suspense fallback={<InlineSkeleton />}>
+                <ContextName portal={portal} />
               </Suspense>
+            </span>
+            <div className="ml-auto flex items-center gap-1">
+              <NotificationBell portal={portal} />
+              <Account portal={portal} />
             </div>
           </div>
         </header>
-        <main className="mx-auto w-full max-w-5xl animate-fade-in px-4 py-6 md:px-6">{children}</main>
+        <PageContent className="mx-auto w-full max-w-5xl animate-fade-in px-4 py-6 md:px-6">{children}</PageContent>
       </div>
     </div>
   );
 }
 
-/** Login and join pages: logo, account or theme menu, one narrow column. */
-export function PublicShell({ children, wide = false }: { children: ReactNode; wide?: boolean }) {
-  const width = wide ? "max-w-4xl" : "max-w-md";
-  return (
-    <div className="min-h-dvh">
-      <header className="border-b border-border bg-surface">
-        <div className={`mx-auto flex h-14 ${width} items-center justify-between px-3`}>
-          <Logo />
-          <Suspense fallback={<ThemeMenu />}>
-            <AccountMenu context="public" />
-          </Suspense>
-        </div>
-      </header>
-      <main className={`mx-auto ${width} animate-fade-in px-4 py-8`}>{children}</main>
-    </div>
-  );
-}
+// The public pages' shell is in public-shell.tsx: importing it must not pull the portals'
+// navigation (and all its icons) into the landing and login pages' JavaScript.

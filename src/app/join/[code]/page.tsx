@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
-import { PublicShell } from "@/components/shell/shells";
+import { PublicShell } from "@/components/shell/public-shell";
 import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Banner } from "@/components/ui/display";
@@ -64,7 +64,7 @@ async function Invite({ params, searchParams }: Pick<PageProps<"/join/[code]">, 
     );
   }
 
-  if (user.role === "VENDOR" || user.role === "ADMIN") {
+  if (user.role !== "RESIDENT") {
     return (
       <>
         {header}
@@ -74,7 +74,7 @@ async function Invite({ params, searchParams }: Pick<PageProps<"/join/[code]">, 
   }
 
   if (user.flat) {
-    if (user.flat.community.id === community.id) redirect(round ? `/round/${round}` : "/");
+    if (user.flat.community.id === community.id) redirect(round ? `/round/${round}` : "/app");
     return (
       <>
         {header}

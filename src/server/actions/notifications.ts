@@ -11,7 +11,7 @@ import { markAllRead, markRead } from "@/server/notifications";
 function centrePath(role: string): string {
   if (role === "VENDOR") return "/vendor/notifications";
   if (role === "ADMIN") return "/admin/notifications";
-  return "/notifications";
+  return "/app/notifications";
 }
 
 export type MarkAllReadState = { runs: number; marked: number; message?: string };
@@ -29,5 +29,5 @@ export async function openNotificationAction(formData: FormData): Promise<void> 
   const user = await requireUser();
   const result = await markRead(user.id, String(formData.get("id") ?? ""), new Date());
   const href = result?.href ? safeNotificationHref(result.href) : centrePath(user.role);
-  redirect(href === "/notifications" ? centrePath(user.role) : href);
+  redirect(href === "/app/notifications" ? centrePath(user.role) : href);
 }

@@ -5,7 +5,7 @@
 //       └──────────────┴──► CANCELLED (full refund)
 
 export type VisitStatus = "SCHEDULED" | "ON_THE_WAY" | "IN_PROGRESS" | "COMPLETED" | "NO_ACCESS" | "CANCELLED";
-export type VisitActor = "VENDOR" | "CAPTAIN" | "ADMIN";
+export type VisitActor = "VENDOR" | "MANAGER" | "ADMIN";
 
 export const MAX_CODE_ATTEMPTS = 5;
 
@@ -18,13 +18,13 @@ export const VISIT_TRANSITIONS: Record<VisitStatus, readonly VisitStatus[]> = {
   CANCELLED: [],
 };
 
-/** The vendor runs the visit; captains and admins can only cancel, or confirm a code-locked visit. */
+/** The vendor runs the visit; managers and admins can only cancel, or confirm a code-locked visit. */
 const ACTORS: Record<Exclude<VisitStatus, "SCHEDULED">, readonly VisitActor[]> = {
   ON_THE_WAY: ["VENDOR"],
   IN_PROGRESS: ["VENDOR"],
-  COMPLETED: ["VENDOR", "CAPTAIN", "ADMIN"],
+  COMPLETED: ["VENDOR", "MANAGER", "ADMIN"],
   NO_ACCESS: ["VENDOR"],
-  CANCELLED: ["VENDOR", "CAPTAIN", "ADMIN"],
+  CANCELLED: ["VENDOR", "MANAGER", "ADMIN"],
 };
 
 export function canTransition(from: VisitStatus, to: VisitStatus): boolean {
@@ -76,7 +76,7 @@ export function isCodeLocked(visit: Pick<VisitState, "codeAttempts">): boolean {
 
 /**
  * Decides one lifecycle step. A wrong completion code returns the new attempt count to persist;
- * after 5 wrong codes the vendor is locked out and a captain or admin confirms completion instead.
+ * after 5 wrong codes the vendor is locked out and a manager or admin confirms completion instead.
  */
 export function transitionVisit(visit: VisitState, t: VisitTransition): TransitionResult {
   if (!canTransition(visit.status, t.to)) return { ok: false, error: "INVALID_TRANSITION" };

@@ -85,7 +85,7 @@ describe("seeded demo data", () => {
     expect(await prisma.vendorAdjustment.count({ where: { visitId: noAccess.id, type: "NO_ACCESS_FEE" } })).toBe(1);
   });
 
-  it("prompts the captain once for the poll that crossed its threshold", async () => {
+  it("prompts the manager once for the poll that crossed its threshold", async () => {
     const poll = await prisma.interestPoll.findFirstOrThrow({ where: { title: { startsWith: "Pest control" } }, include: { _count: { select: { votes: true } } } });
     expect(poll._count.votes).toBe(23);
     expect(poll.thresholdNotifiedAt).not.toBeNull();

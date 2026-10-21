@@ -7,7 +7,7 @@ import { canVote, defaultRoundDates, shouldNotifyThreshold } from "@/lib/polls";
 import { startOfIstDay } from "@/lib/time";
 import { notify } from "./notifications";
 import { lockPoll } from "./round-lock";
-import { communityCaptainIds, openRoundInTx, type Actor, type CreateRoundError } from "./rounds";
+import { communityManagerIds, openRoundInTx, type Actor, type CreateRoundError } from "./rounds";
 
 export const MAX_OPEN_SUGGESTIONS = 3;
 export const THRESHOLD_LIMITS = { min: 2, max: 500 } as const;
@@ -51,7 +51,7 @@ async function checkInput(input: PollInput): Promise<{ errors: PollError[]; defa
   return { errors, defaultThreshold };
 }
 
-/** A captain (or admin) publishes a poll. The threshold defaults to the service's minimum flats. */
+/** A manager (or admin) publishes a poll. The threshold defaults to the service's minimum flats. */
 export async function createPoll(actor: Actor, input: PollInput, now: Date): Promise<{ ok: true; pollId: string } | { ok: false; errors: PollError[] }> {
   const communityId = actor.communityId;
   if (!communityId || !canManageCommunity(actor, communityId)) return { ok: false, errors: ["FORBIDDEN"] };
@@ -75,7 +75,7 @@ export async function createPoll(actor: Actor, input: PollInput, now: Date): Pro
   return { ok: true, pollId: poll.id };
 }
 
-/** A resident suggests a poll; it waits in the captain's queue. */
+/** A resident suggests a poll; it waits in the manager's queue. */
 export async function suggestPoll(
   user: { id: string; name: string | null; communityId: string },
   input: Omit<PollInput, "threshold">,
@@ -102,8 +102,8 @@ export async function suggestPoll(
     });
     await notify(
       tx,
-      await communityCaptainIds(tx, user.communityId),
-      { type: "POLL_SUGGESTION", params: { poll: poll.title, by: user.name ?? "A neighbour" }, href: "/captain/polls" },
+      await communityManagerIds(tx, user.communityId),
+      { type: "POLL_SUGGESTION", params: { poll: poll.title, by: user.name ?? "A neighbour" }, href: "/manager/polls" },
       { dedupeKey: notificationKeys.pollSuggestion(poll.id), now },
     );
     return { ok: true as const, pollId: poll.id };
@@ -152,7 +152,7 @@ export type VoteResult = { ok: true; votes: number; threshold: number } | { ok: 
 
 /**
  * One vote per flat (family members share it). Votes on a poll run one at a time under the poll's
- * lock, so the count is exact and the vote that reaches the threshold prompts the captains once.
+ * lock, so the count is exact and the vote that reaches the threshold prompts the managers once.
  */
 export async function castVote(user: { id: string; flatId: string; communityId: string }, pollId: string, now: Date): Promise<VoteResult> {
   return prisma.$transaction(async (tx) => {
@@ -166,8 +166,8 @@ export async function castVote(user: { id: string; flatId: string; communityId: 
       await tx.interestPoll.update({ where: { id: pollId }, data: { thresholdNotifiedAt: now } });
       await notify(
         tx,
-        await communityCaptainIds(tx, poll.communityId),
-        { type: "POLL_THRESHOLD", params: { poll: poll.title, votes }, href: "/captain/polls" },
+        await communityManagerIds(tx, poll.communityId),
+        { type: "POLL_THRESHOLD", params: { poll: poll.title, votes }, href: "/manager/polls" },
         { dedupeKey: notificationKeys.pollThreshold(poll.id), now },
       );
     }
@@ -233,7 +233,7 @@ export async function convertPollToRound(actor: Actor, pollId: string, now: Date
   });
 }
 
-/** Polls for the captain's page, with vote counts. */
+/** Polls for the manager's page, with vote counts. */
 export async function listCommunityPolls(communityId: string) {
   return prisma.interestPoll.findMany({
     where: { communityId },
@@ -248,7 +248,7 @@ export async function listCommunityPolls(communityId: string) {
   });
 }
 
-export type CaptainPoll = Awaited<ReturnType<typeof listCommunityPolls>>[number];
+export type ManagerPoll = Awaited<ReturnType<typeof listCommunityPolls>>[number];
 
 /** Polls residents can see, with whether their flat has voted. Newest first. */
 export async function listResidentPolls(communityId: string, flatId: string) {

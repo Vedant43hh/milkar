@@ -4,7 +4,7 @@ import { lotsQty, protectedUnitPaise, type Lot } from "./lots";
 /**
  * Refund for units reported short or damaged at distribution.
  *
- * The captain records the cumulative number of problem units for an order item; only increases
+ * The manager records the cumulative number of problem units for an order item; only increases
  * are allowed. Units are refunded at their final per-unit amount (min(lot price, final price)),
  * highest first, so the refund for units prevIssueQty..newIssueQty is deterministic and
  * re-submitting the same cumulative value refunds nothing.

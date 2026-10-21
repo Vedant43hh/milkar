@@ -4,7 +4,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import { SESSION_COOKIE } from "@/lib/auth/rules";
 import { recordPageRequest } from "@/lib/dev-reload-watchdog";
 
-const PUBLIC_PATHS = [/^\/login(?:\/|$)/, /^\/join(?:\/|$)/, /^\/offline(?:\/|$)/, /^\/design(?:\/|$)/];
+// The landing page, login and joining are public; every portal needs a session.
+const PUBLIC_PATHS = [/^\/$/, /^\/login(?:\/|$)/, /^\/join(?:\/|$)/, /^\/offline(?:\/|$)/, /^\/design(?:\/|$)/];
 
 export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
@@ -16,7 +17,7 @@ export function proxy(request: NextRequest) {
   if (request.cookies.has(SESSION_COOKIE)) return NextResponse.next();
 
   const login = new URL("/login", request.url);
-  if (pathname !== "/") login.searchParams.set("next", `${pathname}${search}`);
+  login.searchParams.set("next", `${pathname}${search}`);
   return NextResponse.redirect(login);
 }
 

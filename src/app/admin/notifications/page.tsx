@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: t("notifications.title") };
 export default function AdminNotificationsPage() {
   return (
     <Suspense fallback={<ListSkeleton rows={5} />}>
-      <NotificationCentre area="admin" />
+      <NotificationCentre portal="admin" />
     </Suspense>
   );
 }

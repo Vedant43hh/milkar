@@ -10,7 +10,7 @@ test("the bell shows unread notifications, and opening one marks it read", async
   await expect(bell).toBeVisible();
 
   await bell.click();
-  await expect(page).toHaveURL("/notifications");
+  await expect(page).toHaveURL("/app/notifications");
   await expect(page.getByRole("heading", { level: 1, name: "Notifications" })).toBeVisible();
   // The centre shows the exact count (the bell caps at 9+).
   const subtitle = page.getByText(/^\d+ unread$/);
@@ -20,15 +20,15 @@ test("the bell shows unread notifications, and opening one marks it read", async
   // The newest unread one opens its page and stops counting as unread.
   const unread = page.getByRole("listitem").filter({ hasText: "Unread" });
   await unread.first().getByRole("button").click();
-  await expect(page).not.toHaveURL("/notifications");
-  await page.goto("/notifications");
+  await expect(page).not.toHaveURL("/app/notifications");
+  await page.goto("/app/notifications");
   if (before > 1) await expect(page.getByText(`${before - 1} unread`, { exact: true })).toBeVisible();
   else await expect(page.getByTestId("unread-badge")).toHaveCount(0);
 });
 
 test("mark all as read clears the badge", async ({ page }) => {
   await demoLogin(page, "Sunita Kulkarni");
-  await page.goto("/notifications");
+  await page.goto("/manager/notifications");
   await page.getByRole("button", { name: "Mark all as read" }).click();
   await expect(page.getByText("All notifications marked as read.")).toBeVisible();
   await expect(page.getByRole("link", { name: "Notifications", exact: true })).toBeVisible();
@@ -37,8 +37,8 @@ test("mark all as read clears the badge", async ({ page }) => {
 });
 
 test("notifications render from their stored details", async ({ page }) => {
-  await demoLogin(page, "Sunita Kulkarni");
-  await page.goto("/notifications");
+  await demoLogin(page, "Sunita Kulkarni"); // a Society Manager's own notification centre
+  await page.goto("/manager/notifications");
   await expect(page.getByText(/^Pest control before the monsoon: \d+ flats are in$/)).toBeVisible();
   await expect(page.getByText("New idea: Sofa & carpet shampoo before Diwali")).toBeVisible();
 });

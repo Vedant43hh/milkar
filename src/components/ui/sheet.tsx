@@ -4,10 +4,29 @@ import { X } from "lucide-react";
 import { useEffect, useId, useRef, type ReactNode, type RefObject } from "react";
 import { tu } from "@/i18n/ui";
 
-const DIALOG =
-  "fixed inset-x-0 bottom-0 top-auto m-0 max-h-[85dvh] w-full max-w-none overflow-y-auto rounded-t-2xl border border-border bg-surface p-0 text-fg shadow-raised backdrop:bg-overlay open:animate-slide-up md:inset-0 md:m-auto md:max-w-md md:rounded-2xl";
+export type SheetSide = "bottom" | "left";
 
-function Frame({ dialog, title, children, onClose }: { dialog: RefObject<HTMLDialogElement | null>; title: string; children: ReactNode; onClose?: () => void }) {
+const DIALOG: Record<SheetSide, string> = {
+  // A bottom sheet on phones, a centred dialog on larger screens.
+  bottom:
+    "fixed inset-x-0 bottom-0 top-auto m-0 max-h-[85dvh] w-full max-w-none overflow-y-auto rounded-t-2xl border border-border bg-surface p-0 text-fg shadow-raised backdrop:bg-overlay open:animate-slide-up md:inset-0 md:m-auto md:max-w-md md:rounded-2xl",
+  // A drawer from the left edge: the staff portals' sidebar on phones.
+  left: "fixed inset-y-0 left-0 right-auto m-0 h-dvh max-h-dvh w-[min(20rem,85vw)] max-w-none overflow-y-auto rounded-r-2xl border border-border bg-surface p-0 text-fg shadow-raised backdrop:bg-overlay open:animate-slide-in-left",
+};
+
+function Frame({
+  dialog,
+  title,
+  children,
+  onClose,
+  side = "bottom",
+}: {
+  dialog: RefObject<HTMLDialogElement | null>;
+  title: string;
+  children: ReactNode;
+  onClose?: () => void;
+  side?: SheetSide;
+}) {
   const titleId = useId();
   // A modal dialog makes the rest of the document inert. If its page goes away (navigation, or
   // Next keeping the page hidden for back/forward), close it so the next page stays usable.
@@ -25,7 +44,7 @@ function Frame({ dialog, title, children, onClose }: { dialog: RefObject<HTMLDia
         // Backdrop click, or a link inside the sheet was followed.
         if (target === dialog.current || target.closest("a[href]")) dialog.current?.close();
       }}
-      className={DIALOG}
+      className={DIALOG[side]}
     >
       <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-surface px-4 py-2">
         <h2 id={titleId} className="font-semibold">
@@ -56,9 +75,12 @@ export function Sheet({
   triggerLabel,
   trigger,
   triggerClassName,
+  side,
   children,
 }: {
   title: string;
+  /** Where it slides in from: the bottom (default), or the left edge as a navigation drawer. */
+  side?: SheetSide;
   /**
    * Screen-reader text added after the trigger's visible content (needed for icon-only triggers).
    * Leave it out when the trigger already shows words.
@@ -82,7 +104,7 @@ export function Sheet({
         {/* Hidden text rather than aria-label, so the accessible name always includes what's visible. */}
         {triggerLabel && <span className="sr-only">{triggerLabel}</span>}
       </button>
-      <Frame dialog={ref} title={title}>
+      <Frame dialog={ref} title={title} side={side}>
         {children}
       </Frame>
     </>

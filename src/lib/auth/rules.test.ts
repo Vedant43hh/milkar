@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canAccess, canManageCommunity, clientIpFrom, homePathFor, otpRateLimit, safeNextPath } from "./rules";
+import { canEnter, canManageCommunity, clientIpFrom, homePathFor, otpRateLimit, PORTALS, portalFor, portalOfPath, ROLES, safeNextPath, type Portal, type Role } from "./rules";
 
 const limits = { phone15m: 3, phoneDay: 10, ip15m: 30, ipDay: 200 };
 const none = { phone15m: 0, phoneDay: 0, ip15m: 0, ipDay: 0 };
@@ -22,36 +22,37 @@ describe("otpRateLimit", () => {
   });
 });
 
-describe("homePathFor / canAccess", () => {
-  it("sends each role to its home", () => {
-    expect(homePathFor({ role: "ADMIN", flatId: null })).toBe("/admin");
-    expect(homePathFor({ role: "VENDOR", flatId: null })).toBe("/vendor");
-    expect(homePathFor({ role: "RESIDENT", flatId: "f1" })).toBe("/");
-    expect(homePathFor({ role: "CAPTAIN", flatId: "f1" })).toBe("/");
-    expect(homePathFor({ role: "RESIDENT", flatId: null })).toBe("/join");
+describe("portals", () => {
+  const own: Record<Role, Portal> = { RESIDENT: "app", MANAGER: "manager", VENDOR: "vendor", TECHNICIAN: "tech", ADMIN: "admin" };
+
+  it("gives every role exactly one portal, and lands them there after login", () => {
+    for (const role of ROLES) {
+      expect(portalFor(role)).toBe(own[role]);
+      expect(homePathFor({ role })).toBe(`/${own[role]}`);
+    }
   });
 
-  it("lets captains use resident pages but not the reverse", () => {
-    const captain = { role: "CAPTAIN" as const, flatId: "f1" };
-    const resident = { role: "RESIDENT" as const, flatId: "f1" };
-    expect(canAccess(captain, "resident")).toBe(true);
-    expect(canAccess(captain, "captain")).toBe(true);
-    expect(canAccess(resident, "captain")).toBe(false);
-    expect(canAccess({ role: "RESIDENT", flatId: null }, "resident")).toBe(false);
+  // Every role against every portal: only its own is allowed. Society Managers don't get the
+  // resident app either: one portal per account.
+  it.each(ROLES.flatMap((role) => PORTALS.map((portal) => [role, portal] as const)))("%s in /%s", (role, portal) => {
+    expect(canEnter({ role }, portal)).toBe(own[role] === portal);
   });
 
-  it("keeps vendors and admins in their own areas", () => {
-    expect(canAccess({ role: "VENDOR", flatId: null }, "vendor")).toBe(true);
-    expect(canAccess({ role: "VENDOR", flatId: null }, "admin")).toBe(false);
-    expect(canAccess({ role: "ADMIN", flatId: null }, "resident")).toBe(false);
-    expect(canAccess({ role: "ADMIN", flatId: null }, "admin")).toBe(true);
+  it("knows which portal a path belongs to", () => {
+    expect(portalOfPath("/app")).toBe("app");
+    expect(portalOfPath("/app/services/r1")).toBe("app");
+    expect(portalOfPath("/manager/rounds/new")).toBe("manager");
+    expect(portalOfPath("/tech/upcoming")).toBe("tech");
+    expect(portalOfPath("/vendor")).toBe("vendor");
+    expect(portalOfPath("/admin/notifications")).toBe("admin");
+    for (const publicPath of ["/", "/login", "/join/GREENMDW", "/application", "/technician", "/round/r1"]) expect(portalOfPath(publicPath)).toBeNull();
   });
 });
 
 describe("safeNextPath", () => {
   it("allows same-site paths", () => {
     expect(safeNextPath("/join/GREENMDW?round=abc")).toBe("/join/GREENMDW?round=abc");
-    expect(safeNextPath("/orders")).toBe("/orders");
+    expect(safeNextPath("/app/orders")).toBe("/app/orders");
   });
 
   it.each(["https://evil.example", "//evil.example", "/\\evil.example", "javascript:alert(1)", "", "/login?next=/x", "/a\nb"])(
@@ -81,9 +82,9 @@ describe("clientIpFrom", () => {
 });
 
 describe("canManageCommunity", () => {
-  it("lets captains run only their own community, and admins any", () => {
-    expect(canManageCommunity({ role: "CAPTAIN", communityId: "c1" }, "c1")).toBe(true);
-    expect(canManageCommunity({ role: "CAPTAIN", communityId: "c1" }, "c2")).toBe(false);
+  it("lets managers run only their own community, and admins any", () => {
+    expect(canManageCommunity({ role: "MANAGER", communityId: "c1" }, "c1")).toBe(true);
+    expect(canManageCommunity({ role: "MANAGER", communityId: "c1" }, "c2")).toBe(false);
     expect(canManageCommunity({ role: "RESIDENT", communityId: "c1" }, "c1")).toBe(false);
     expect(canManageCommunity({ role: "VENDOR", communityId: null }, "c1")).toBe(false);
     expect(canManageCommunity({ role: "ADMIN", communityId: null }, "c2")).toBe(true);
