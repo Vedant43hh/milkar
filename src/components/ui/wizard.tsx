@@ -1,13 +1,19 @@
 "use client";
 
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, CircleAlert } from "lucide-react";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { tu } from "@/i18n/ui";
 import { Button } from "./button";
 import { cn } from "./cn";
 import { ProgressBar } from "./progress";
 
-export type WizardStep = { id: string; title: string; content: ReactNode };
+export type WizardStep = {
+  id: string;
+  title: string;
+  content: ReactNode;
+  /** Checks the browser can't do on its own (a choice made, at least one box ticked): a message, or null. */
+  validate?: () => string | null;
+};
 
 /**
  * A step-by-step form. Put it inside one <form>: every step stays in the DOM (the hidden ones with
@@ -17,6 +23,7 @@ export type WizardStep = { id: string; title: string; content: ReactNode };
  */
 export function Wizard({ steps, submit }: { steps: WizardStep[]; submit: ReactNode }) {
   const [current, setCurrent] = useState(0);
+  const [problem, setProblem] = useState<string | null>(null);
   const refs = useRef<(HTMLFieldSetElement | null)[]>([]);
   const headingId = useId();
   const moved = useRef(false);
@@ -35,12 +42,16 @@ export function Wizard({ steps, submit }: { steps: WizardStep[]; submit: ReactNo
         return;
       }
     }
+    const message = steps[current].validate?.() ?? null;
+    setProblem(message);
+    if (message) return;
     moved.current = true;
     setCurrent((c) => Math.min(c + 1, steps.length - 1));
   }
 
   function back() {
     moved.current = true;
+    setProblem(null);
     setCurrent((c) => Math.max(c - 1, 0));
   }
 
@@ -70,6 +81,12 @@ export function Wizard({ steps, submit }: { steps: WizardStep[]; submit: ReactNo
             </span>
           </legend>
           {step.content}
+          {index === current && problem && (
+            <p role="alert" className="flex items-center gap-1.5 text-sm font-medium text-danger">
+              <CircleAlert aria-hidden className="size-4 shrink-0" />
+              {problem}
+            </p>
+          )}
         </fieldset>
       ))}
       <div className={cn("flex gap-3", current > 0 ? "justify-between" : "justify-end")}>

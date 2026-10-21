@@ -45,7 +45,20 @@ Every account has one role and one portal. Nobody can enter another role's porta
 | Technician | `/tech` | a vendor's staff, added by the vendor | bottom tabs: Today, Upcoming, Me | sky blue |
 | Platform admin | `/admin` | Milkar staff; never self-registered | sidebar, a drawer on phones | plum |
 
-Opening another role's portal shows a friendly page ("This area is for Society Managers") with a button to your own, not a silent redirect; server actions answer with a 403. Society Managers run their community through `CommunityStaff` and don't use the resident app: to shop, they use a separate resident account. `/` is the public landing page and `/round/<id>` sends each role to the right page for a round.
+Opening another role's portal shows a friendly page ("This area is for Society Managers") with a button to your own, not a silent redirect; server actions answer with a 403. Society Managers run their community through `CommunityStaff` and don't use the resident app: to shop, they use a separate resident account. `/round/<id>` sends each role to the right page for a round.
+
+## Landing, registering and logging in
+
+- `/` is the public landing page: how group buying works, a price-drop simulator (slide from 1 to 100 flats and watch the price per flat, the building's savings and the vendor trips fall; the numbers in `src/lib/simulator.ts` are a labelled example), why vendors can charge less, and a card per role. `/welcome` asks "new or already have an account?".
+- **Logging in never creates an account.** A number nobody registered gets "No account with this number yet" and a link to register.
+- **`/register`** asks how you'll use Milkar, then walks through that role's steps and verifies your phone last. The account and its request are created together, in one transaction (`src/server/registration.ts`):
+  - **Resident:** find your community by invite code or by searching live communities (name, city or pincode), pick your tower and flat, and your Society Manager approves you in `/manager/residents`. Until then `/app/join` shows the request (withdraw it, or ask again after a decline, with the manager's note). Invite links, `/join/<community code>`, open this with the community filled in. Demo codes: `GREENMDW` (Green Meadows CHS, Pune) and `SUNRISE` (Sunrise Co-living, Bengaluru).
+  - **Society Manager:** the community's name, type and address, what it calls buildings and homes, and its layout (buildings × floors × homes per floor; flats are numbered floor × 100 + unit, up to 2,000). The community waits for a platform admin (`/admin/communities`); then the manager gets the invite link and code.
+  - **Vendor:** business name, what you offer (groceries, home services, repairs), service-area pincodes and an optional GSTIN (its check digit is verified). The vendor portal shows a verification checklist until an admin verifies you in `/admin/vendors`.
+  - **Technicians** don't register: their vendor adds them in `/vendor/technicians`, then they log in with their phone.
+  - **Admins can never be self-registered.** The role isn't offered, and the server refuses any role other than resident, Society Manager or vendor, however the request is made.
+- Every decision (approve, decline with a note, verify) notifies the person it's about, and new registrations notify whoever decides them.
+- After the first login to a set-up account, a short skippable tour introduces the portal; it's saved as seen (`User.onboardedAt`).
 
 ## How pricing works
 
@@ -104,8 +117,7 @@ Alongside it, residents get a "closes soon" reminder 6 hours before cutoff (once
 - Phone number + 6-digit OTP. With `OTP_MODE=mock` (the default) any 6 digits are accepted and the generated code is printed in the server console.
 - OTP requests are rate-limited per phone (3 per 15 minutes, 10 per day) and per network (30 per 15 minutes, 200 per day); see `.env.example`.
 - The server refuses to start in production with `OTP_MODE=mock` unless `DEMO_MODE=true`.
-- With `DEMO_MODE=true`, `/login` shows one-tap buttons for the seeded demo users.
-- New residents join through an invite link, `/join/<community code>`, then pick their tower and flat (each community names these itself: a PG has wings and rooms). Demo codes: `GREENMDW` (Green Meadows CHS, Pune) and `SUNRISE` (Sunrise Co-living, Bengaluru).
+- With `DEMO_MODE=true`, `/login` shows one-tap buttons for the seeded demo users, each labelled "Demo".
 
 ## Notifications
 
@@ -120,8 +132,10 @@ Any 6-digit OTP works in mock mode.
 | Resident | 9000000003 | Rahul Deshmukh | Green Meadows, Flat A-101: orders, an AC booking, a held car-wash slot, a resolved complaint |
 | Resident | 9000000005 | Kavya Deshpande | Green Meadows, Flat B-402: groceries, a deep clean, poll votes; hasn't booked the AC Service Day |
 | Resident | 9000000004 | Arnav Sinha | Sunrise Co-living (PG), Room A-103 |
+| Resident | 9000000008 | Nikhil Bhosale | Asked to join Green Meadows as Flat C-301; waiting for Sunita |
 | Society Manager | 9000000002 | Sunita Kulkarni | Runs Green Meadows: a poll past its threshold and a resident suggestion |
 | Society Manager | 9000000006 | Deepak Rao | Assistant manager at Green Meadows |
+| Society Manager | 9000000007 | Anil Kapoor | Registered Lakeview Residency, Pune (48 flats); waiting for the admin |
 | Vendor | 9000000013 | Suresh Pillai | CoolCare AC & Appliance (verified) |
 | Vendor | 9000000014 | Nisha Thomas | SparkleHome Cleaning & Pest Control (verified, rated) |
 | Vendor | 9000000015 | Manoj Yadav | WashWell Car Wash (verification pending) |
@@ -129,11 +143,13 @@ Any 6-digit OTP works in mock mode.
 | Vendor | 9000000012 | Imran Shaikh | Annapurna Home Care Distributors (groceries) |
 | Technician | 9000000021 | Raju Thapa | WashWell: this week's car-wash visits |
 | Technician | 9000000022 | Lata Pawar | SparkleHome: the completed deep-clean visits |
-| Admin | 9000000001 | Priya Nair | |
+| Admin | 9000000001 | Priya Nair | Lakeview Residency and WashWell are waiting for her |
 
 The seed (`prisma/seed-scenario.ts`) prices every order through the real engine, on one timeline, so wallets, tier unlocks, refunds and notifications agree. It includes two completed grocery rounds and one open round; a completed deep-cleaning Service Day (ratings, a complaint fixed by a free revisit, a no-access visit with the visit fee kept); an open AC Service Day at 14 flats (6 more unlock ₹400, some slots full); a weekly car wash with last week's slots held for 24 hours; and four interest polls. GST rates and GSTINs are illustrative samples.
 
 ## Database migrations
+
+`20261021150000_registration_notifications` adds the notifications sent when a community or a vendor registers.
 
 `20261021090000_portals_and_roles` renames the `CAPTAIN` role to `MANAGER` and adds `TECHNICIAN`; existing captains become their community's primary Society Manager in `CommunityStaff`. It adds community approval (existing communities stay approved), join requests (one open request per user, enforced by a unique column and a check constraint), vendor categories and service areas, and the technician on each visit, and rewrites links stored in notifications to the new portal paths. Old paths such as `/groceries` and `/captain/...` redirect to their new homes.
 

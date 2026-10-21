@@ -34,15 +34,28 @@ function Frame({
     const element = dialog.current;
     return () => element?.close();
   }, [dialog]);
+  // Tell the owner at once when the person closes the sheet. The browser's close event comes a
+  // moment later, so a quick "open it again" could otherwise land while the owner still thinks
+  // it's open, and nothing would reopen.
+  const close = () => {
+    dialog.current?.close();
+    onClose?.();
+  };
   return (
     <dialog
       ref={dialog}
       aria-labelledby={titleId}
-      onClose={onClose}
+      // Escape (or the phone's back gesture): fires before the dialog closes.
+      onCancel={() => onClose?.()}
+      // Anything else that closed it. If it's open again by then (a quick reopen, or React
+      // re-running effects in development, which closes and reopens it), it isn't closed after all.
+      onClose={() => {
+        if (!dialog.current?.open) onClose?.();
+      }}
       onClick={(e) => {
         const target = e.target as HTMLElement;
         // Backdrop click, or a link inside the sheet was followed.
-        if (target === dialog.current || target.closest("a[href]")) dialog.current?.close();
+        if (target === dialog.current || target.closest("a[href]")) close();
       }}
       className={DIALOG[side]}
     >
@@ -52,7 +65,7 @@ function Frame({
         </h2>
         <button
           type="button"
-          onClick={() => dialog.current?.close()}
+          onClick={close}
           aria-label={tu("ui.close")}
           className="inline-flex size-11 items-center justify-center rounded-full text-muted hover:bg-surface-2 hover:text-fg"
         >

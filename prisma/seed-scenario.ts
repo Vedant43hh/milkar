@@ -19,6 +19,7 @@ import { applyBps } from "../src/lib/pricing/money";
 import { unitPriceAt } from "../src/lib/pricing/price";
 import type { Tier } from "../src/lib/pricing/tiers";
 import { allocateNoAccessRefunds, noAccessRefund, noAccessRefundKey, noAccessVendorAdjustment } from "../src/lib/services/no-access";
+import { generateFlats } from "../src/lib/registration";
 import { generateSlots, holdExpiresAt, oneWeekLater } from "../src/lib/services/slots";
 import { startOfIstDay } from "../src/lib/time";
 import * as data from "./seed-data";
@@ -72,7 +73,11 @@ export function buildWorld(now: Date) {
   const communities = {
     greenMeadows: addCommunity("greenMeadows", data.TOWERS, data.FLAT_NUMBERS),
     sunrise: addCommunity("sunrise", data.PG_WINGS, data.PG_ROOMS),
+    // Laid out the way registration does it: wings A and B, six floors, four flats a floor.
+    lakeview: addCommunity("lakeview", ["A", "B"], [...new Set(generateFlats({ blocks: ["A"], floors: 6, unitsPerFloor: 4 }).map((f) => f.number))]),
   };
+  // Lakeview registered yesterday and is waiting for a platform admin.
+  Object.assign(rec.communities.find((c) => c.id === communities.lakeview.id)!, { status: "PENDING", reviewedAt: null, createdAt: plus(now, -DAY) });
   const gm = communities.greenMeadows;
   const pg = communities.sunrise;
 
@@ -92,6 +97,8 @@ export function buildWorld(now: Date) {
       verificationStatus: details.verification,
       verifiedAt: details.verification === "VERIFIED" ? plus(now, -100 * DAY) : null,
       verificationNote: details.note ?? null,
+      categories: DEMO_VENDORS[key].kind === "GOODS" ? ["GROCERIES"] : ["HOME_SERVICES"],
+      serviceAreaPincodes: details.serviceArea,
       createdAt: plus(now, -160 * DAY),
     });
   }
@@ -191,6 +198,7 @@ export function buildWorld(now: Date) {
     vendorId?: string;
     communityId?: string;
     manages?: { communityId: string; kind: "PRIMARY" | "ASSISTANT" };
+    requests?: { communityId: string; flatId: string };
     joinedDaysAgo: number;
   }) => {
     const userId = id();
@@ -210,6 +218,9 @@ export function buildWorld(now: Date) {
       rec.communityStaff.push({ id: id(), userId, communityId: input.manages.communityId, kind: input.manages.kind, createdAt });
       managers.set(input.name, userId);
     }
+    if (input.requests) {
+      rec.joinRequests.push({ id: id(), userId, communityId: input.requests.communityId, flatId: input.requests.flatId, status: "PENDING", pendingUserId: userId, createdAt });
+    }
     if (input.role === "TECHNICIAN") technicianIds.set(input.name, userId);
     return userId;
   };
@@ -223,7 +234,9 @@ export function buildWorld(now: Date) {
       communityId: community?.id,
       vendorId: u.vendor ? vendorIds[u.vendor] : undefined,
       manages: u.manages ? { communityId: communities[u.manages.community].id, kind: u.manages.kind } : undefined,
-      joinedDaysAgo: 120,
+      requests: u.requests ? { communityId: communities[u.requests.community].id, flatId: communities[u.requests.community].flatId(u.requests.flat) } : undefined,
+      // Waiting accounts registered recently; everyone else has been around.
+      joinedDaysAgo: u.requests ? 0.2 : u.manages?.community === "lakeview" ? 1 : 120,
     });
     if (u.vendor && u.role === "VENDOR") userIdOfVendor[u.vendor] = userId;
   }
@@ -239,6 +252,33 @@ export function buildWorld(now: Date) {
     if (!p) throw new Error(`Unknown person ${name}`);
     return p;
   };
+  // ---------- waiting for approval ----------
+  const userIdByPhone = (phone: string) => rec.users.find((u) => u.phone === phone)!.id as string;
+  const adminId = userIdByPhone(DEMO_USERS.admin.phone);
+  const anil = userIdByPhone(DEMO_USERS.pendingManager.phone);
+  const nikhil = userIdByPhone(DEMO_USERS.pendingResident.phone);
+  rec.registrants.push({ communityId: communities.lakeview.id, userId: anil });
+  world.notify(
+    [adminId],
+    { type: "COMMUNITY_REGISTERED", params: { community: DEMO_COMMUNITIES.lakeview.name, city: DEMO_COMMUNITIES.lakeview.city }, href: "/admin/communities" },
+    plus(now, -DAY),
+    notificationKeys.communityRegistered(communities.lakeview.id),
+  );
+  world.notify(
+    [adminId],
+    { type: "VENDOR_REGISTERED", params: { vendor: DEMO_VENDORS.washwell.name, city: data.VENDOR_DETAILS.washwell.city }, href: "/admin/vendors" },
+    plus(now, -150 * DAY),
+    notificationKeys.vendorRegistered(vendorIds.washwell),
+  );
+  const nikhilRequest = rec.joinRequests.find((r) => r.userId === nikhil)!;
+  const gmManagers = rec.communityStaff.filter((s) => s.communityId === gm.id).map((s) => s.userId);
+  world.notify(
+    gmManagers,
+    { type: "JOIN_REQUEST", params: { name: DEMO_USERS.pendingResident.name, flat: `Flat ${DEMO_USERS.pendingResident.requests!.flat}` }, href: "/manager/residents" },
+    plus(now, -0.2 * DAY),
+    notificationKeys.joinRequest(nikhilRequest.id as string),
+  );
+
   const manager = (name: string) => {
     const userId = managers.get(name);
     if (!userId) throw new Error(`Unknown manager ${name}`);
@@ -873,6 +913,8 @@ export async function writeWorld(prisma: PrismaClient, world: SeedWorld): Promis
   await prisma.vendor.createMany({ data: rec.vendors });
   await prisma.user.createMany({ data: rec.users });
   await prisma.communityStaff.createMany({ data: rec.communityStaff });
+  await prisma.joinRequest.createMany({ data: rec.joinRequests });
+  for (const r of rec.registrants) await prisma.community.update({ where: { id: r.communityId }, data: { registeredById: r.userId } });
   await prisma.product.createMany({ data: rec.products });
   await prisma.priceTier.createMany({ data: rec.priceTiers });
   await prisma.service.createMany({ data: rec.services });

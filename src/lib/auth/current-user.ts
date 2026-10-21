@@ -51,7 +51,7 @@ export async function requirePortal(portal: "vendor" | "tech"): Promise<VendorUs
 export async function requirePortal(portal: Portal): Promise<SessionUser>;
 export async function requirePortal(portal: Portal): Promise<SessionUser> {
   const user = await requirePortalUser(portal);
-  if (portal === "app" && !user.flat) redirect("/join");
+  if (portal === "app" && !user.flat) redirect("/app/join");
   if (portal === "manager" && user.staff?.community.status !== "APPROVED") redirect("/manager/pending");
   if ((portal === "vendor" || portal === "tech") && !user.vendor) forbidden();
   return user;

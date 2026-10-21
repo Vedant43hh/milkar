@@ -22,10 +22,11 @@ export type SeedProduct = {
 
 export const VENDOR_DETAILS: Record<
   DemoVendorKey,
-  { gstin: string; phone: string; city: string; about: string; verification: "VERIFIED" | "PENDING"; note?: string }
+  { gstin: string; phone: string; city: string; about: string; verification: "VERIFIED" | "PENDING"; note?: string; serviceArea: string[] }
 > = {
   balaji: {
-    gstin: "27ABCDE1234F1Z5",
+    gstin: "27ABCDE1234F1Z0",
+    serviceArea: ["411045", "411057", "411021"],
     phone: "+912024000001",
     city: "Pune",
     about: "Wholesale grains, dals, oils and staples from Market Yard, Pune.",
@@ -33,7 +34,8 @@ export const VENDOR_DETAILS: Record<
     note: "GST certificate and APMC trader licence checked.",
   },
   annapurna: {
-    gstin: "27PQRSX5678L1Z2",
+    gstin: "27PQRSX5678L1ZW",
+    serviceArea: ["411045", "411057"],
     phone: "+912024000002",
     city: "Pune",
     about: "Home care, personal care and farm eggs.",
@@ -41,7 +43,8 @@ export const VENDOR_DETAILS: Record<
     note: "GST certificate checked.",
   },
   coolcare: {
-    gstin: "27COOLC4321K1Z8",
+    gstin: "27COOLC4321K1Z3",
+    serviceArea: ["411045", "411057", "411007"],
     phone: "+912024000013",
     city: "Pune",
     about: "AC, RO and appliance servicing with trained, uniformed technicians. 90-day service warranty.",
@@ -49,7 +52,8 @@ export const VENDOR_DETAILS: Record<
     note: "GST certificate, shop licence and police verification of all technicians checked.",
   },
   sparkle: {
-    gstin: "27SPRKL8765H1Z3",
+    gstin: "27SPRKL8765H1ZU",
+    serviceArea: ["411045", "411021", "560095"],
     phone: "+912024000014",
     city: "Pune",
     about: "Deep cleaning, pest control and tank cleaning. Licensed pest-control operator; odourless, child-safe products.",
@@ -57,7 +61,8 @@ export const VENDOR_DETAILS: Record<
     note: "GST certificate, insecticide licence and staff ID proofs checked.",
   },
   washwell: {
-    gstin: "27WASHW2468M1Z6",
+    gstin: "27WASHW2468M1ZH",
+    serviceArea: ["411045"],
     phone: "+912024000015",
     city: "Pune",
     about: "Waterless car wash at your parking spot, every week.",

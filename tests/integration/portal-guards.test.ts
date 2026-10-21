@@ -38,12 +38,18 @@ function userWith(role: Role): SessionUser {
   };
 }
 
-/** Server-action modules and the portal they belong to. Auth and notification actions serve every role. */
+/**
+ * Server-action modules and the portal they belong to. Login, registration, notification and
+ * onboarding actions serve every role (or nobody signed in yet), so they aren't listed.
+ */
 const ACTION_MODULES: { portal: Portal; name: string; load: () => Promise<Record<string, unknown>> }[] = [
   { portal: "manager", name: "manager", load: () => import("@/server/actions/manager") },
   { portal: "app", name: "shop", load: () => import("@/server/actions/shop") },
   { portal: "app", name: "polls", load: () => import("@/server/actions/polls") },
   { portal: "app", name: "services", load: () => import("@/server/actions/services") },
+  { portal: "app", name: "join", load: () => import("@/server/actions/join") },
+  { portal: "vendor", name: "vendor", load: () => import("@/server/actions/vendor") },
+  { portal: "admin", name: "admin", load: () => import("@/server/actions/admin") },
 ];
 
 /** What a call ended with: Next's digest for interrupts (403, redirect), or the error message. */

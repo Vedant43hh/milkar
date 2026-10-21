@@ -1,10 +1,11 @@
 import { Bell, Building2, Menu, Store } from "lucide-react";
 import Link from "next/link";
 import { Suspense, ViewTransition, type ReactNode } from "react";
-import { t, type MessageKey } from "@/i18n";
+import { messages, t, type MessageKey } from "@/i18n";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { canEnter, PORTAL_PATH, type Portal } from "@/lib/auth/rules";
 import { unreadCount } from "@/server/notifications";
+import { OnboardingTour } from "../onboarding/tour";
 import { cn } from "../ui/cn";
 import { InlineSkeleton } from "../ui/skeleton";
 import { Sheet } from "../ui/sheet";
@@ -113,6 +114,27 @@ function Account({ portal }: { portal: Portal }) {
   );
 }
 
+/**
+ * The first-login tour, for an account that is set up for this portal and hasn't seen it yet
+ * (not while a resident or a community is still waiting for approval).
+ */
+async function FirstLoginTour({ portal }: { portal: Portal }) {
+  const user = await getCurrentUser();
+  if (!user || !canEnter(user, portal) || user.onboardedAt) return null;
+  if (portal === "app" && !user.flat) return null;
+  if (portal === "manager" && user.staff?.community.status !== "APPROVED") return null;
+  const text = messages().onboarding;
+  return <OnboardingTour userId={user.id} cards={text[portal]} text={{ title: text.title, skip: text.skip, next: text.next, done: text.done, step: text.step }} />;
+}
+
+function Tour({ portal }: { portal: Portal }) {
+  return (
+    <Suspense fallback={null}>
+      <FirstLoginTour portal={portal} />
+    </Suspense>
+  );
+}
+
 /** Page transitions: a soft cross-fade between pages (none with reduced motion, see globals.css). */
 function PageContent({ className, children }: { className: string; children: ReactNode }) {
   return (
@@ -163,6 +185,7 @@ export function TabShell({ portal, children }: { portal: TabPortal; children: Re
       <PortalNav portal={portal} fallback={<TabList portal={portal} pathname="" />}>
         <ActiveTabBar portal={portal} />
       </PortalNav>
+      <Tour portal={portal} />
     </div>
   );
 }
@@ -212,6 +235,7 @@ export function StaffShell({ portal, children }: { portal: StaffPortal; children
         </header>
         <PageContent className="mx-auto w-full max-w-5xl animate-fade-in px-4 py-6 md:px-6">{children}</PageContent>
       </div>
+      <Tour portal={portal} />
     </div>
   );
 }

@@ -1,39 +1,24 @@
 import { expect, test } from "@playwright/test";
-import { demoLogin, loginWithOtp, logout, uniquePhone } from "./helpers";
+import { demoLogin, loginWithOtp, logout, nextStep, uniquePhone, verifyPhoneAndSubmit } from "./helpers";
 
-test("a new resident joins through the invite link", async ({ page }) => {
+test("an invite link starts resident registration with the community filled in", async ({ page }) => {
   await page.goto("/join/GREENMDW");
+  await expect(page).toHaveURL("/register?role=resident&code=GREENMDW");
   await expect(page.getByText("Green Meadows CHS, Pune")).toBeVisible();
-  await page.getByRole("link", { name: "Log in with your phone to join" }).click();
-  await expect(page).toHaveURL(/\/login\?next=%2Fjoin%2FGREENMDW/);
-
-  await loginWithOtp(page, uniquePhone());
-  await expect(page).toHaveURL(/\/join\/GREENMDW$/);
-
-  await page.getByLabel("Your name").fill("Test Resident");
-  await page.getByLabel("Tower", { exact: true }).selectOption("B");
-  await page.getByLabel("Flat number").selectOption({ label: "201" });
-  await page.getByRole("button", { name: "Join Green Meadows CHS" }).click();
-
-  await expect(page).toHaveURL("/app");
-  await expect(page.getByText("Welcome to Green Meadows CHS!")).toBeVisible(); // flash toast
-  await expect(page.getByRole("heading", { level: 1, name: "Namaste, Test" })).toBeVisible();
-  await expect(page.getByText("Flat B-201, Green Meadows CHS")).toBeVisible();
 });
 
-test("a PG resident joins with the PG's own labels: wing and room", async ({ page }) => {
+test("a PG resident registers with the PG's own labels: wing and room", async ({ page }) => {
   await page.goto("/join/SUNRISE");
   await expect(page.getByText("Sunrise Co-living, Bengaluru")).toBeVisible();
-  await page.getByRole("link", { name: "Log in with your phone to join" }).click();
-  await loginWithOtp(page, uniquePhone());
-  await expect(page).toHaveURL(/\/join\/SUNRISE$/);
-
-  await page.getByLabel("Your name").fill("Test Tenant");
+  await nextStep(page);
   await page.getByLabel("Wing", { exact: true }).selectOption("B");
   await page.getByLabel("Room number").selectOption({ label: "102" });
-  await page.getByRole("button", { name: "Join Sunrise Co-living" }).click();
-  await expect(page).toHaveURL("/app");
-  await expect(page.getByText("Room B-102, Sunrise Co-living")).toBeVisible();
+  await nextStep(page);
+  await page.getByLabel("Your name").fill("Test Tenant");
+  await nextStep(page);
+  await verifyPhoneAndSubmit(page, uniquePhone(), "Send my request");
+  await expect(page).toHaveURL("/app/join", { timeout: 60_000 });
+  await expect(page.getByText(/You asked to join Sunrise Co-living as Room B-102/)).toBeVisible();
 });
 
 test("invalid phone numbers are rejected", async ({ page }) => {
@@ -43,14 +28,13 @@ test("invalid phone numbers are rejected", async ({ page }) => {
   await expect(page.getByRole("alert").filter({ hasText: /\S/ })).toHaveText("Enter a valid 10-digit Indian mobile number.");
 });
 
-test("a new user without a flat is sent to join a community", async ({ page }) => {
+test("logging in with a number nobody registered offers registration instead", async ({ page }) => {
   await page.goto("/login");
   await loginWithOtp(page, uniquePhone());
-  await expect(page).toHaveURL("/join");
-  await page.getByLabel("Invite code").fill("greenmdw");
-  await page.getByRole("button", { name: "Continue" }).click();
-  await expect(page).toHaveURL("/join/GREENMDW");
-  await expect(page.getByLabel("Your name")).toBeVisible();
+  await expect(page.getByText("No account with this number yet")).toBeVisible();
+  await page.getByRole("link", { name: "Register instead" }).click();
+  await expect(page).toHaveURL("/register");
+  await expect(page.getByRole("heading", { level: 1, name: "How will you use Milkar?" })).toBeVisible();
 });
 
 test("a Society Manager lands in the manager portal, and only there", async ({ page }) => {
@@ -85,8 +69,9 @@ test("vendors and admins land in their own areas", async ({ page }) => {
   await logout(page);
   await demoLogin(page, "Priya Nair");
   await expect(page).toHaveURL("/admin");
-  await page.goto("/join/GREENMDW");
-  await expect(page.getByText("Invite links are for residents. You're logged in as Platform admin.")).toBeVisible();
+  await page.goto("/join/GREENMDW"); // invite links are for new residents
+  await page.getByRole("link", { name: "Go to my portal" }).click();
+  await expect(page).toHaveURL("/admin");
 });
 
 test("logging out ends the session", async ({ page, context }) => {

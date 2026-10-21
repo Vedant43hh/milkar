@@ -1,8 +1,10 @@
 import { ChevronRight, CircleAlert, ShieldCheck, Store, UserRound, Users, Wrench } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { PublicShell } from "@/components/shell/public-shell";
+import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Banner } from "@/components/ui/display";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -52,6 +54,12 @@ async function LoginSection({ searchParams }: { searchParams: PageProps<"/login"
       <Card>
         <LoginForm next={next} mockOtp={env.OTP_MODE === "mock"} text={messages().auth} />
       </Card>
+      <p className="text-center text-sm text-muted">
+        {t("auth.newHere")}{" "}
+        <Link href="/register" className="font-semibold text-brand underline-offset-2 hover:underline">
+          {t("auth.registerLink")}
+        </Link>
+      </p>
       {env.DEMO_MODE && <DemoLogins next={next} />}
     </div>
   );
@@ -80,7 +88,10 @@ function DemoLogins({ next }: { next: string | null }) {
                     <Icon aria-hidden className="size-4" />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-medium text-fg">{t("auth.demoAs", { name: demo.name })}</span>
+                    <span className="flex items-center gap-1.5 text-sm font-medium text-fg">
+                      {t("auth.demoAs", { name: demo.name })}
+                      <Badge tone="accent">{t("auth.demoBadge")}</Badge>
+                    </span>
                     <span className="block text-xs text-muted">
                       {t(`roles.${demo.role}`)}
                       {demoUserContext(demo) ? ` · ${demoUserContext(demo)}` : ""}

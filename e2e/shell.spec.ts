@@ -72,9 +72,14 @@ test("staff areas use a menu sheet on phones", async ({ page }) => {
 // Pages to check, with the demo user to log in as (null = signed out). None of them redirect.
 const PAGES: [path: string, user: string | null][] = [
   ["/", null],
+  ["/welcome", null],
   ["/login", null],
-  ["/join/GREENMDW", null],
+  ["/register", null],
+  ["/register?role=resident&code=GREENMDW", null], // where an invite link lands
+  ["/register?role=manager", null],
+  ["/register?role=vendor", null],
   ["/design", null],
+  ["/app/join", "Nikhil Bhosale"],
   ["/app", "Rahul Deshmukh"],
   ["/app/buys", "Rahul Deshmukh"],
   ["/app/groceries", "Rahul Deshmukh"],
@@ -87,11 +92,16 @@ const PAGES: [path: string, user: string | null][] = [
   ["/manager/polls", "Sunita Kulkarni"],
   ["/manager/rounds/new/service", "Sunita Kulkarni"],
   ["/manager/notifications", "Sunita Kulkarni"],
+  ["/manager/residents", "Sunita Kulkarni"],
+  ["/manager/pending", "Anil Kapoor"],
   ["/tech", "Raju Thapa"],
   ["/tech/upcoming", "Raju Thapa"],
   ["/vendor", "Ramesh Agarwal"],
   ["/vendor/notifications", "Manoj Yadav"],
+  ["/vendor/technicians", "Suresh Pillai"],
   ["/admin", "Priya Nair"],
+  ["/admin/communities", "Priya Nair"],
+  ["/admin/vendors", "Priya Nair"],
 ];
 
 async function visitAs(page: Page, path: string, user: string | null) {
@@ -100,7 +110,7 @@ async function visitAs(page: Page, path: string, user: string | null) {
 }
 
 test("reload-loop guard: each page loads exactly once", async ({ page }) => {
-  test.setTimeout(420_000);
+  test.setTimeout(600_000);
   for (const [path, user] of PAGES) {
     await visitAs(page, path, user);
     // Count real document loads (not same-document history updates the router makes).
@@ -118,7 +128,7 @@ test("reload-loop guard: each page loads exactly once", async ({ page }) => {
 
 for (const scheme of ["light", "dark"] as const) {
   test(`no serious accessibility problems (${scheme} theme)`, async ({ page }) => {
-    test.setTimeout(420_000);
+    test.setTimeout(600_000);
     // Reduced motion: no fade-in mid-scan (axe would measure half-transparent text).
     await page.emulateMedia({ colorScheme: scheme, reducedMotion: "reduce" });
     const problems: { page: string; rule: string; help: string; nodes: string[] }[] = [];

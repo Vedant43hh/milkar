@@ -1,6 +1,7 @@
 import {
   BadgeCheck,
   BadgePercent,
+  Store,
   Building2,
   UserPlus,
   Users,
@@ -50,6 +51,8 @@ const ICONS: Record<NotificationType, { icon: LucideIcon; tone: string }> = {
   JOIN_DECIDED: { icon: Users, tone: "bg-success-soft text-success" },
   COMMUNITY_DECIDED: { icon: Building2, tone: "bg-success-soft text-success" },
   VENDOR_DECIDED: { icon: BadgeCheck, tone: "bg-success-soft text-success" },
+  COMMUNITY_REGISTERED: { icon: Building2, tone: "bg-accent-soft text-accent-soft-fg" },
+  VENDOR_REGISTERED: { icon: Store, tone: "bg-accent-soft text-accent-soft-fg" },
 };
 
 /** The notification list for the signed-in user. Reads the session: render inside <Suspense>. */

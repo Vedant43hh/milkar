@@ -24,6 +24,8 @@ export const NOTIFICATION_TYPES = [
   "JOIN_DECIDED",
   "COMMUNITY_DECIDED",
   "VENDOR_DECIDED",
+  "COMMUNITY_REGISTERED",
+  "VENDOR_REGISTERED",
 ] as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
@@ -69,6 +71,9 @@ export type NotificationParams = {
   JOIN_DECIDED: { community: string; decision: Decision };
   COMMUNITY_DECIDED: { community: string; decision: Decision };
   VENDOR_DECIDED: { vendor: string; decision: Decision };
+  /** To platform admins. */
+  COMMUNITY_REGISTERED: { community: string; city: string };
+  VENDOR_REGISTERED: { vendor: string; city: string };
 };
 
 export type NotificationMessage<T extends NotificationType = NotificationType> = {
@@ -158,4 +163,6 @@ export const notificationKeys = {
   joinDecided: (requestId: string) => `JOIN_DECIDED:${requestId}`,
   communityDecided: (communityId: string, decision: Decision) => `COMMUNITY_DECIDED:${communityId}:${decision}`,
   vendorDecided: (vendorId: string, decision: Decision) => `VENDOR_DECIDED:${vendorId}:${decision}`,
+  communityRegistered: (communityId: string) => `COMMUNITY_REGISTERED:${communityId}`,
+  vendorRegistered: (vendorId: string) => `VENDOR_REGISTERED:${vendorId}`,
 };

@@ -134,6 +134,9 @@ function emptyRecords() {
     vendors: [] as Prisma.VendorCreateManyInput[],
     users: [] as Prisma.UserCreateManyInput[],
     communityStaff: [] as Prisma.CommunityStaffCreateManyInput[],
+    joinRequests: [] as Prisma.JoinRequestCreateManyInput[],
+    /** Who registered which community; written once the users exist. */
+    registrants: [] as { communityId: string; userId: string }[],
     products: [] as Prisma.ProductCreateManyInput[],
     priceTiers: [] as Prisma.PriceTierCreateManyInput[],
     services: [] as Prisma.ServiceCreateManyInput[],

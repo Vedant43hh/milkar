@@ -1,8 +1,8 @@
 "use client";
 
-import { CircleAlert, FlaskConical } from "lucide-react";
+import { CircleAlert, FlaskConical, UserPlus } from "lucide-react";
 import { useActionState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { Banner } from "@/components/ui/display";
 import { Input, Label } from "@/components/ui/form";
 import type { Messages } from "@/i18n";
@@ -23,7 +23,20 @@ export function LoginForm({ next, mockOtp, text }: { next: string | null; mockOt
   return (
     <form action={formAction} className="space-y-4">
       <input type="hidden" name="next" value={next ?? ""} />
-      {state.step === "phone" || !state.phone ? (
+      {state.step === "noAccount" && state.phone ? (
+        <>
+          <input type="hidden" name="phone" value={state.phone} />
+          <Banner tone="info" role="status" title={text.noAccountTitle} icon={<UserPlus aria-hidden className="size-4" />}>
+            {text.noAccountBody}
+          </Banner>
+          <ButtonLink href="/register" block icon={<UserPlus aria-hidden className="size-4" />}>
+            {text.registerInstead}
+          </ButtonLink>
+          <Button variant="ghost" block name="intent" value="change" formNoValidate>
+            {text.tryAnotherNumber}
+          </Button>
+        </>
+      ) : state.step === "phone" || !state.phone ? (
         <>
           <div>
             <Label htmlFor="phone">{text.phoneLabel}</Label>

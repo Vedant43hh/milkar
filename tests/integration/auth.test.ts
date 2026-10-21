@@ -2,7 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import { prisma } from "@/lib/db";
 import { OTP_MAX_ATTEMPTS, SESSION_TTL_MS } from "@/lib/auth/rules";
 import { DEMO_USERS } from "@/lib/demo";
-import { findOrCreateUserByPhone, joinCommunity, resolveDemoLogin } from "@/server/auth";
+import { findUserByPhone, resolveDemoLogin } from "@/server/auth";
 import { hashOtp, requestOtp, verifyOtp } from "@/server/otp";
 import { createSession, deleteSession, findSessionUser, hashSessionToken } from "@/server/session";
 import { truncateAll } from "../../prisma/truncate";
@@ -106,16 +106,17 @@ describe("verifyOtp", () => {
 });
 
 describe("accounts and sessions", () => {
-  it("creates a resident account on first login and reuses it after", async () => {
+  it("never creates an account when logging in: new numbers must register first", async () => {
     const phone = nextPhone();
-    const first = await findOrCreateUserByPhone(phone);
-    const second = await findOrCreateUserByPhone(phone);
-    expect(first).toEqual({ id: second.id, role: "RESIDENT", flatId: null });
-    expect(await prisma.user.count()).toBe(1);
+    expect(await findUserByPhone(phone)).toBeNull();
+    expect(await findUserByPhone(phone)).toBeNull();
+    expect(await prisma.user.count()).toBe(0);
+    const user = await prisma.user.create({ data: { phone, role: "RESIDENT" } });
+    expect(await findUserByPhone(phone)).toEqual({ id: user.id, role: "RESIDENT", flatId: null });
   });
 
   it("stores only a hash of the session token and expires sessions", async () => {
-    const user = await findOrCreateUserByPhone(nextPhone());
+    const user = await prisma.user.create({ data: { phone: nextPhone() } });
     const { token, expiresAt } = await createSession(user.id, t0);
     expect(expiresAt.getTime()).toBe(t0.getTime() + SESSION_TTL_MS);
 
@@ -154,38 +155,5 @@ describe("demo login", () => {
     expect(await resolveDemoLogin("admin", true)).toEqual({ ok: true, user: { id: admin.id, role: "ADMIN", flatId: null } });
     expect(await resolveDemoLogin("nobody", true)).toEqual({ ok: false, error: "UNKNOWN_DEMO_USER" });
     expect(await resolveDemoLogin("manager", true)).toEqual({ ok: false, error: "UNKNOWN_DEMO_USER" }); // not seeded here
-  });
-});
-
-describe("joinCommunity", () => {
-  it("puts a new resident in a flat of the invited community", async () => {
-    const community = await makeCommunity("JOIN1");
-    const user = await findOrCreateUserByPhone(nextPhone());
-    const result = await joinCommunity({ userId: user.id, communityCode: "join1", flatId: community.flats[1].id, name: "  Ravi Kumar " });
-    expect(result).toEqual({ ok: true, communityId: community.id, communityName: "JOIN1 CHS" });
-    expect(await prisma.user.findUniqueOrThrow({ where: { id: user.id } })).toMatchObject({ name: "Ravi Kumar", flatId: community.flats[1].id });
-  });
-
-  it("rejects flats from another community, unknown codes, existing members and non-residents", async () => {
-    const mine = await makeCommunity("JOIN2");
-    const other = await makeCommunity("JOIN3");
-    const user = await findOrCreateUserByPhone(nextPhone());
-    expect(await joinCommunity({ userId: user.id, communityCode: "JOIN2", flatId: other.flats[0].id, name: "Ravi" })).toEqual({ ok: false, error: "UNKNOWN_FLAT" });
-    expect(await joinCommunity({ userId: user.id, communityCode: "NOPE", flatId: mine.flats[0].id, name: "Ravi" })).toEqual({ ok: false, error: "UNKNOWN_COMMUNITY" });
-
-    await joinCommunity({ userId: user.id, communityCode: "JOIN2", flatId: mine.flats[0].id, name: "Ravi" });
-    expect(await joinCommunity({ userId: user.id, communityCode: "JOIN2", flatId: mine.flats[1].id, name: "Ravi" })).toEqual({ ok: false, error: "ALREADY_MEMBER" });
-
-    const vendor = await prisma.user.create({ data: { phone: nextPhone(), role: "VENDOR" } });
-    expect(await joinCommunity({ userId: vendor.id, communityCode: "JOIN2", flatId: mine.flats[0].id, name: "S" })).toEqual({ ok: false, error: "NOT_RESIDENT" });
-  });
-
-  it("lets only one of two simultaneous joins succeed", async () => {
-    const community = await makeCommunity("JOIN4");
-    const user = await findOrCreateUserByPhone(nextPhone());
-    const results = await Promise.all(
-      community.flats.map((flat) => joinCommunity({ userId: user.id, communityCode: "JOIN4", flatId: flat.id, name: "Ravi" })),
-    );
-    expect(results.filter((r) => r.ok)).toHaveLength(1);
   });
 });

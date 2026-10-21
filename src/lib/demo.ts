@@ -23,6 +23,17 @@ export const DEMO_COMMUNITIES = {
     city: "Bengaluru",
     pincode: "560095",
   },
+  /** Registered by its Society Manager and still waiting for a platform admin. */
+  lakeview: {
+    name: "Lakeview Residency",
+    code: "LAKEVIEW",
+    type: "GATED_COMMUNITY",
+    blockLabel: "Wing",
+    unitLabel: "Flat",
+    address: "Wakad Road, Wakad",
+    city: "Pune",
+    pincode: "411057",
+  },
 } as const;
 
 export type DemoCommunityKey = keyof typeof DEMO_COMMUNITIES;
@@ -41,8 +52,10 @@ export type DemoUserKey =
   | "resident"
   | "neighbour"
   | "pgResident"
+  | "pendingResident"
   | "manager"
   | "assistantManager"
+  | "pendingManager"
   | "vendorAc"
   | "vendorCleaning"
   | "vendorCarWash"
@@ -60,6 +73,8 @@ export type DemoUser = {
   home?: { community: DemoCommunityKey; flat: string };
   /** Society Managers: the community they run. They don't live there as far as Milkar knows. */
   manages?: { community: DemoCommunityKey; kind: "PRIMARY" | "ASSISTANT" };
+  /** A resident who has asked to join this flat and is waiting for the Society Manager. */
+  requests?: { community: DemoCommunityKey; flat: string };
   /** Vendors and their technicians. */
   vendor?: DemoVendorKey;
 };
@@ -69,8 +84,10 @@ export const DEMO_USERS: Record<DemoUserKey, DemoUser> = {
   resident: { phone: "+919000000003", name: "Rahul Deshmukh", role: "RESIDENT", home: { community: "greenMeadows", flat: "A-101" } },
   neighbour: { phone: "+919000000005", name: "Kavya Deshpande", role: "RESIDENT", home: { community: "greenMeadows", flat: "B-402" } },
   pgResident: { phone: "+919000000004", name: "Arnav Sinha", role: "RESIDENT", home: { community: "sunrise", flat: "A-103" } },
+  pendingResident: { phone: "+919000000008", name: "Nikhil Bhosale", role: "RESIDENT", requests: { community: "greenMeadows", flat: "C-301" } },
   manager: { phone: "+919000000002", name: "Sunita Kulkarni", role: "MANAGER", manages: { community: "greenMeadows", kind: "PRIMARY" } },
   assistantManager: { phone: "+919000000006", name: "Deepak Rao", role: "MANAGER", manages: { community: "greenMeadows", kind: "ASSISTANT" } },
+  pendingManager: { phone: "+919000000007", name: "Anil Kapoor", role: "MANAGER", manages: { community: "lakeview", kind: "PRIMARY" } },
   vendorAc: { phone: "+919000000013", name: "Suresh Pillai", role: "VENDOR", vendor: "coolcare" },
   vendorCleaning: { phone: "+919000000014", name: "Nisha Thomas", role: "VENDOR", vendor: "sparkle" },
   vendorCarWash: { phone: "+919000000015", name: "Manoj Yadav", role: "VENDOR", vendor: "washwell" },
@@ -89,6 +106,13 @@ export function demoUserContext(user: DemoUser): string | null {
     const community = DEMO_COMMUNITIES[user.home.community];
     return `${community.unitLabel} ${user.home.flat} · ${community.name}`;
   }
-  if (user.manages) return DEMO_COMMUNITIES[user.manages.community].name;
+  if (user.requests) {
+    const community = DEMO_COMMUNITIES[user.requests.community];
+    return `${community.unitLabel} ${user.requests.flat} · ${community.name} (waiting for approval)`;
+  }
+  if (user.manages) {
+    const community = DEMO_COMMUNITIES[user.manages.community];
+    return user.manages.community === "lakeview" ? `${community.name} (waiting for approval)` : community.name;
+  }
   return user.vendor ? DEMO_VENDORS[user.vendor].name : null;
 }

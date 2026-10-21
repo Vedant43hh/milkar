@@ -22,6 +22,9 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       { source: "/captain/:path*", destination: "/manager/:path*", permanent: false },
+      // Invite links (/join/<code>) now start resident registration with the code filled in.
+      { source: "/join", destination: "/register?role=resident", permanent: false },
+      { source: "/join/:code", destination: "/register?role=resident&code=:code", permanent: false },
       ...MOVED_TO_APP.map((page) => ({ source: `/${page}/:path*`, destination: `/app/${page}/:path*`, permanent: false })),
     ];
   },

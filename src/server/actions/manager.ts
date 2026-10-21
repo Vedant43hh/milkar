@@ -9,6 +9,7 @@ import { setFlash } from "@/lib/flash";
 import { formatINR } from "@/lib/pricing/money";
 import { istDateToUtc, istLocalToUtc } from "@/lib/time";
 import { finalizeRound } from "@/server/finalize";
+import { decideJoinRequest } from "@/server/registration";
 import { closePoll, convertPollToRound, createPoll, publishSuggestion, type PollError } from "@/server/polls";
 import {
   actorOf,
@@ -184,4 +185,14 @@ export async function convertPollAction(_prev: ActionResult, formData: FormData)
   if (!result.ok) return { ok: false, message: errorText(result.errors?.[0] ?? result.error) };
   if (result.created) await setFlash("success", "manager.flash.roundOpened");
   redirect(`/manager/rounds/${result.roundId}`);
+}
+
+/** Approve or decline someone's request to join this community. */
+export async function decideJoinAction(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  const user = await requirePortal("manager");
+  const decision = formData.get("decision") === "APPROVED" ? "APPROVED" : "REJECTED";
+  const result = await decideJoinRequest(actorOf(user), String(formData.get("requestId") ?? ""), decision, String(formData.get("note") ?? ""), new Date());
+  if (!result.ok) return { ok: false, message: t(`approvals.errors.${result.error}`) };
+  refresh();
+  return { ok: true, message: t(decision === "APPROVED" ? "approvals.residentApproved" : "approvals.residentDeclined") };
 }

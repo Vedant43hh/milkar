@@ -249,6 +249,8 @@ enum NotificationType {
   JOIN_DECIDED
   COMMUNITY_DECIDED
   VENDOR_DECIDED
+  COMMUNITY_REGISTERED // to platform admins: a community is waiting for approval
+  VENDOR_REGISTERED // to platform admins: a vendor is waiting for verification
 }
 
 // A residential community: apartment society, gated community, PG, hostel or office campus.
