@@ -48,6 +48,7 @@ const ACTION_MODULES: { portal: Portal; name: string; load: () => Promise<Record
   { portal: "app", name: "polls", load: () => import("@/server/actions/polls") },
   { portal: "app", name: "services", load: () => import("@/server/actions/services") },
   { portal: "app", name: "join", load: () => import("@/server/actions/join") },
+  { portal: "app", name: "orders", load: () => import("@/server/actions/orders") },
   { portal: "vendor", name: "vendor", load: () => import("@/server/actions/vendor") },
   { portal: "admin", name: "admin", load: () => import("@/server/actions/admin") },
 ];

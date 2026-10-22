@@ -304,7 +304,7 @@ export class SeedWorld {
       slots: [],
       bookings: new Map(),
       record,
-      href: input.kind === "GROCERY" ? "/app/groceries" : `/app/services/${roundId}`,
+      href: `/round/${roundId}`,
     };
     return round;
   }

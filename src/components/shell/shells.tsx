@@ -151,7 +151,7 @@ export function TabShell({ portal, children }: { portal: TabPortal; children: Re
   return (
     <div data-portal={portal} className="min-h-dvh bg-bg md:flex">
       {wideSidebar && (
-        <aside className="hidden md:sticky md:top-0 md:flex md:h-dvh md:w-60 md:shrink-0 md:flex-col md:gap-4 md:border-r md:border-border md:bg-surface md:px-3 md:py-3">
+        <aside className="hidden md:sticky md:top-0 md:flex md:h-dvh md:w-60 md:shrink-0 md:flex-col md:gap-4 md:border-r md:border-border md:bg-surface md:px-3 md:py-3 print:hidden">
           <div className="flex items-center gap-2 px-2">
             <Logo href={PORTAL_PATH[portal]} />
           </div>
@@ -161,7 +161,7 @@ export function TabShell({ portal, children }: { portal: TabPortal; children: Re
         </aside>
       )}
       <div className="min-w-0 flex-1">
-        <header className="sticky top-0 z-30 border-t-[3px] border-b border-t-brand border-b-border bg-surface/90 backdrop-blur">
+        <header className="sticky top-0 z-30 border-t-[3px] border-b border-t-brand border-b-border bg-surface/90 backdrop-blur print:hidden">
           <div className={cn("mx-auto flex h-14 items-center gap-2 px-3 md:px-6", width)}>
             <span className={cn(wideSidebar && "md:hidden")}>
               <Logo href={PORTAL_PATH[portal]} compact />
@@ -178,13 +178,15 @@ export function TabShell({ portal, children }: { portal: TabPortal; children: Re
             </div>
           </div>
         </header>
-        <PageContent className={cn("mx-auto w-full animate-fade-in px-4 pt-5 pb-[calc(6.5rem+env(safe-area-inset-bottom))]", width, wideSidebar && "md:px-6 md:pb-12")}>
+        <PageContent className={cn("mx-auto w-full animate-fade-in px-4 pt-5 pb-[calc(6.5rem+env(safe-area-inset-bottom))] print:p-0", width, wideSidebar && "md:px-6 md:pb-12")}>
           {children}
         </PageContent>
       </div>
-      <PortalNav portal={portal} fallback={<TabList portal={portal} pathname="" />}>
-        <ActiveTabBar portal={portal} />
-      </PortalNav>
+      <div className="print:hidden">
+        <PortalNav portal={portal} fallback={<TabList portal={portal} pathname="" />}>
+          <ActiveTabBar portal={portal} />
+        </PortalNav>
+      </div>
       <Tour portal={portal} />
     </div>
   );

@@ -244,6 +244,7 @@ enum NotificationType {
   SLOT_HELD
   SLOT_AUTO_BOOKED // a held weekly slot paid from the wallet automatically
   ISSUE_UPDATE
+  ISSUE_REPORTED // to a community's Society Managers: a resident reported a problem with a visit
   VENDOR_ORDER
   JOIN_REQUEST
   JOIN_DECIDED

@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/card";
+import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { Countdown } from "@/components/ui/countdown";
 import { EmptyState } from "@/components/ui/display";
 import { TierMeter } from "@/components/ui/progress";
@@ -33,7 +34,7 @@ async function Services() {
   const words = unitWordsFor(community.unitLabel);
 
   return (
-    <div>
+    <PullToRefresh>
       <PageHeader title={t("serviceDay.listTitle")} subtitle={t("serviceDay.listIntro")} />
       {days.length === 0 ? (
         <EmptyState
@@ -85,6 +86,6 @@ async function Services() {
           ))}
         </ul>
       )}
-    </div>
+    </PullToRefresh>
   );
 }

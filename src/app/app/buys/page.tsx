@@ -1,23 +1,17 @@
-import { ArrowRight, Repeat, ShoppingBasket, Sparkles, Wrench, type LucideIcon } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+import { CATEGORY_LOOK } from "@/components/buys/group-buy-card";
 import { PageHeader } from "@/components/ui/card";
 import { cn } from "@/components/ui/cn";
 import { PageSkeleton } from "@/components/ui/skeleton";
 import { t } from "@/i18n";
 import { requirePortal } from "@/lib/auth/current-user";
-import { BUY_CATEGORIES, type BuyCategory } from "@/lib/categories";
+import { BUY_CATEGORIES, CATEGORY_SLUG } from "@/lib/categories";
 import { openBuysByCategory } from "@/server/buys";
 
 export const metadata: Metadata = { title: t("buys.title") };
-
-const CATEGORY_LOOK: Record<BuyCategory, { icon: LucideIcon; href: string; tint: string }> = {
-  GROCERIES: { icon: ShoppingBasket, href: "/app/groceries", tint: "bg-success-soft text-success" },
-  HOME_SERVICES: { icon: Sparkles, href: "/app/services", tint: "bg-brand-soft text-brand-soft-fg" },
-  REPAIRS: { icon: Wrench, href: "/app/services", tint: "bg-warning-soft text-warning" },
-  SUBSCRIPTIONS: { icon: Repeat, href: "/app/services", tint: "bg-accent-soft text-accent-soft-fg" },
-};
 
 export default function GroupBuysPage() {
   return (
@@ -36,11 +30,14 @@ async function GroupBuys() {
       <PageHeader title={t("buys.title")} subtitle={t("buys.intro")} />
       <ul className="grid gap-3 sm:grid-cols-2">
         {BUY_CATEGORIES.map((category) => {
-          const { icon: Icon, href, tint } = CATEGORY_LOOK[category];
+          const { icon: Icon, tint } = CATEGORY_LOOK[category];
           const open = counts[category];
           return (
             <li key={category}>
-              <Link href={href} className="group flex h-full items-start gap-3 rounded-card border border-border bg-surface p-4 shadow-card transition-colors hover:border-brand/50">
+              <Link
+                href={`/app/buys/${CATEGORY_SLUG[category]}`}
+                className="group flex h-full items-start gap-3 rounded-card border border-border bg-surface p-4 shadow-card transition-colors hover:border-brand/50"
+              >
                 <span className={cn("flex size-12 shrink-0 items-center justify-center rounded-2xl", tint)}>
                   <Icon aria-hidden className="size-6" />
                 </span>

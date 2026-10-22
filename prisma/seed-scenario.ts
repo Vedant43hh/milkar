@@ -3,6 +3,8 @@
 // Green Meadows CHS (apartment society, 40 flats)
 //   - grocery rounds: two completed (refunds, short/damaged items), one open with live meters
 //   - Pre-Diwali deep cleaning (completed): rated visits, an issue fixed by a free revisit, a no-access visit
+//   - Kitchen chimney cleaning (completed yesterday): Rahul's and Kavya's visits not rated yet, still
+//     inside the 48-hour window for reporting a problem
 //   - AC servicing Service Day (open): 14 flats booked, 6 more unlock ₹400, some slots full
 //   - weekly car wash: last week's round finalized (visits this week), this week's open with held slots
 //   - interest polls: one past its threshold, two building up, one resident suggestion
@@ -684,6 +686,57 @@ export function buildWorld(now: Date) {
       }
       // The Service Day is complete once the revisit is done.
       const completedAt = plus(istAt(-8, 10), 2 * HOUR + 30 * MINUTE);
+      world.at(completedAt, () => {
+        round.record.status = "COMPLETED";
+        round.record.completedAt = completedAt;
+      });
+    });
+  }
+
+  // Kitchen chimney cleaning: done over the last two days. Rahul and Kavya haven't rated their
+  // visits yet, and can still report a problem.
+  {
+    const cutoffAt = istAt(-4, 20);
+    const { round, svc } = serviceRound("chimney", {
+      title: "Kitchen chimney cleaning",
+      cutoffAt,
+      createdAt: plus(cutoffAt, -5 * DAY),
+      days: [day(-2), day(-1)],
+    });
+    // Slots: day before yesterday 10–1 and 2–5, then yesterday 10–1 and 2–5; two technicians each.
+    const bookers: [Participant, number][] = [
+      [person("Ananya Iyer"), 0],
+      [person("Kavita Patil"), 0],
+      [person("Deepa Krishnan"), 1],
+      [person("Swati Kulkarni"), 1],
+      [kavya, 2],
+      [person("Neha Bhatt"), 2],
+      [rahul, 3],
+    ];
+    const times = bookers.map(() => random.between(plus(cutoffAt, -4 * DAY), plus(cutoffAt, -3 * HOUR))).sort((a, b) => a.getTime() - b.getTime());
+    bookers.forEach(([who, slot], i) => schedule([bookingEvent(round, who, times[i], { chimney: 1 }, slot)]));
+
+    world.at(plus(cutoffAt, MINUTE), () => {
+      const finalizedAt = plus(cutoffAt, MINUTE);
+      const { confirmed } = world.finalize(round, finalizedAt);
+      const orders = world.issueVendorOrders(round, confirmed, finalizedAt, plus(finalizedAt, 3 * HOUR));
+      notifyVendorOrders(orders, round, DEMO_COMMUNITIES.greenMeadows.name, finalizedAt);
+      const visits = createVisits(round, "chimney", finalizedAt, new Map(bookers.map(([who]) => [who.flatId, "COMPLETED" as const])));
+      const reviews: [number, string | null][] = [
+        [5, "Filters look new and the hood is spotless."],
+        [4, null],
+        [5, "Quick and tidy. Covered the hob before starting."],
+        [4, "Good job; came a little late."],
+        [5, null],
+      ];
+      let r = 0;
+      for (const visit of visits) {
+        if (visit.booking.userId === rahul.userId || visit.booking.userId === kavya.userId) continue;
+        const end = plus(visit.booking.slot.startsAt, svc.seed.durationMinutes * MINUTE);
+        const [rating, comment] = reviews[r++ % reviews.length];
+        rate(visit.id, round, svc.vendorId, visit.booking.userId, rating, comment, plus(end, random.int(1, 6) * HOUR));
+      }
+      const completedAt = istAt(-1, 17, 30);
       world.at(completedAt, () => {
         round.record.status = "COMPLETED";
         round.record.completedAt = completedAt;

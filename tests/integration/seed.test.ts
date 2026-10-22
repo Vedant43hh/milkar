@@ -4,6 +4,8 @@ import { prisma } from "@/lib/db";
 import { groupBasis } from "@/lib/pricing/basis";
 import { computeMeter } from "@/lib/pricing/meter";
 import type { Tier } from "@/lib/pricing/tiers";
+import { getInvoice, getRoundHistory, getWalletLedger, listOrderHistory } from "@/server/history";
+import { getCommunityImpact } from "@/server/impact";
 import { buildWorld, writeWorld } from "../../prisma/seed-scenario";
 import { truncateAll } from "../../prisma/truncate";
 
@@ -104,5 +106,89 @@ describe("seeded demo data", () => {
   it("gives the demo resident unread notifications to look at", async () => {
     const rahul = await prisma.user.findUniqueOrThrow({ where: { phone: "+919000000003" } });
     expect(await prisma.notification.count({ where: { userId: rahul.id, readAt: null } })).toBeGreaterThan(0);
+  });
+
+  it("leaves Rahul's and Kavya's chimney visits from yesterday to rate, and open for a complaint", async () => {
+    const round = await prisma.orderRound.findFirstOrThrow({ where: { title: "Kitchen chimney cleaning" }, include: { visits: { include: { rating: true } } } });
+    expect(round.status).toBe("COMPLETED");
+    for (const phone of ["+919000000003", "+919000000005"]) {
+      const user = await prisma.user.findUniqueOrThrow({ where: { phone }, include: { flat: true } });
+      const history = await getRoundHistory({ id: user.id, flatId: user.flatId!, communityId: user.flat!.communityId }, round.id, now);
+      expect(history?.visits).toHaveLength(1);
+      expect(history?.visits[0]).toMatchObject({ status: "COMPLETED", canRate: true, report: { kind: "NOT_DONE_PROPERLY" } });
+    }
+    expect(round.visits.filter((v) => v.rating).length).toBe(round.visits.length - 2);
+  });
+});
+
+// The resident's orders, invoices and wallet are read from different tables: payments, order items
+// and the wallet ledger. Across every seeded resident and round, they must tell the same story.
+describe("order history, invoices and the wallet", () => {
+  const POST_CUTOFF = ["SHORT_DELIVERY_REFUND", "NO_ACCESS_REFUND", "VISIT_CANCEL_REFUND", "SERVICE_ISSUE_REFUND", "ROUND_CANCEL_REFUND", "ADJUSTMENT"] as const;
+
+  async function residents() {
+    const users = await prisma.user.findMany({ where: { role: "RESIDENT", flatId: { not: null } }, include: { flat: true } });
+    return users.map((u) => ({ id: u.id, name: u.name, flatId: u.flatId!, communityId: u.flat!.communityId }));
+  }
+
+  it("shows what each resident paid and got back, exactly as payments and the ledger record it", async () => {
+    let rounds = 0;
+    for (const user of await residents()) {
+      for (const entry of await listOrderHistory(user)) {
+        const paid = await prisma.payment.aggregate({ where: { userId: user.id, roundId: entry.id, status: "PAID" }, _sum: { chargePaise: true } });
+        const back = await prisma.walletTransaction.aggregate({
+          where: { userId: user.id, roundId: entry.id, amountPaise: { gt: 0 }, type: { not: "LATE_PAYMENT_CREDIT" } },
+          _sum: { amountPaise: true },
+        });
+        expect(entry.money.paidPaise).toBe(paid._sum.chargePaise ?? 0);
+        expect(entry.money.refundedPaise).toBe(back._sum.amountPaise ?? 0);
+        rounds++;
+      }
+    }
+    expect(rounds).toBeGreaterThan(50);
+  });
+
+  it("invoices the final prices, which add up to what was paid less every refund", async () => {
+    let invoices = 0;
+    for (const user of await residents()) {
+      for (const entry of await listOrderHistory(user)) {
+        const result = await getInvoice(user, entry.id);
+        if (!result) continue;
+        const items = await prisma.orderItem.findMany({ where: { userId: user.id, roundId: entry.id } });
+        const confirmedFinal = items.filter((i) => i.status === "CONFIRMED").reduce((s, i) => s + (i.finalPaise ?? 0), 0);
+        const absorbed = items.reduce((s, i) => s + (i.absorbedPaise ?? 0), 0);
+        const afterCutoff = await prisma.walletTransaction.aggregate({ where: { userId: user.id, roundId: entry.id, type: { in: [...POST_CUTOFF] } }, _sum: { amountPaise: true } });
+        const { invoice, money } = result;
+        expect(invoice.totals.totalPaise).toBe(confirmedFinal);
+        expect(invoice.totals.taxablePaise + invoice.totals.gstPaise).toBe(invoice.totals.totalPaise);
+        // paid − refunds at reduction and cutoff = final − what Milkar absorbed; later refunds come off that.
+        expect(money.netPaise).toBe(invoice.totals.totalPaise - absorbed - (afterCutoff._sum.amountPaise ?? 0));
+        invoices++;
+      }
+    }
+    expect(invoices).toBeGreaterThan(30);
+  });
+
+  it("has no invoice for a round that is still taking orders", async () => {
+    const open = await prisma.orderRound.findFirstOrThrow({ where: { status: "OPEN", kind: "GROCERY", community: { code: "GREENMDW" } }, include: { orderItems: { take: 1, include: { user: { include: { flat: true } } } } } });
+    const buyer = open.orderItems[0].user;
+    expect(await getInvoice({ id: buyer.id, name: buyer.name, flatId: buyer.flatId!, communityId: buyer.flat!.communityId }, open.id)).toBeNull();
+  });
+
+  it("lists the whole wallet ledger, adding up to the balance", async () => {
+    for (const user of await residents()) {
+      const { balancePaise, entries, hasMore } = await getWalletLedger(user.id, 500);
+      expect(hasMore).toBe(false);
+      expect(entries.reduce((s, e) => s + e.amountPaise, 0)).toBe(balancePaise);
+    }
+  });
+
+  it("counts the community's savings and the vendor trips it avoided", async () => {
+    const gm = await prisma.community.findUniqueOrThrow({ where: { code: "GREENMDW" } });
+    const impact = await getCommunityImpact(gm.id);
+    expect(impact.savedPaise).toBeGreaterThan(0);
+    expect(impact.trips.separate).toBeGreaterThan(impact.trips.together);
+    expect(impact.trips.avoided).toBe(impact.trips.separate - impact.trips.together);
+    expect(impact.km).toBe(impact.trips.avoided * impact.assumptions.kmPerTrip);
   });
 });

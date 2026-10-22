@@ -86,7 +86,13 @@ After a schema change (`prisma generate`), restart `npm run dev`: the dev server
 - **Price unlocks:** the order that takes a product into a better tier shows a celebration, and everyone holding that product is notified once.
 - **Services** (`/app/services`, then `/app/services/<id>`): each open Service Day with its vendor (Verified badge, rating), a meter of flats booked, and the price per unit for each option. Pick units, then a time slot; full slots are greyed out. Checkout works like groceries, and the seat in the slot is taken in the same transaction that records the payment: if the slot filled up while you were paying, the money goes to your wallet and you're asked to pick another. Change slot for free until the cutoff; removing every unit cancels the booking and frees the seat. On weekly rounds, "keep this slot every week" holds your slot in next week's round for 24 hours, prefilled with this week's order; with "pay from my wallet automatically" it's booked for you when the wallet covers it.
 - **Polls** (`/app/polls`): "I'd join this" (one vote per flat, updated instantly), and **Suggest something** for your Society Manager (up to 3 waiting).
-- **Home:** open rounds with countdowns, the nearest price unlock and your stake; money saved this month compared with MRP; wallet balance; upcoming visits with their completion code; a held weekly slot to confirm; the polls closest to their threshold.
+- **Home:** chips for the four kinds of group buy (groceries, home services, repairs, subscriptions) with what's open in each; a card per open group buy with today's price against MRP, how many more flats or packs unlock the next price, a countdown and the flats that have joined (numbers only, never names); money saved this month and the wallet; upcoming visits with their completion code; a held weekly slot to confirm; the community's impact; the polls closest to their threshold. With nothing open, it points to the polls. Pull down on a phone to refresh this and the other resident lists.
+- **Group buys** (`/app/buys`, then `/app/buys/<category>`): the same cards, one kind at a time.
+- **Community impact:** money saved together against MRP, and vendor trips avoided: every flat buying alone means a delivery per shop and a trip per visit, while together a vendor makes one trip per grocery round and one per day of a Service Day. Distance, fuel and CO₂ follow from those trips through stated assumptions (8 km a trip, 0.04 L of fuel per km, 2.3 kg of CO₂ per litre; `src/lib/impact.ts`), shown as estimates with how they're worked out.
+- **Orders** (`/app/orders`, then `/app/orders/<round>`): every round you ordered in or your flat booked, with what you paid, what came back to the wallet and why (reductions, better tiers at cutoff, dropped items, short or damaged goods, no-access visits, cancellations, complaints) and what it cost in the end; the pickup code and delivery for groceries; for services, each visit's timeline (scheduled, on the way, started, done; or couldn't get in, or cancelled), the technician and the completion code until the job is done.
+- **Rating and complaints:** anyone in the flat can rate a finished visit from 1 to 5 once (the vendor's average updates with it), and report a problem within 48 hours of the visit ending: a job not done properly, or a no-access fee they dispute. One complaint per visit; the community's Society Managers are notified, and the household gets a receipt. Resolving it (one free revisit or a refund) comes with the manager portal.
+- **GST invoices** (`/app/orders/<round>/invoice`): once a round is confirmed, an invoice from Milkar for your confirmed items at their final prices, each split into taxable value and GST (CGST + SGST inside Milkar's state, IGST to another; the state comes from the GSTIN and the pincode), with a tax summary per rate and the round's payments and refunds. Print it or save it as a PDF. Without `PLATFORM_GSTIN` it is marked as a sample.
+- **Wallet** (`/app/wallet`): the balance and the full ledger, each entry with its reason and a link to its order.
 
 ## Society Manager portal (`/manager`)
 
@@ -129,8 +135,8 @@ Any 6-digit OTP works in mock mode.
 
 | Role | Phone | Name | Notes |
 |---|---|---|---|
-| Resident | 9000000003 | Rahul Deshmukh | Green Meadows, Flat A-101: orders, an AC booking, a held car-wash slot, a resolved complaint |
-| Resident | 9000000005 | Kavya Deshpande | Green Meadows, Flat B-402: groceries, a deep clean, poll votes; hasn't booked the AC Service Day |
+| Resident | 9000000003 | Rahul Deshmukh | Green Meadows, Flat A-101: orders, an AC booking, a held car-wash slot, a resolved complaint, yesterday's chimney visit to rate or complain about |
+| Resident | 9000000005 | Kavya Deshpande | Green Meadows, Flat B-402: groceries, a deep clean, yesterday's chimney visit to rate, poll votes; hasn't booked the AC Service Day |
 | Resident | 9000000004 | Arnav Sinha | Sunrise Co-living (PG), Room A-103 |
 | Resident | 9000000008 | Nikhil Bhosale | Asked to join Green Meadows as Flat C-301; waiting for Sunita |
 | Society Manager | 9000000002 | Sunita Kulkarni | Runs Green Meadows: a poll past its threshold and a resident suggestion |
@@ -145,9 +151,11 @@ Any 6-digit OTP works in mock mode.
 | Technician | 9000000022 | Lata Pawar | SparkleHome: the completed deep-clean visits |
 | Admin | 9000000001 | Priya Nair | Lakeview Residency and WashWell are waiting for her |
 
-The seed (`prisma/seed-scenario.ts`) prices every order through the real engine, on one timeline, so wallets, tier unlocks, refunds and notifications agree. It includes two completed grocery rounds and one open round; a completed deep-cleaning Service Day (ratings, a complaint fixed by a free revisit, a no-access visit with the visit fee kept); an open AC Service Day at 14 flats (6 more unlock ₹400, some slots full); a weekly car wash with last week's slots held for 24 hours; and four interest polls. GST rates and GSTINs are illustrative samples.
+The seed (`prisma/seed-scenario.ts`) prices every order through the real engine, on one timeline, so wallets, tier unlocks, refunds and notifications agree. It includes two completed grocery rounds and one open round; a completed deep-cleaning Service Day (ratings, a complaint fixed by a free revisit, a no-access visit with the visit fee kept); a kitchen chimney cleaning day finished yesterday, where Rahul's and Kavya's visits are still waiting for a rating and can still get a complaint; an open AC Service Day at 14 flats (6 more unlock ₹400, some slots full); a weekly car wash with last week's slots held for 24 hours; and four interest polls. GST rates and GSTINs are illustrative samples.
 
 ## Database migrations
+
+`20261022090000_issue_reported_notification` adds the notification Society Managers get when a resident reports a problem with a visit.
 
 `20261021150000_registration_notifications` adds the notifications sent when a community or a vendor registers.
 

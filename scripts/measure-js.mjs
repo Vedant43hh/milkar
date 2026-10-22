@@ -14,6 +14,11 @@ const PAGES = [
   { path: "/app/groceries", as: "Rahul Deshmukh" },
   { path: "/app/notifications", as: "Rahul Deshmukh" },
   { path: "/app/services", as: "Rahul Deshmukh" },
+  { path: "/app/buys/home-services", as: "Rahul Deshmukh" },
+  { path: "/app/orders", as: "Rahul Deshmukh" },
+  // A round's id comes from the seed, so follow the link to it.
+  { path: "/app/orders/[roundId]", as: "Kavya Deshpande", from: "/app/orders", link: /Kitchen chimney cleaning/ },
+  { path: "/app/wallet", as: "Rahul Deshmukh" },
   // A Service Day's id comes from the seed, so follow the link to it.
   { path: "/app/services/[roundId]", as: "Kavya Deshpande", from: "/app/services", link: /AC servicing Service Day/ },
   { path: "/tech", as: "Raju Thapa" },

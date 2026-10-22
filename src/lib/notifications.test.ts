@@ -27,6 +27,14 @@ describe("renderNotification", () => {
     expect(renderNotification("ISSUE_UPDATE", { service: "Deep cleaning", status: "REVISIT_SCHEDULED" }).body).toBe("A free revisit has been scheduled.");
   });
 
+  it("tells managers what kind of problem a resident reported", () => {
+    expect(renderNotification("ISSUE_REPORTED", { service: "Chimney cleaning", flat: "Flat A-101", kind: "NOT_DONE_PROPERLY" }).title).toBe(
+      "Flat A-101: Chimney cleaning not done properly",
+    );
+    expect(renderNotification("ISSUE_REPORTED", { service: "Deep cleaning", flat: "Flat A-201", kind: "NO_ACCESS_DISPUTE" }).title).toBe("Flat A-201 disputes a no-access fee");
+    expect(renderNotification("ISSUE_REPORTED", { service: "Deep cleaning", flat: "Flat A-201" }).body).toBe("Flat A-201 reported a problem. Arrange a free revisit or a refund.");
+  });
+
   it("has a title and body for every type", () => {
     for (const type of NOTIFICATION_TYPES) {
       expect(en.notifications.types[type].title.length).toBeGreaterThan(0);

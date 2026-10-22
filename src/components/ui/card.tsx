@@ -1,17 +1,32 @@
 import type { ReactNode } from "react";
 import { cn } from "./cn";
 
-export function Card({ children, className, as: Tag = "section" }: { children: ReactNode; className?: string; as?: "section" | "div" | "article" | "li" }) {
+/** `labelledBy`: the id of the card's title, which makes the section a named region for screen readers. */
+export function Card({
+  children,
+  className,
+  as: Tag = "section",
+  labelledBy,
+}: {
+  children: ReactNode;
+  className?: string;
+  as?: "section" | "div" | "article" | "li";
+  labelledBy?: string;
+}) {
   return (
-    <Tag className={cn("rounded-card border border-border bg-surface p-4 shadow-card", className)}>{children}</Tag>
+    <Tag aria-labelledby={labelledBy} className={cn("rounded-card border border-border bg-surface p-4 shadow-card", className)}>
+      {children}
+    </Tag>
   );
 }
 
-export function CardHeader({ title, subtitle, action }: { title: ReactNode; subtitle?: ReactNode; action?: ReactNode }) {
+export function CardHeader({ title, subtitle, action, titleId }: { title: ReactNode; subtitle?: ReactNode; action?: ReactNode; titleId?: string }) {
   return (
     <div className="mb-3 flex items-start justify-between gap-3">
       <div className="min-w-0">
-        <h2 className="text-base font-semibold text-fg">{title}</h2>
+        <h2 id={titleId} className="text-base font-semibold text-fg">
+          {title}
+        </h2>
         {subtitle && <p className="mt-0.5 text-sm text-muted">{subtitle}</p>}
       </div>
       {action}

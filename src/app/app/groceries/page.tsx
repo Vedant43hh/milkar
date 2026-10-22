@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { GroceryShop } from "@/components/shop/grocery-shop";
+import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { ButtonLink } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/card";
 import { cn } from "@/components/ui/cn";
@@ -55,7 +56,7 @@ async function Groceries({ searchParams }: { searchParams: PageProps<"/app/groce
   const { round } = shop;
 
   return (
-    <div>
+    <PullToRefresh>
       <PageHeader title={t("shop.title")} subtitle={t("shop.intro", { community: community.name })} />
       {rounds.length > 1 && (
         <nav aria-label={t("shop.otherRounds")} className="-mx-4 mb-4 flex gap-2 overflow-x-auto px-4">
@@ -97,6 +98,6 @@ async function Groceries({ searchParams }: { searchParams: PageProps<"/app/groce
         )}
       </section>
       <GroceryShop shop={shop} text={messages().shop} />
-    </div>
+    </PullToRefresh>
   );
 }

@@ -4,6 +4,7 @@ import { canManageCommunity } from "@/lib/auth/rules";
 import { prisma } from "@/lib/db";
 import { notificationKeys } from "@/lib/notifications";
 import { communityCodeFrom, generateFlats, isSelfRegistrationRole, isValidGstin, layoutProblems, type FlatLayout } from "@/lib/registration";
+import { isUniqueViolation } from "./db-errors";
 import { notify } from "./notifications";
 import { communityManagerIds, type Actor } from "./rounds";
 
@@ -50,9 +51,6 @@ class RegisterFailure extends Error {
     super(code);
   }
 }
-
-const isUniqueViolation = (error: unknown, field: string) =>
-  typeof error === "object" && error !== null && (error as { code?: string }).code === "P2002" && JSON.stringify((error as { meta?: unknown }).meta ?? "").includes(field);
 
 function detailsProblem(details: RegisterInput["details"]): RegisterError | null {
   if (details.kind === "MANAGER") {

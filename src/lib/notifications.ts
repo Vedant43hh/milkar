@@ -19,6 +19,7 @@ export const NOTIFICATION_TYPES = [
   "SLOT_HELD",
   "SLOT_AUTO_BOOKED",
   "ISSUE_UPDATE",
+  "ISSUE_REPORTED",
   "VENDOR_ORDER",
   "JOIN_REQUEST",
   "JOIN_DECIDED",
@@ -43,6 +44,7 @@ type RefundReason =
   | "ADJUSTMENT";
 
 type IssueStatus = "OPEN" | "REVISIT_SCHEDULED" | "REFUNDED" | "REJECTED" | "RESOLVED";
+type IssueKind = "NOT_DONE_PROPERLY" | "NO_ACCESS_DISPUTE";
 type Decision = "APPROVED" | "REJECTED";
 
 /**
@@ -65,6 +67,8 @@ export type NotificationParams = {
   SLOT_HELD: { service: string; startsAt: string; expiresAt: string };
   SLOT_AUTO_BOOKED: { service: string; startsAt: string; amountPaise: number };
   ISSUE_UPDATE: { service: string; status: IssueStatus };
+  /** To a community's Society Managers. `flat` is e.g. "Flat A-101". */
+  ISSUE_REPORTED: { service: string; flat: string; kind: IssueKind };
   VENDOR_ORDER: { round: string; community: string };
   /** To a community's Society Managers: someone asked to join. `flat` is e.g. "Flat A-101". */
   JOIN_REQUEST: { name: string; flat: string };
@@ -114,6 +118,12 @@ export function renderNotification(type: string, params: unknown): { title: stri
   if (type === "ISSUE_UPDATE" && typeof raw.status === "string") {
     vars.status = t(`notifications.issueStatus.${raw.status}` as MessageKey);
   }
+  if (type === "ISSUE_REPORTED" && (raw.kind === "NOT_DONE_PROPERLY" || raw.kind === "NO_ACCESS_DISPUTE")) {
+    return {
+      title: t(`notifications.types.ISSUE_REPORTED.${raw.kind}.title`, vars),
+      body: t(`notifications.types.ISSUE_REPORTED.${raw.kind}.body`, vars),
+    };
+  }
   if ((type === "JOIN_DECIDED" || type === "COMMUNITY_DECIDED" || type === "VENDOR_DECIDED") && (raw.decision === "APPROVED" || raw.decision === "REJECTED")) {
     return {
       title: t(`notifications.types.${type}.${raw.decision}.title`, vars),
@@ -158,6 +168,7 @@ export const notificationKeys = {
   slotHeld: (bookingId: string) => `SLOT_HELD:${bookingId}`,
   slotAutoBooked: (bookingId: string) => `SLOT_AUTO_BOOKED:${bookingId}`,
   issue: (issueId: string, status: string) => `ISSUE:${issueId}:${status}`,
+  issueReported: (issueId: string) => `ISSUE_REPORTED:${issueId}`,
   vendorOrder: (vendorOrderId: string) => `VENDOR_ORDER:${vendorOrderId}`,
   joinRequest: (requestId: string) => `JOIN_REQUEST:${requestId}`,
   joinDecided: (requestId: string) => `JOIN_DECIDED:${requestId}`,
