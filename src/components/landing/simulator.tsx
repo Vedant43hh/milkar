@@ -1,7 +1,7 @@
 "use client";
 
 import { PartyPopper, Truck, TrendingDown } from "lucide-react";
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import type { Messages } from "@/i18n";
 import { interpolate } from "@/i18n/interpolate";
 import { formatINR } from "@/lib/pricing/money";
@@ -19,6 +19,13 @@ type Text = Messages["landing"]["sim"];
 export function PriceSimulator({ text, initialFlats = 12 }: { text: Text; initialFlats?: number }) {
   const [flats, setFlats] = useState(initialFlats);
   const sliderId = useId();
+  const slider = useRef<HTMLInputElement>(null);
+  // On a slow phone the slider can be dragged before the page has finished loading: it moves,
+  // but nothing listens yet. Once it does, start from where the slider is.
+  useEffect(() => {
+    const moved = Number(slider.current?.value);
+    if (moved) setFlats(moved);
+  }, []);
   const result = simulate(EXAMPLE_BASKET, flats);
   const flatsLabel = interpolate(text.flatsValue, { n: result.flats });
   const nextLabel = result.next ? interpolate(text.next, { n: result.next.needed, price: formatINR(result.next.pricePaise) }) : text.best;
@@ -35,6 +42,7 @@ export function PriceSimulator({ text, initialFlats = 12 }: { text: Text; initia
           </output>
         </div>
         <input
+          ref={slider}
           id={sliderId}
           type="range"
           min={SIM_MIN_FLATS}
