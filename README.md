@@ -94,6 +94,14 @@ After a schema change (`prisma generate`), restart `npm run dev`: the dev server
 - **GST invoices** (`/app/orders/<round>/invoice`): once a round is confirmed, an invoice from Milkar for your confirmed items at their final prices, each split into taxable value and GST (CGST + SGST inside Milkar's state, IGST to another; the state comes from the GSTIN and the pincode), with a tax summary per rate and the round's payments and refunds. Print it or save it as a PDF. Without `PLATFORM_GSTIN` it is marked as a sample.
 - **Wallet** (`/app/wallet`): the balance and the full ledger, each entry with its reason and a link to its order.
 
+## Repair Days and technicians
+
+- **Repair Days** are Service Days for plumbers, electricians, carpenters and painters (listed under **Repairs**). One "Visit & labour" option is priced by flats booked, so the more flats join, the less each visit costs.
+- **What's wrong:** after booking, the resident describes the problem and can add a photo. The phone shrinks it (at most 1280 px, at most 300 KB as JPEG) before upload; the server accepts only real JPEG, PNG or WebP files, recognised by their bytes. It's editable until the technician sets out. Photos are served by `/api/photos/<id>` only to the flat, the technician assigned to the visit, the vendor and the community's Society Managers; everyone else gets the same 404 as for a photo that doesn't exist.
+- **Technicians:** when a Service Day is confirmed, each visit goes to one of the vendor's technicians, round-robin within each time slot (`src/lib/services/assign.ts`). A technician sees only their own visits (`/tech`, `/tech/upcoming`); each opens a page with the flat, the time, the problem and photo, and big buttons at the bottom for the next step: **On my way** (the household is told), **Start the job** or **Couldn't get in** (they get back what they paid minus the visit fee, and the vendor keeps the fee instead of the job), then **Add parts** and **Enter code**. The resident's 4-digit code finishes the visit; after 5 wrong codes only a Society Manager can confirm it.
+- **Parts:** while working, the technician lists the parts needed at cost. The household is notified and sees the bill: the group-priced visit plus parts. **Approve and pay** charges the wallet first and the rest by UPI (a payment for the parts, confirmed under the same locks as checkout); **Decline** lets the technician carry on without them. While a request waits, the visit can't be finished and no other parts can be asked for (one waiting request per visit, enforced in the database). A payment that arrives after the parts were decided, or once the job stopped, goes to the wallet, so tapping twice charges once. The vendor's payout grows by the parts (a PARTS adjustment).
+- **Refunds:** parts paid for but not used go back to whoever paid, from the technician's screen; a job called off once started (by the vendor or a Society Manager) refunds the visit and its parts in full. Parts appear on the GST invoice (at 18%, inside the price), and complaints follow the usual revisit-or-refund rules.
+
 ## Society Manager portal (`/manager`)
 
 - **Open a grocery round:** pick products (all ticked by default), the per-flat limit for each, the cutoff and delivery time. Prices are snapshotted from the catalogue when the round opens.
@@ -145,15 +153,19 @@ Any 6-digit OTP works in mock mode.
 | Vendor | 9000000013 | Suresh Pillai | CoolCare AC & Appliance (verified) |
 | Vendor | 9000000014 | Nisha Thomas | SparkleHome Cleaning & Pest Control (verified, rated) |
 | Vendor | 9000000015 | Manoj Yadav | WashWell Car Wash (verification pending) |
+| Vendor | 9000000016 | Sameer Kulkarni | FixRight Home Repairs (plumber, electrician, carpenter) |
 | Vendor | 9000000011 | Ramesh Agarwal | Shree Balaji Wholesale Traders (groceries) |
 | Vendor | 9000000012 | Imran Shaikh | Annapurna Home Care Distributors (groceries) |
 | Technician | 9000000021 | Raju Thapa | WashWell: this week's car-wash visits |
 | Technician | 9000000022 | Lata Pawar | SparkleHome: the completed deep-clean visits |
+| Technician | 9000000023 | Mahesh Kale | FixRight: today's carpentry at Kavya's, Joseph's and Rahul's flats |
 | Admin | 9000000001 | Priya Nair | Lakeview Residency and WashWell are waiting for her |
 
-The seed (`prisma/seed-scenario.ts`) prices every order through the real engine, on one timeline, so wallets, tier unlocks, refunds and notifications agree. It includes two completed grocery rounds and one open round; a completed deep-cleaning Service Day (ratings, a complaint fixed by a free revisit, a no-access visit with the visit fee kept); a kitchen chimney cleaning day finished yesterday, where Rahul's and Kavya's visits are still waiting for a rating and can still get a complaint; an open AC Service Day at 14 flats (6 more unlock ₹400, some slots full); a weekly car wash with last week's slots held for 24 hours; and four interest polls. GST rates and GSTINs are illustrative samples.
+The seed (`prisma/seed-scenario.ts`) prices every order through the real engine, on one timeline, so wallets, tier unlocks, refunds and notifications agree. It includes two completed grocery rounds and one open round; a completed deep-cleaning Service Day (ratings, a complaint fixed by a free revisit, a no-access visit with the visit fee kept); a kitchen chimney cleaning day finished yesterday, where Rahul's and Kavya's visits are still waiting for a rating and can still get a complaint; FixRight's Repair Days (an Electrician Day done, with parts approved and paid for one flat and ratings; a Carpenter Day with visits today; a Plumber Day open at 7 flats, where 3 more unlock ₹249); an open AC Service Day at 14 flats (6 more unlock ₹400, some slots full); a weekly car wash with last week's slots held for 24 hours; and four interest polls. GST rates and GSTINs are illustrative samples.
 
 ## Database migrations
+
+`20261022120000_repair_days` adds plumber, electrician, carpenter and painter services, the problem note and photo on a booking, parts requests (one waiting per visit, through a unique column and a check constraint), PARTS payments, the PARTS_DEBIT and PARTS_REFUND wallet entries, the vendor's PARTS adjustment and the PARTS_APPROVAL notification. Existing payments become ORDER payments.
 
 `20261022090000_issue_reported_notification` adds the notification Society Managers get when a resident reports a problem with a visit.
 

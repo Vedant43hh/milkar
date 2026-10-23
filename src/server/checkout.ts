@@ -8,6 +8,7 @@ import { unitPriceAt } from "@/lib/pricing/price";
 import { checkChange, isQuoteExpired, QUOTE_TTL_MS, type ChangeError } from "@/lib/pricing/rules";
 import { tierIndexAt, sortTiers, type Tier } from "@/lib/pricing/tiers";
 import { notify } from "./notifications";
+import { applyPartsPayment, partsPaymentProblem } from "./parts";
 import { paymentGateway } from "./payments/gateway";
 import { lockRound } from "./round-lock";
 import { releaseSeat, takeSeat } from "./slots";
@@ -366,7 +367,9 @@ export type ConfirmFailure =
   | "OFFERING_UNAVAILABLE"
   | "WALLET_CHANGED"
   | "SLOT_FULL"
-  | "SLOT_REQUIRED";
+  | "SLOT_REQUIRED"
+  | "PARTS_DECIDED"
+  | "VISIT_CHANGED";
 
 export type ConfirmResult =
   | { status: "PAID"; roundId: string; unlocked: Unlock[]; repeat: boolean }
@@ -406,6 +409,14 @@ export async function confirmPayment(paymentId: string, providerPaymentId: strin
       await tx.payment.update({ where: { id: paymentId }, data: { status: "CREDITED_TO_WALLET", failureReason: reason, providerPaymentId, paidAt: now } });
       return { status: "CREDITED_TO_WALLET", roundId, reason, amountPaise: payment.gatewayPaise };
     };
+
+    // Parts for a repair visit: applied only if the request still waits and the job is still going on.
+    if (payment.purpose === "PARTS") {
+      const problem = await partsPaymentProblem(tx, payment, now);
+      if (problem) return creditInstead(problem);
+      await applyPartsPayment(tx, { paymentId, userId: payment.userId, walletAppliedPaise: payment.walletAppliedPaise, providerPaymentId }, payment.partsRequestId!, now);
+      return { status: "PAID", roundId, unlocked: [], repeat: false };
+    }
 
     // This only runs once the gateway has captured the money, so a payment that stopped waiting for
     // it (expired, or the round was cancelled) still ends up in the wallet.
@@ -465,6 +476,7 @@ export async function getPaymentForUser(paymentId: string, userId: string) {
       providerOrderId: true,
       expiresAt: true,
       roundId: true,
+      purpose: true,
       round: { select: { title: true, kind: true } },
     },
   });

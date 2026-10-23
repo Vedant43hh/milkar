@@ -119,6 +119,23 @@ describe("seeded demo data", () => {
     }
     expect(round.visits.filter((v) => v.rating).length).toBe(round.visits.length - 2);
   });
+
+  it("has FixRight's Repair Days: parts approved and paid on the Electrician Day, today's carpentry for the demo technician", async () => {
+    const electrician = await prisma.orderRound.findFirstOrThrow({ where: { title: "Electrician Day" }, include: { partsRequests: { include: { payments: true } } } });
+    expect(electrician.status).toBe("COMPLETED");
+    const [parts] = electrician.partsRequests;
+    expect(parts).toMatchObject({ status: "APPROVED", totalPaise: 52000 + 5 * 4500, pendingVisitId: null });
+    expect(parts.payments).toMatchObject([{ purpose: "PARTS", status: "PAID", chargePaise: parts.totalPaise }]);
+    expect(await prisma.vendorAdjustment.findFirstOrThrow({ where: { visitId: parts.visitId, type: "PARTS" } })).toMatchObject({ amountPaise: parts.totalPaise });
+
+    const mahesh = await prisma.user.findUniqueOrThrow({ where: { phone: "+919000000023" } });
+    const today = await prisma.serviceVisit.findMany({ where: { technicianId: mahesh.id, round: { title: "Carpenter Day" } }, include: { booking: true } });
+    expect(today.map((v) => v.status)).toEqual(["SCHEDULED", "SCHEDULED", "SCHEDULED"]);
+    expect(today.every((v) => v.booking.problemNote)).toBe(true);
+
+    const plumber = await prisma.orderRound.findFirstOrThrow({ where: { title: "Plumber Day", status: "OPEN" }, include: { orderItems: true } });
+    expect(groupBasis(plumber.orderItems, "FLATS")).toBe(7);
+  });
 });
 
 // The resident's orders, invoices and wallet are read from different tables: payments, order items
@@ -136,11 +153,9 @@ describe("order history, invoices and the wallet", () => {
     for (const user of await residents()) {
       for (const entry of await listOrderHistory(user)) {
         const paid = await prisma.payment.aggregate({ where: { userId: user.id, roundId: entry.id, status: "PAID" }, _sum: { chargePaise: true } });
-        const back = await prisma.walletTransaction.aggregate({
-          where: { userId: user.id, roundId: entry.id, amountPaise: { gt: 0 }, type: { not: "LATE_PAYMENT_CREDIT" } },
-          _sum: { amountPaise: true },
-        });
-        expect(entry.money.paidPaise).toBe(paid._sum.chargePaise ?? 0);
+        const late = await prisma.payment.aggregate({ where: { userId: user.id, roundId: entry.id, status: "CREDITED_TO_WALLET" }, _sum: { gatewayPaise: true } });
+        const back = await prisma.walletTransaction.aggregate({ where: { userId: user.id, roundId: entry.id, amountPaise: { gt: 0 } }, _sum: { amountPaise: true } });
+        expect(entry.money.paidPaise).toBe((paid._sum.chargePaise ?? 0) + (late._sum.gatewayPaise ?? 0));
         expect(entry.money.refundedPaise).toBe(back._sum.amountPaise ?? 0);
         rounds++;
       }
@@ -159,7 +174,12 @@ describe("order history, invoices and the wallet", () => {
         const absorbed = items.reduce((s, i) => s + (i.absorbedPaise ?? 0), 0);
         const afterCutoff = await prisma.walletTransaction.aggregate({ where: { userId: user.id, roundId: entry.id, type: { in: [...POST_CUTOFF] } }, _sum: { amountPaise: true } });
         const { invoice, money } = result;
-        expect(invoice.totals.totalPaise).toBe(confirmedFinal);
+        // Repair visits: parts the resident paid for and kept are on the invoice too.
+        const parts = await prisma.partsRequest.aggregate({
+          where: { roundId: entry.id, status: "APPROVED", payments: { some: { userId: user.id, status: "PAID" } } },
+          _sum: { totalPaise: true },
+        });
+        expect(invoice.totals.totalPaise).toBe(confirmedFinal + (parts._sum.totalPaise ?? 0));
         expect(invoice.totals.taxablePaise + invoice.totals.gstPaise).toBe(invoice.totals.totalPaise);
         // paid − refunds at reduction and cutoff = final − what Milkar absorbed; later refunds come off that.
         expect(money.netPaise).toBe(invoice.totals.totalPaise - absorbed - (afterCutoff._sum.amountPaise ?? 0));

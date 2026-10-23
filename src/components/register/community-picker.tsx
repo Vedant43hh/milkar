@@ -1,7 +1,7 @@
 "use client";
 
 import { Building2, Check, KeyRound, Search } from "lucide-react";
-import { useState, useTransition, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, useTransition, type KeyboardEvent } from "react";
 import type { Messages } from "@/i18n";
 import { interpolate } from "@/i18n/interpolate";
 import { findCommunityAction, searchCommunitiesAction } from "@/server/actions/register";
@@ -30,6 +30,17 @@ export function CommunityFinder({ text, chosen, onChoose }: { text: Text; chosen
   const [results, setResults] = useState<Found[] | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  const codeInput = useRef<HTMLInputElement>(null);
+  const searchInput = useRef<HTMLInputElement>(null);
+
+  // On a slow phone the boxes can be typed in before the page has finished loading: they show the
+  // text, but nothing was listening. Once it is, start from what's there.
+  useEffect(() => {
+    const typedCode = codeInput.current?.value ?? "";
+    if (typedCode) setCode(typedCode.toUpperCase());
+    const typedQuery = searchInput.current?.value ?? "";
+    if (typedQuery) setQuery(typedQuery);
+  }, []);
 
   const findByCode = () =>
     start(async () => {
@@ -69,6 +80,7 @@ export function CommunityFinder({ text, chosen, onChoose }: { text: Text; chosen
         <Label htmlFor="invite-code">{text.find.codeLabel}</Label>
         <div className="flex gap-2">
           <Input
+            ref={codeInput}
             id="invite-code"
             value={code}
             onChange={(e) => setCode(e.target.value.toUpperCase())}
@@ -92,6 +104,7 @@ export function CommunityFinder({ text, chosen, onChoose }: { text: Text; chosen
         <Label htmlFor="community-search">{text.find.searchLabel}</Label>
         <div className="flex gap-2">
           <Input
+            ref={searchInput}
             id="community-search"
             type="search"
             value={query}

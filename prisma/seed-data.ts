@@ -60,6 +60,15 @@ export const VENDOR_DETAILS: Record<
     verification: "VERIFIED",
     note: "GST certificate, insecticide licence and staff ID proofs checked.",
   },
+  fixright: {
+    gstin: "27FIXRT9876N1ZA",
+    serviceArea: ["411045", "411057", "411021"],
+    phone: "+912024000016",
+    city: "Pune",
+    about: "Plumbers, electricians and carpenters for whole buildings. Parts at cost, shown to you before anything is fitted.",
+    verification: "VERIFIED",
+    note: "GST certificate, trade licence and police verification of technicians checked.",
+  },
   washwell: {
     gstin: "27WASHW2468M1ZH",
     serviceArea: ["411045"],
@@ -111,7 +120,7 @@ export type SeedServiceOption = {
 
 export type SeedService = {
   key: string;
-  vendor: Extract<DemoVendorKey, "coolcare" | "sparkle" | "washwell">;
+  vendor: Extract<DemoVendorKey, "coolcare" | "sparkle" | "washwell" | "fixright">;
   category: ServiceCategory;
   name: string;
   description: string;
@@ -248,6 +257,45 @@ export const SERVICES: SeedService[] = [
     slots: [["10:00", "13:00", 2], ["14:00", "17:00", 2]],
   },
   {
+    key: "plumber",
+    vendor: "fixright",
+    category: "PLUMBER",
+    name: "Plumber",
+    description: "Leaking taps, flush tanks, blocked drains and pipe fixes. Parts at cost, approved by you first.",
+    minFlats: 4,
+    noAccessFee: 99,
+    durationMinutes: 60,
+    gstPct: 18,
+    options: [{ key: "visit", name: "Visit & labour", unitLabel: "visit", mrp: 499, maxPerFlat: 1, tiers: [[1, 389], [5, 299], [10, 249], [20, 199]] }],
+    slots: [["09:00", "12:00", 3], ["13:00", "16:00", 3], ["16:00", "19:00", 2]],
+  },
+  {
+    key: "electrician",
+    vendor: "fixright",
+    category: "ELECTRICIAN",
+    name: "Electrician",
+    description: "Switches, sockets, fans, lights and MCB trips. Parts at cost, approved by you first.",
+    minFlats: 4,
+    noAccessFee: 99,
+    durationMinutes: 60,
+    gstPct: 18,
+    options: [{ key: "visit", name: "Visit & labour", unitLabel: "visit", mrp: 499, maxPerFlat: 1, tiers: [[1, 389], [5, 299], [10, 249], [20, 199]] }],
+    slots: [["09:00", "12:00", 3], ["13:00", "16:00", 3], ["16:00", "19:00", 2]],
+  },
+  {
+    key: "carpenter",
+    vendor: "fixright",
+    category: "CARPENTER",
+    name: "Carpenter",
+    description: "Hinges, drawer runners, door locks and furniture fixes. Parts at cost, approved by you first.",
+    minFlats: 4,
+    noAccessFee: 99,
+    durationMinutes: 60,
+    gstPct: 18,
+    options: [{ key: "visit", name: "Visit & labour", unitLabel: "visit", mrp: 549, maxPerFlat: 1, tiers: [[1, 449], [5, 349], [10, 299], [20, 249]] }],
+    slots: [["09:00", "12:00", 3], ["13:00", "16:00", 3], ["16:00", "19:00", 2]],
+  },
+  {
     key: "carwash",
     vendor: "washwell",
     category: "CAR_WASH",
@@ -273,6 +321,7 @@ export const TECHNICIANS: Record<SeedService["vendor"], string[]> = {
   coolcare: ["Santosh Gaikwad", "Irfan Shaikh", "Ganesh More"],
   sparkle: ["Lata Pawar", "Rekha Jadhav", "Anil Kamble", "Sunil Waghmare"],
   washwell: ["Raju Thapa", "Dinesh Rawat"],
+  fixright: ["Mahesh Kale", "Salim Khan", "Prakash Jadhav"],
 };
 
 /** Green Meadows: Towers A–D, five floors, two flats per floor: 101, 102, 201 … 502. */

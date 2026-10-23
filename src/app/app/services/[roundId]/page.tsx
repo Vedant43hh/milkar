@@ -3,7 +3,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { ProblemForm } from "@/components/orders/problem-form";
+import { problemFormText } from "@/components/orders/problem-text";
 import { ServiceBooking } from "@/components/services/service-booking";
+import { Card, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Countdown } from "@/components/ui/countdown";
 import { Banner } from "@/components/ui/display";
@@ -13,7 +16,23 @@ import { messages, t } from "@/i18n";
 import { requirePortal } from "@/lib/auth/current-user";
 import { formatINR } from "@/lib/pricing/money";
 import { formatIST } from "@/lib/time";
-import { getServiceDay } from "@/server/service-days";
+import { getServiceDay, type ServiceDay } from "@/server/service-days";
+
+/** Booked a repair: tell the technician what's wrong, with a photo if it helps. */
+function ProblemCard({ roundId, booking }: { roundId: string; booking: NonNullable<ServiceDay["booking"]> }) {
+  const text = messages().problem;
+  return (
+    <Card labelledBy="problem-title" className="border-brand/40">
+      <CardHeader titleId="problem-title" title={text.title} subtitle={text.intro} />
+      <ProblemForm
+        roundId={roundId}
+        note={booking.problemNote ?? ""}
+        photo={booking.photo ? { url: `/api/photos/${booking.photo.id}`, width: booking.photo.width, height: booking.photo.height } : null}
+        text={problemFormText()}
+      />
+    </Card>
+  );
+}
 
 export const metadata: Metadata = { title: t("serviceDay.listTitle") };
 
@@ -79,6 +98,7 @@ async function ServiceDayScreen({ params }: { params: PageProps<"/app/services/[
             {t("serviceDay.visitFee", { fee: formatINR(round.noAccessFeePaise) })}
           </p>
         </header>
+        {day.repair && day.booking?.status === "ACTIVE" && <ProblemCard roundId={round.id} booking={day.booking} />}
         <ServiceBooking day={day} text={messages().serviceDay} shopText={messages().shop} />
       </div>
     </PullToRefresh>

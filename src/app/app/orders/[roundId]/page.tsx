@@ -76,7 +76,7 @@ async function Order({ params }: { params: PageProps<"/app/orders/[roundId]">["p
           </SectionTitle>
           <div className="space-y-3">
             {visits.map((visit) => (
-              <VisitCard key={visit.id} visit={visit} title={round.serviceName ?? round.title} />
+              <VisitCard key={visit.id} visit={visit} title={round.serviceName ?? round.title} roundId={round.id} />
             ))}
           </div>
         </section>

@@ -28,30 +28,36 @@ function Frame({
   side?: SheetSide;
 }) {
   const titleId = useId();
-  // A modal dialog makes the rest of the document inert. If its page goes away (navigation, or
-  // Next keeping the page hidden for back/forward), close it so the next page stays usable.
+  const latestOnClose = useRef(onClose);
+  useEffect(() => {
+    latestOnClose.current = onClose;
+  });
+
   useEffect(() => {
     const element = dialog.current;
-    return () => element?.close();
+    if (!element) return;
+    // Tell the owner as soon as the sheet closes, however that happened: Escape or the back
+    // gesture, the backdrop, a button, a form finishing. The browser's close event comes a moment
+    // later (and on Escape the cancel event doesn't always come), so a quick "open it again" could
+    // land while the owner still thinks it's open, and nothing would reopen. The open attribute
+    // changes at once and observers run before the next tap. If the sheet is open again by then
+    // (React re-running effects in development closes and reopens it), nothing closed.
+    const watcher = new MutationObserver(() => {
+      if (!element.open) latestOnClose.current?.();
+    });
+    watcher.observe(element, { attributes: true, attributeFilter: ["open"] });
+    return () => {
+      watcher.disconnect();
+      // A modal dialog makes the rest of the document inert. If its page goes away (navigation,
+      // or Next keeping the page hidden for back/forward), close it so the next page stays usable.
+      element.close();
+    };
   }, [dialog]);
-  // Tell the owner at once when the person closes the sheet. The browser's close event comes a
-  // moment later, so a quick "open it again" could otherwise land while the owner still thinks
-  // it's open, and nothing would reopen.
-  const close = () => {
-    dialog.current?.close();
-    onClose?.();
-  };
+  const close = () => dialog.current?.close();
   return (
     <dialog
       ref={dialog}
       aria-labelledby={titleId}
-      // Escape (or the phone's back gesture): fires before the dialog closes.
-      onCancel={() => onClose?.()}
-      // Anything else that closed it. If it's open again by then (a quick reopen, or React
-      // re-running effects in development, which closes and reopens it), it isn't closed after all.
-      onClose={() => {
-        if (!dialog.current?.open) onClose?.();
-      }}
       onClick={(e) => {
         const target = e.target as HTMLElement;
         // Backdrop click, or a link inside the sheet was followed.

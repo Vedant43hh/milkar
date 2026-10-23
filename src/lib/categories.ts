@@ -7,6 +7,11 @@ export const BUY_CATEGORIES: readonly BuyCategory[] = ["GROCERIES", "HOME_SERVIC
 /** Service categories that are fixing something rather than regular upkeep. */
 const REPAIR_SERVICES = new Set(["APPLIANCE_REPAIR", "PLUMBER", "ELECTRICIAN", "CARPENTER", "PAINTER"]);
 
+/** Repair visits: the resident says what's wrong, and the technician may need parts. */
+export function isRepairService(category: string | null | undefined): boolean {
+  return !!category && REPAIR_SERVICES.has(category);
+}
+
 /**
  * Where a round is listed. Anything repeating every week is a subscription (car wash, milk);
  * otherwise groceries, repairs or home services by what it is.

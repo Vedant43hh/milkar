@@ -33,7 +33,11 @@ async function Pay({ params }: { params: PageProps<"/app/pay/[paymentId]">["para
   if (!payment || payment.provider !== "MOCK") notFound();
   const now = new Date();
   const back = (
-    <ButtonLink href={payment.round.kind === "SERVICE" ? `/app/services/${payment.roundId}` : `/app/groceries?round=${payment.roundId}`} variant="secondary" block>
+    <ButtonLink
+      href={payment.purpose === "PARTS" ? `/app/orders/${payment.roundId}` : payment.round.kind === "SERVICE" ? `/app/services/${payment.roundId}` : `/app/groceries?round=${payment.roundId}`}
+      variant="secondary"
+      block
+    >
       {t("pay.back")}
     </ButtonLink>
   );
@@ -79,7 +83,7 @@ async function Pay({ params }: { params: PageProps<"/app/pay/[paymentId]">["para
         </span>
         <div>
           <p className="text-sm text-muted">{t("pay.payee")}</p>
-          <p className="text-sm text-muted">{t("pay.for", { round: payment.round.title })}</p>
+          <p className="text-sm text-muted">{t(payment.purpose === "PARTS" ? "pay.forParts" : "pay.for", { round: payment.round.title })}</p>
         </div>
         <div>
           <p className="text-sm text-muted">{t("pay.amount")}</p>

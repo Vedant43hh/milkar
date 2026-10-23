@@ -45,7 +45,7 @@ test("home shows the categories, live group buys with neighbours' flats, and the
 });
 
 test("a category with nothing open points to the polls", async ({ page }) => {
-  await demoLogin(page, "Rahul Deshmukh");
+  await demoLogin(page, "Arnav Sinha"); // Sunrise Co-living only has a grocery round open
   await page.goto("/app/buys/repairs");
   await expect(page.getByText("Nothing open in repairs right now")).toBeVisible();
   await page.getByRole("link", { name: /Vote for what your building needs/ }).click();

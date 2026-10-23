@@ -5,6 +5,8 @@
 //   - Pre-Diwali deep cleaning (completed): rated visits, an issue fixed by a free revisit, a no-access visit
 //   - Kitchen chimney cleaning (completed yesterday): Rahul's and Kavya's visits not rated yet, still
 //     inside the 48-hour window for reporting a problem
+//   - Repair Days by FixRight: an Electrician Day done (parts approved and paid, rated), a Carpenter
+//     Day with visits today for the demo technician, and a Plumber Day open at 7 flats
 //   - AC servicing Service Day (open): 14 flats booked, 6 more unlock ₹400, some slots full
 //   - weekly car wash: last week's round finalized (visits this week), this week's open with held slots
 //   - interest polls: one past its threshold, two building up, one resident suggestion
@@ -99,7 +101,7 @@ export function buildWorld(now: Date) {
       verificationStatus: details.verification,
       verifiedAt: details.verification === "VERIFIED" ? plus(now, -100 * DAY) : null,
       verificationNote: details.note ?? null,
-      categories: DEMO_VENDORS[key].kind === "GOODS" ? ["GROCERIES"] : ["HOME_SERVICES"],
+      categories: key === "fixright" ? ["REPAIRS"] : DEMO_VENDORS[key].kind === "GOODS" ? ["GROCERIES"] : ["HOME_SERVICES"],
       serviceAreaPincodes: details.serviceArea,
       createdAt: plus(now, -160 * DAY),
     });
@@ -744,6 +746,171 @@ export function buildWorld(now: Date) {
     });
   }
 
+  // ---------- Repair Days (FixRight) ----------
+  // Problem notes residents wrote when booking, applied once bookings are recorded.
+  const problemNotes: { roundId: string; flatId: string; note: string }[] = [];
+  /** Gives a visit to a technician by name (the demo account when it's Mahesh Kale). */
+  const assignTo = (visit: { record: (typeof rec.visits)[number] }, name: string) => {
+    visit.record.technicianName = name;
+    visit.record.technicianId = technicianIds.get(name) ?? null;
+  };
+  const mahesh = data.TECHNICIANS.fixright[0];
+
+  // Electrician Day, done five days ago. Rohan's MCB needed parts: approved and paid by UPI, then rated.
+  {
+    const cutoffAt = istAt(-7, 20);
+    const { round, svc } = serviceRound("electrician", { title: "Electrician Day", cutoffAt, createdAt: plus(cutoffAt, -5 * DAY), days: [day(-5)] });
+    const rohan = person("Rohan Pawar");
+    const bookers: [Participant, number, string][] = [
+      [person("Fatima Sheikh"), 0, "Two switchboards in the hall spark when switched on."],
+      [person("Sanjay Gupta"), 0, "Bedroom ceiling fan wobbles and hums."],
+      [rohan, 1, "The MCB trips whenever the geyser is on."],
+      [person("Harpreet Kaur"), 1, "Kitchen tube light flickers."],
+      [person("Arjun Menon"), 2, "Need two new sockets in the study."],
+      [person("Neha Bhatt"), 2, "Doorbell stopped working."],
+    ];
+    const times = bookers.map(() => random.between(plus(cutoffAt, -4 * DAY), plus(cutoffAt, -3 * HOUR))).sort((a, b) => a.getTime() - b.getTime());
+    bookers.forEach(([who, slot, note], i) => {
+      schedule([bookingEvent(round, who, times[i], { visit: 1 }, slot)]);
+      problemNotes.push({ roundId: round.id, flatId: who.flatId, note });
+    });
+    world.at(plus(cutoffAt, MINUTE), () => {
+      const finalizedAt = plus(cutoffAt, MINUTE);
+      const { confirmed } = world.finalize(round, finalizedAt);
+      const orders = world.issueVendorOrders(round, confirmed, finalizedAt, plus(finalizedAt, 2 * HOUR));
+      notifyVendorOrders(orders, round, DEMO_COMMUNITIES.greenMeadows.name, finalizedAt);
+      const visits = createVisits(round, "electrician", finalizedAt, new Map(bookers.map(([who]) => [who.flatId, "COMPLETED" as const])));
+      const reviews: [number, string | null][] = [
+        [5, "Found the loose wire in minutes."],
+        [4, null],
+        [5, "Neat work, cleaned up after."],
+        [4, "Good, but came at the end of the slot."],
+      ];
+      let r = 0;
+      for (const visit of visits) {
+        const start = visit.booking.slot.startsAt;
+        const end = plus(start, svc.seed.durationMinutes * MINUTE);
+        if (visit.booking.flatId !== rohan.flatId) {
+          if (r < reviews.length) rate(visit.id, round, svc.vendorId, visit.booking.userId, ...reviews[r++], plus(end, random.int(2, 8) * HOUR));
+          continue;
+        }
+        // Rohan's visit: Mahesh asks for a new MCB and wire, Rohan approves and pays by UPI.
+        assignTo(visit, mahesh);
+        const items = [
+          { name: "32 A MCB", qty: 1, unitPaise: 52000 },
+          { name: "2.5 sq mm wire (per metre)", qty: 5, unitPaise: 4500 },
+        ];
+        const totalPaise = items.reduce((s, i) => s + i.qty * i.unitPaise, 0);
+        const requestId = id();
+        const askedAt = plus(start, 25 * MINUTE);
+        const approvedAt = plus(start, 31 * MINUTE);
+        world.at(askedAt, () => {
+          rec.partsRequests.push({
+            id: requestId,
+            visitId: visit.id,
+            roundId: round.id,
+            flatId: rohan.flatId,
+            items,
+            totalPaise,
+            status: "PENDING",
+            pendingVisitId: visit.id,
+            requestedById: technicianIds.get(mahesh)!,
+            createdAt: askedAt,
+          });
+          world.notify(
+            flatResidents(round, rohan.flatId),
+            { type: "PARTS_APPROVAL", params: { service: svc.seed.name, technician: mahesh, totalPaise }, href: `/app/orders/${round.id}` },
+            askedAt,
+            notificationKeys.partsApproval(requestId),
+          );
+        });
+        world.at(approvedAt, () => {
+          Object.assign(rec.partsRequests.find((p) => p.id === requestId)!, { status: "APPROVED", pendingVisitId: null, decidedById: rohan.userId, decidedAt: approvedAt });
+          const paymentId = id();
+          rec.payments.push({
+            id: paymentId,
+            userId: rohan.userId,
+            roundId: round.id,
+            purpose: "PARTS",
+            partsRequestId: requestId,
+            changes: { partsRequestId: requestId },
+            chargePaise: totalPaise,
+            creditPaise: 0,
+            walletAppliedPaise: 0,
+            gatewayPaise: totalPaise,
+            provider: "MOCK",
+            providerOrderId: `mock_order_${paymentId}`,
+            providerPaymentId: `mock_pay_${paymentId.slice(-8)}`,
+            status: "PAID",
+            expiresAt: plus(approvedAt, 15 * MINUTE),
+            paidAt: approvedAt,
+            createdAt: plus(approvedAt, -2 * MINUTE),
+          });
+          rec.vendorAdjustments.push({ id: id(), vendorOrderId: vendorOrderIdOf(round), visitId: visit.id, type: "PARTS", amountPaise: totalPaise, note: "Parts at cost, paid by the resident", createdAt: approvedAt });
+        });
+        rate(visit.id, round, svc.vendorId, rohan.userId, 5, "Replaced the MCB and showed me the old one. Parts at cost, no surprises.", plus(end, 3 * HOUR));
+      }
+      const completedAt = istAt(-5, 19, 30);
+      world.at(completedAt, () => {
+        round.record.status = "COMPLETED";
+        round.record.completedAt = completedAt;
+      });
+    });
+  }
+
+  // Carpenter Day: confirmed last night, visits today. Mahesh (the demo technician) has Kavya's,
+  // Joseph's and Rahul's, all still to start.
+  {
+    const cutoffAt = istAt(-1, 20);
+    const { round } = serviceRound("carpenter", { title: "Carpenter Day", cutoffAt, createdAt: plus(cutoffAt, -5 * DAY), days: [day(0)] });
+    const joseph = person("Joseph D'Souza");
+    const bookers: [Participant, number, string][] = [
+      [kavya, 0, "The wardrobe door hinge is broken; the door hangs loose."],
+      [joseph, 0, "Main door lock is stiff and the key sticks."],
+      [rahul, 1, "A kitchen drawer runner is stuck."],
+      [person("Sneha Joshi"), 1, "A bed slat cracked."],
+      [person("Farhan Qureshi"), 2, "The shoe rack shelf came off its brackets."],
+    ];
+    const times = bookers.map(() => random.between(plus(cutoffAt, -4 * DAY), plus(cutoffAt, -3 * HOUR))).sort((a, b) => a.getTime() - b.getTime());
+    bookers.forEach(([who, slot, note], i) => {
+      schedule([bookingEvent(round, who, times[i], { visit: 1 }, slot)]);
+      problemNotes.push({ roundId: round.id, flatId: who.flatId, note });
+    });
+    world.at(plus(cutoffAt, MINUTE), () => {
+      const finalizedAt = plus(cutoffAt, MINUTE);
+      const { confirmed } = world.finalize(round, finalizedAt);
+      const orders = world.issueVendorOrders(round, confirmed, finalizedAt, plus(finalizedAt, HOUR));
+      notifyVendorOrders(orders, round, DEMO_COMMUNITIES.greenMeadows.name, finalizedAt);
+      const visits = createVisits(round, "carpenter", finalizedAt, new Map());
+      const others = data.TECHNICIANS.fixright.slice(1);
+      let o = 0;
+      for (const visit of visits) {
+        const mine = [kavya.flatId, joseph.flatId, rahul.flatId].includes(visit.booking.flatId);
+        assignTo(visit, mine ? mahesh : others[o++ % others.length]);
+      }
+    });
+  }
+
+  // Plumber Day, open: 7 flats booked, so ₹299 a visit; 3 more flats unlock ₹249.
+  {
+    const createdAt = plus(now, -DAY - 5 * HOUR);
+    const { round } = serviceRound("plumber", { title: "Plumber Day", cutoffAt: istAt(3, 20), createdAt, days: [day(5)] });
+    const bookers: [Participant, number, string][] = [
+      [person("Kavita Patil"), 0, "Kitchen sink drains very slowly."],
+      [person("Ananya Iyer"), 0, "Bathroom tap drips all night."],
+      [person("Deepa Krishnan"), 1, "The flush tank keeps running."],
+      [person("Swati Kulkarni"), 1, "Washing machine inlet pipe leaks."],
+      [person("Vikram Joshi"), 2, "Low water pressure in the shower."],
+      [person("Gaurav Mehta"), 0, "Geyser outlet pipe is leaking."],
+      [person("Karan Malhotra"), 1, "Wash basin is loose on the wall."],
+    ];
+    const times = bookers.map(() => random.between(plus(createdAt, HOUR), plus(now, -HOUR))).sort((a, b) => a.getTime() - b.getTime());
+    bookers.forEach(([who, slot, note], i) => {
+      schedule([bookingEvent(round, who, times[i], { visit: 1 }, slot)]);
+      problemNotes.push({ roundId: round.id, flatId: who.flatId, note });
+    });
+  }
+
   // AC servicing: open, 14 flats booked across two days; three slots already full.
   {
     const createdAt = plus(now, -2 * DAY - 3 * HOUR);
@@ -946,6 +1113,10 @@ export function buildWorld(now: Date) {
     world.recordItems(round);
     world.recordBookings(round, bookingMeta);
   }
+  for (const p of problemNotes) {
+    const booking = rec.bookings.find((b) => b.roundId === p.roundId && b.flatId === p.flatId);
+    if (booking) booking.problemNote = p.note;
+  }
   for (const vendor of rec.vendors) {
     const ratings = ratingsByVendor.get(vendor.id as string) ?? [];
     vendor.ratingCount = ratings.length;
@@ -980,7 +1151,7 @@ export async function writeWorld(prisma: PrismaClient, world: SeedWorld): Promis
   await prisma.serviceSlot.createMany({ data: rec.slots });
   await prisma.serviceBooking.createMany({ data: rec.bookings.filter((b) => !b.repeatOfBookingId) });
   await prisma.serviceBooking.createMany({ data: rec.bookings.filter((b) => b.repeatOfBookingId) });
-  await prisma.payment.createMany({ data: rec.payments });
+  await prisma.payment.createMany({ data: rec.payments.filter((p) => !p.partsRequestId) });
   await prisma.orderItem.createMany({ data: rec.orderItems });
   await prisma.orderLot.createMany({ data: rec.lots });
   await prisma.walletTransaction.createMany({ data: rec.walletTxns });
@@ -988,6 +1159,8 @@ export async function writeWorld(prisma: PrismaClient, world: SeedWorld): Promis
   await prisma.vendorOrderLine.createMany({ data: rec.vendorOrderLines });
   await prisma.serviceVisit.createMany({ data: rec.visits.filter((v) => !v.revisitOfId) });
   await prisma.serviceVisit.createMany({ data: rec.visits.filter((v) => v.revisitOfId) });
+  await prisma.partsRequest.createMany({ data: rec.partsRequests });
+  await prisma.payment.createMany({ data: rec.payments.filter((p) => p.partsRequestId) });
   await prisma.vendorAdjustment.createMany({ data: rec.vendorAdjustments });
   await prisma.distributionRecord.createMany({ data: rec.distribution });
   await prisma.serviceIssue.createMany({ data: rec.serviceIssues });

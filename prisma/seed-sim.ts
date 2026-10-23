@@ -157,6 +157,7 @@ function emptyRecords() {
     distribution: [] as Prisma.DistributionRecordCreateManyInput[],
     orderIssues: [] as Prisma.OrderIssueCreateManyInput[],
     visits: [] as Prisma.ServiceVisitCreateManyInput[],
+    partsRequests: [] as Prisma.PartsRequestCreateManyInput[],
     ratings: [] as Prisma.VisitRatingCreateManyInput[],
     serviceIssues: [] as Prisma.ServiceIssueCreateManyInput[],
     polls: [] as Prisma.InterestPollCreateManyInput[],

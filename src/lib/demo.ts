@@ -44,6 +44,7 @@ export const DEMO_VENDORS = {
   coolcare: { name: "CoolCare AC & Appliance", kind: "SERVICES" },
   sparkle: { name: "SparkleHome Cleaning & Pest Control", kind: "SERVICES" },
   washwell: { name: "WashWell Car Wash", kind: "SERVICES" },
+  fixright: { name: "FixRight Home Repairs", kind: "SERVICES" },
 } as const;
 
 export type DemoVendorKey = keyof typeof DEMO_VENDORS;
@@ -61,8 +62,10 @@ export type DemoUserKey =
   | "vendorCarWash"
   | "vendorGrocery"
   | "vendorHomeCare"
+  | "vendorRepairs"
   | "technicianCarWash"
   | "technicianCleaning"
+  | "technicianRepairs"
   | "admin";
 
 export type DemoUser = {
@@ -93,8 +96,10 @@ export const DEMO_USERS: Record<DemoUserKey, DemoUser> = {
   vendorCarWash: { phone: "+919000000015", name: "Manoj Yadav", role: "VENDOR", vendor: "washwell" },
   vendorGrocery: { phone: "+919000000011", name: "Ramesh Agarwal", role: "VENDOR", vendor: "balaji" },
   vendorHomeCare: { phone: "+919000000012", name: "Imran Shaikh", role: "VENDOR", vendor: "annapurna" },
+  vendorRepairs: { phone: "+919000000016", name: "Sameer Kulkarni", role: "VENDOR", vendor: "fixright" },
   technicianCarWash: { phone: "+919000000021", name: "Raju Thapa", role: "TECHNICIAN", vendor: "washwell" },
   technicianCleaning: { phone: "+919000000022", name: "Lata Pawar", role: "TECHNICIAN", vendor: "sparkle" },
+  technicianRepairs: { phone: "+919000000023", name: "Mahesh Kale", role: "TECHNICIAN", vendor: "fixright" },
   admin: { phone: "+919000000001", name: "Priya Nair", role: "ADMIN" },
 };
 

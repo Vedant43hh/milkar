@@ -115,7 +115,7 @@ test("the home screen shows open rounds, savings, the visit code, the held slot 
   await expect(open.getByRole("link", { name: /This week's group drive/ })).toBeVisible();
   const visits = page.getByRole("region", { name: "Upcoming visits" });
   await expect(visits.getByText("Weekly car wash")).toBeVisible();
-  await expect(visits.getByText(/^Code \d{4}$/)).toBeVisible();
+  await expect(visits.getByText(/^Code \d{4}$/).first()).toBeVisible(); // one per visit (today's carpentry too, until it ends)
   await expect(page.getByRole("region", { name: "What neighbours want next" }).getByRole("article").first()).toBeVisible();
   await expectNoSeriousA11yIssues(page);
 });

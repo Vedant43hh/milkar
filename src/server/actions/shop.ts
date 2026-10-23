@@ -40,8 +40,9 @@ function cleanBooking(input: unknown): BookingIntent | undefined {
   };
 }
 
-/** Where a resident goes back to after paying: the grocery list or the Service Day. */
-const roundPage = (round: { kind: string }, roundId: string) => (round.kind === "SERVICE" ? `/app/services/${roundId}` : `/app/groceries?round=${roundId}`);
+/** Where a resident goes back to after paying: the order for parts, otherwise the grocery list or the Service Day. */
+const roundPage = (payment: { round: { kind: string }; roundId: string; purpose: string }) =>
+  payment.purpose === "PARTS" ? `/app/orders/${payment.roundId}` : payment.round.kind === "SERVICE" ? `/app/services/${payment.roundId}` : `/app/groceries?round=${payment.roundId}`;
 
 function errorTexts(errors: CheckoutErrors, names: Record<string, string>): string[] {
   return [
@@ -160,7 +161,7 @@ export async function payMockAction(formData: FormData): Promise<void> {
   const text = confirmedText(result);
   if (text.celebrate) await setFlash("celebrate", "shop.flashText", { text: text.celebrate });
   else await setFlash(result.status === "PAID" ? "success" : "info", "shop.flashText", { text: text.message });
-  redirect(roundPage(payment.round, payment.roundId));
+  redirect(roundPage(payment));
 }
 
 /** The test UPI screen's "Cancel payment" button. */
@@ -170,5 +171,5 @@ export async function declineMockAction(formData: FormData): Promise<void> {
   const payment = await getPaymentForUser(paymentId, user.id);
   if (payment) await failPayment(paymentId, user.id, "Declined by the resident");
   await setFlash("info", "pay.declined");
-  redirect(payment ? roundPage(payment.round, payment.roundId) : "/app");
+  redirect(payment ? roundPage(payment) : "/app");
 }

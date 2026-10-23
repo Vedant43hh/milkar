@@ -22,6 +22,8 @@ const PAGES = [
   // A Service Day's id comes from the seed, so follow the link to it.
   { path: "/app/services/[roundId]", as: "Kavya Deshpande", from: "/app/services", link: /AC servicing Service Day/ },
   { path: "/tech", as: "Raju Thapa" },
+  // Today's carpentry: follow the link to one visit.
+  { path: "/tech/visits/[visitId]", as: "Mahesh Kale", from: "/tech", link: /Flat B-402/ },
   { path: "/manager", as: "Sunita Kulkarni" },
 ];
 

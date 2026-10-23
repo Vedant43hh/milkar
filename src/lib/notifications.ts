@@ -20,6 +20,7 @@ export const NOTIFICATION_TYPES = [
   "SLOT_AUTO_BOOKED",
   "ISSUE_UPDATE",
   "ISSUE_REPORTED",
+  "PARTS_APPROVAL",
   "VENDOR_ORDER",
   "JOIN_REQUEST",
   "JOIN_DECIDED",
@@ -41,6 +42,7 @@ type RefundReason =
   | "NO_ACCESS_REFUND"
   | "VISIT_CANCEL_REFUND"
   | "SERVICE_ISSUE_REFUND"
+  | "PARTS_REFUND"
   | "ADJUSTMENT";
 
 type IssueStatus = "OPEN" | "REVISIT_SCHEDULED" | "REFUNDED" | "REJECTED" | "RESOLVED";
@@ -69,6 +71,8 @@ export type NotificationParams = {
   ISSUE_UPDATE: { service: string; status: IssueStatus };
   /** To a community's Society Managers. `flat` is e.g. "Flat A-101". */
   ISSUE_REPORTED: { service: string; flat: string; kind: IssueKind };
+  /** To a flat: the technician needs parts for the job in progress. */
+  PARTS_APPROVAL: { service: string; technician: string; totalPaise: number };
   VENDOR_ORDER: { round: string; community: string };
   /** To a community's Society Managers: someone asked to join. `flat` is e.g. "Flat A-101". */
   JOIN_REQUEST: { name: string; flat: string };
@@ -169,6 +173,7 @@ export const notificationKeys = {
   slotAutoBooked: (bookingId: string) => `SLOT_AUTO_BOOKED:${bookingId}`,
   issue: (issueId: string, status: string) => `ISSUE:${issueId}:${status}`,
   issueReported: (issueId: string) => `ISSUE_REPORTED:${issueId}`,
+  partsApproval: (requestId: string) => `PARTS_APPROVAL:${requestId}`,
   vendorOrder: (vendorOrderId: string) => `VENDOR_ORDER:${vendorOrderId}`,
   joinRequest: (requestId: string) => `JOIN_REQUEST:${requestId}`,
   joinDecided: (requestId: string) => `JOIN_DECIDED:${requestId}`,

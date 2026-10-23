@@ -95,6 +95,10 @@ enum ServiceCategory {
   SOFA_CARPET
   APPLIANCE_REPAIR
   CHIMNEY
+  PLUMBER
+  ELECTRICIAN
+  CARPENTER
+  PAINTER
 }
 
 enum RoundKind {
@@ -140,6 +144,11 @@ enum PaymentProvider {
   RAZORPAY
 }
 
+enum PaymentPurpose {
+  ORDER // a change to the resident's order in a round
+  PARTS // parts a technician needs during a repair visit
+}
+
 enum PaymentStatus {
   CREATED
   PAID
@@ -159,6 +168,8 @@ enum WalletTxnType {
   NO_ACCESS_REFUND // technician could not get in: paid amount minus the visit fee
   VISIT_CANCEL_REFUND
   SERVICE_ISSUE_REFUND
+  PARTS_DEBIT // the wallet's share of paying for a repair visit's parts
+  PARTS_REFUND // parts paid for, then not used or the visit was cancelled
   ADJUSTMENT
 }
 
@@ -177,6 +188,14 @@ enum VendorAdjustmentType {
   NO_ACCESS_FEE
   VISIT_CANCELLED
   ISSUE_REFUND
+  PARTS // parts residents paid for at cost, passed on to the vendor
+}
+
+enum PartsRequestStatus {
+  PENDING // waiting for the resident; the visit can't be completed meanwhile
+  APPROVED // paid
+  DECLINED // the technician carries on without them
+  REFUNDED // paid, then back to the wallet: not used, or the visit was cancelled
 }
 
 enum DistributionStatus {
@@ -245,6 +264,7 @@ enum NotificationType {
   SLOT_AUTO_BOOKED // a held weekly slot paid from the wallet automatically
   ISSUE_UPDATE
   ISSUE_REPORTED // to a community's Society Managers: a resident reported a problem with a visit
+  PARTS_APPROVAL // to a flat: the technician needs parts, approve and pay or decline
   VENDOR_ORDER
   JOIN_REQUEST
   JOIN_DECIDED
@@ -337,16 +357,17 @@ model Flat {
   serviceIssues       ServiceIssue[]
   pollVotes           PollVote[]
   joinRequests        JoinRequest[]
+  partsRequests       PartsRequest[]
 
   @@unique([communityId, tower, number])
 }
 
 model User {
-  id        String   @id @default(cuid())
-  phone     String   @unique // E.164, e.g. +919000000001
-  name      String?
-  role      Role     @default(RESIDENT)
-  flatId    String?
+  id          String    @id @default(cuid())
+  phone       String    @unique // E.164, e.g. +919000000001
+  name        String?
+  role        Role      @default(RESIDENT)
+  flatId      String?
   vendorId    String?
   onboardedAt DateTime? @db.Timestamptz(3) // saw (or skipped) the first-login tour
   createdAt   DateTime  @default(now()) @db.Timestamptz(3)
@@ -374,6 +395,9 @@ model User {
   joinRequests           JoinRequest[]        @relation("JoinRequester")
   joinDecisions          JoinRequest[]        @relation("JoinDecider")
   technicianVisits       ServiceVisit[]       @relation("TechnicianVisits")
+  bookingPhotos          BookingPhoto[]       @relation("BookingPhotoUploader")
+  partsRequested         PartsRequest[]       @relation("PartsRequester")
+  partsDecided           PartsRequest[]       @relation("PartsDecider")
 
   @@index([flatId])
   @@index([vendorId])
@@ -407,22 +431,22 @@ model OtpRequest {
 
 // A wholesaler (GOODS) or a home-services company (SERVICES).
 model Vendor {
-  id                 String             @id @default(cuid())
-  name               String
-  kind               VendorKind
-  gstin              String?
-  phone              String
-  city               String
-  about              String?
-  active             Boolean            @default(true)
-  verificationStatus VerificationStatus @default(PENDING)
-  verifiedAt         DateTime?          @db.Timestamptz(3)
-  verificationNote   String? // what the admin checked (GST certificate, trade licence, police verification …)
-  categories          VendorCategory[] @default([])
-  serviceAreaPincodes String[]         @default([])
-  ratingCount        Int                @default(0) // maintained in the same transaction as each rating
-  ratingSum          Int                @default(0)
-  createdAt          DateTime           @default(now()) @db.Timestamptz(3)
+  id                  String             @id @default(cuid())
+  name                String
+  kind                VendorKind
+  gstin               String?
+  phone               String
+  city                String
+  about               String?
+  active              Boolean            @default(true)
+  verificationStatus  VerificationStatus @default(PENDING)
+  verifiedAt          DateTime?          @db.Timestamptz(3)
+  verificationNote    String? // what the admin checked (GST certificate, trade licence, police verification …)
+  categories          VendorCategory[]   @default([])
+  serviceAreaPincodes String[]           @default([])
+  ratingCount         Int                @default(0) // maintained in the same transaction as each rating
+  ratingSum           Int                @default(0)
+  createdAt           DateTime           @default(now()) @db.Timestamptz(3)
 
   users        User[]
   products     Product[]
@@ -586,6 +610,7 @@ model OrderRound {
   bookings            ServiceBooking[]
   visits              ServiceVisit[]
   serviceIssues       ServiceIssue[]
+  partsRequests       PartsRequest[]
   fromPoll            InterestPoll?
 
   @@index([communityId, status])
@@ -683,6 +708,8 @@ model Payment {
   creditPaise        Int // removed units, refunded to the wallet
   walletAppliedPaise Int
   gatewayPaise       Int
+  purpose            PaymentPurpose  @default(ORDER)
+  partsRequestId     String? // PARTS payments: the request they pay for
   provider           PaymentProvider
   providerOrderId    String?
   providerPaymentId  String?
@@ -694,10 +721,12 @@ model Payment {
 
   user               User                @relation(fields: [userId], references: [id])
   round              OrderRound          @relation(fields: [roundId], references: [id])
+  partsRequest       PartsRequest?       @relation(fields: [partsRequestId], references: [id], onDelete: SetNull)
   lots               OrderLot[]
   walletTransactions WalletTransaction[]
 
   @@index([userId, roundId])
+  @@index([partsRequestId])
 }
 
 model WalletTransaction {
@@ -845,6 +874,7 @@ model ServiceBooking {
   holdExpiresAt     DateTime?     @db.Timestamptz(3)
   keepSlotWeekly    Boolean       @default(false)
   autoPayFromWallet Boolean       @default(false)
+  problemNote       String? // repair visits: what's wrong, in the resident's words
   repeatOfBookingId String?       @unique // last week's booking this hold came from
   createdAt         DateTime      @default(now()) @db.Timestamptz(3)
   updatedAt         DateTime      @updatedAt @db.Timestamptz(3)
@@ -856,6 +886,7 @@ model ServiceBooking {
   repeatOf   ServiceBooking? @relation("RepeatBooking", fields: [repeatOfBookingId], references: [id])
   repeatNext ServiceBooking? @relation("RepeatBooking")
   visits     ServiceVisit[]
+  photo      BookingPhoto?
 
   @@unique([roundId, flatId])
   @@index([slotId])
@@ -885,20 +916,68 @@ model ServiceVisit {
   cancelReason   String?
   createdAt      DateTime    @default(now()) @db.Timestamptz(3)
 
-  round       OrderRound         @relation(fields: [roundId], references: [id], onDelete: Cascade)
-  booking     ServiceBooking     @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  flat        Flat               @relation(fields: [flatId], references: [id])
-  slot        ServiceSlot?       @relation(fields: [slotId], references: [id], onDelete: Restrict)
-  technician  User?              @relation("TechnicianVisits", fields: [technicianId], references: [id], onDelete: SetNull)
-  revisitOf   ServiceVisit?      @relation("Revisit", fields: [revisitOfId], references: [id])
-  revisit     ServiceVisit?      @relation("Revisit")
-  rating      VisitRating?
-  issue       ServiceIssue?
-  adjustments VendorAdjustment[]
+  round         OrderRound         @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  booking       ServiceBooking     @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  flat          Flat               @relation(fields: [flatId], references: [id])
+  slot          ServiceSlot?       @relation(fields: [slotId], references: [id], onDelete: Restrict)
+  technician    User?              @relation("TechnicianVisits", fields: [technicianId], references: [id], onDelete: SetNull)
+  revisitOf     ServiceVisit?      @relation("Revisit", fields: [revisitOfId], references: [id])
+  revisit       ServiceVisit?      @relation("Revisit")
+  rating        VisitRating?
+  issue         ServiceIssue?
+  adjustments   VendorAdjustment[]
+  partsRequests PartsRequest[]
 
   @@unique([bookingId, kind])
   @@index([roundId, status])
   @@index([technicianId, startsAt])
+}
+
+// A photo of the problem a resident attached to a repair booking: resized on the phone to at most
+// 300 KB and kept here until object storage arrives. Served only to the flat, the assigned
+// technician, the vendor and the community's Society Managers.
+model BookingPhoto {
+  id           String   @id @default(cuid())
+  bookingId    String   @unique
+  contentType  String
+  data         Bytes
+  sizeBytes    Int // a check constraint keeps it within 1..307200 and equal to the data's length
+  width        Int
+  height       Int
+  uploadedById String
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+
+  booking    ServiceBooking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  uploadedBy User           @relation("BookingPhotoUploader", fields: [uploadedById], references: [id])
+}
+
+// Parts a technician needs during a repair visit, at actual cost. The resident approves (and pays)
+// or declines before the work goes on. One request waits at a time per visit: pendingVisitId
+// (unique) is the visit while PENDING and null otherwise, enforced by a check constraint.
+model PartsRequest {
+  id             String             @id @default(cuid())
+  visitId        String
+  roundId        String
+  flatId         String
+  items          Json // [{ name, qty, unitPaise }], GST-inclusive prices
+  totalPaise     Int // a check constraint keeps it positive
+  status         PartsRequestStatus @default(PENDING)
+  pendingVisitId String?            @unique
+  requestedById  String
+  decidedById    String?
+  decidedAt      DateTime?          @db.Timestamptz(3)
+  refundedAt     DateTime?          @db.Timestamptz(3)
+  createdAt      DateTime           @default(now()) @db.Timestamptz(3)
+
+  visit       ServiceVisit @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  round       OrderRound   @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  flat        Flat         @relation(fields: [flatId], references: [id])
+  requestedBy User         @relation("PartsRequester", fields: [requestedById], references: [id])
+  decidedBy   User?        @relation("PartsDecider", fields: [decidedById], references: [id], onDelete: SetNull)
+  payments    Payment[]
+
+  @@index([visitId])
+  @@index([roundId])
 }
 
 model VisitRating {

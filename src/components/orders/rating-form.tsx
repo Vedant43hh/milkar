@@ -23,7 +23,7 @@ export function RatingForm({ visitId, text }: { visitId: string; text: RatingTex
           {[1, 2, 3, 4, 5].map((n) => (
             <label
               key={n}
-              className="flex size-11 cursor-pointer items-center justify-center rounded-full text-accent transition-transform has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-focus active:scale-90"
+              className="flex size-11 cursor-pointer items-center justify-center rounded-full text-accent transition-transform has-focus-visible:ring-2 has-focus-visible:ring-focus active:scale-90"
             >
               <input type="radio" name="rating" value={n} required checked={rating === n} onChange={() => setRating(n)} className="sr-only" />
               <Star aria-hidden className={cn("size-7", n <= rating ? "fill-current" : "text-border-strong")} />

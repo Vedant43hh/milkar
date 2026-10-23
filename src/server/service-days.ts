@@ -1,4 +1,5 @@
 import "server-only";
+import { isRepairService } from "@/lib/categories";
 import { prisma } from "@/lib/db";
 import { groupBasis } from "@/lib/pricing/basis";
 import { unitPriceAt } from "@/lib/pricing/price";
@@ -44,7 +45,18 @@ export type ServiceDay = {
   /** Units other members of this flat hold, so the flat keeps its visit if they remain. */
   flatOthersUnits: number;
   slots: { id: string; day: string; time: string; label: string; seatsLeft: number }[];
-  booking: { status: "ACTIVE" | "HELD"; slotId: string; slotLabel: string; holdUntil: string | null; keepSlotWeekly: boolean; autoPayFromWallet: boolean } | null;
+  booking: {
+    status: "ACTIVE" | "HELD";
+    slotId: string;
+    slotLabel: string;
+    holdUntil: string | null;
+    keepSlotWeekly: boolean;
+    autoPayFromWallet: boolean;
+    problemNote: string | null;
+    photo: { id: string; width: number; height: number } | null;
+  } | null;
+  /** A repair: the resident says what's wrong, and the technician may need parts. */
+  repair: boolean;
   /** For a held weekly slot: last week's units, filled in. */
   prefill: Record<string, number> | null;
   flatWords: UnitWords;
@@ -76,7 +88,7 @@ export async function getServiceDay(shopper: Shopper, roundId: string, unitLabel
         },
       },
       slots: { orderBy: { startsAt: "asc" } },
-      bookings: { where: { flatId: shopper.flatId } },
+      bookings: { where: { flatId: shopper.flatId }, include: { photo: { select: { id: true, width: true, height: true } } } },
     },
   });
   if (!round || !round.service) return null;
@@ -135,8 +147,11 @@ export async function getServiceDay(shopper: Shopper, roundId: string, unitLabel
           holdUntil: booking.status === "HELD" ? formatIST(booking.holdExpiresAt!) : null,
           keepSlotWeekly: booking.keepSlotWeekly,
           autoPayFromWallet: booking.autoPayFromWallet,
+          problemNote: booking.problemNote,
+          photo: booking.photo,
         }
       : null,
+    repair: isRepairService(round.service.category),
     prefill: booking?.status === "HELD" ? await lastWeekTargets(prisma, booking.id, shopper.id) : null,
     flatWords: unitWordsFor(unitLabel),
     walletPaise: await walletBalance(prisma, shopper.id),

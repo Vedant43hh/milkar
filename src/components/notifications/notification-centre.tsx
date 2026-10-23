@@ -18,6 +18,7 @@ import {
   Timer,
   Truck,
   Wallet,
+  Wrench,
   type LucideIcon,
 } from "lucide-react";
 import { PageHeader } from "@/components/ui/card";
@@ -47,6 +48,7 @@ const ICONS: Record<NotificationType, { icon: LucideIcon; tone: string }> = {
   SLOT_AUTO_BOOKED: { icon: CalendarCheck, tone: "bg-success-soft text-success" },
   ISSUE_UPDATE: { icon: MessageSquareWarning, tone: "bg-surface-2 text-muted" },
   ISSUE_REPORTED: { icon: MessageSquareWarning, tone: "bg-warning-soft text-warning" },
+  PARTS_APPROVAL: { icon: Wrench, tone: "bg-accent-soft text-accent-soft-fg" },
   VENDOR_ORDER: { icon: Package, tone: "bg-brand-soft text-brand-soft-fg" },
   JOIN_REQUEST: { icon: UserPlus, tone: "bg-accent-soft text-accent-soft-fg" },
   JOIN_DECIDED: { icon: Users, tone: "bg-success-soft text-success" },

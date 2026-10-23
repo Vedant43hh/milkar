@@ -2,7 +2,10 @@
 //
 //   SCHEDULED ──► ON_THE_WAY ──► IN_PROGRESS ──► COMPLETED (needs the resident's 4-digit code)
 //       │              ├──► NO_ACCESS (refund minus the visit fee)
-//       └──────────────┴──► CANCELLED (full refund)
+//       └──────────────┴──────────────┴──► CANCELLED (full refund, parts included)
+//
+// A job can be called off once started (the wrong part, unsafe wiring): the vendor or a manager
+// cancels it and everything paid comes back, including parts.
 
 export type VisitStatus = "SCHEDULED" | "ON_THE_WAY" | "IN_PROGRESS" | "COMPLETED" | "NO_ACCESS" | "CANCELLED";
 export type VisitActor = "VENDOR" | "MANAGER" | "ADMIN";
@@ -12,7 +15,7 @@ export const MAX_CODE_ATTEMPTS = 5;
 export const VISIT_TRANSITIONS: Record<VisitStatus, readonly VisitStatus[]> = {
   SCHEDULED: ["ON_THE_WAY", "CANCELLED"],
   ON_THE_WAY: ["IN_PROGRESS", "NO_ACCESS", "CANCELLED"],
-  IN_PROGRESS: ["COMPLETED"],
+  IN_PROGRESS: ["COMPLETED", "CANCELLED"],
   COMPLETED: [],
   NO_ACCESS: [],
   CANCELLED: [],

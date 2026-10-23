@@ -7,6 +7,7 @@ import { buildVendorOrders, type ConfirmedOffering } from "@/lib/pricing/consoli
 import { computeFinalization } from "@/lib/pricing/finalize";
 import type { Tier } from "@/lib/pricing/tiers";
 import { isDueForFinalize } from "@/lib/rounds";
+import { assignTechnicians } from "@/lib/services/assign";
 import { holdExpiresAt, nextWeekDays, oneWeekLater, planHolds } from "@/lib/services/slots";
 import { formatCompletionCode } from "@/lib/services/visit";
 import { autoPayHoldIn } from "./bookings";
@@ -234,16 +235,26 @@ async function createPickups(tx: Tx, round: FinalizeRound, flatIds: string[]): P
 
 /**
  * Service Days: a visit with its own completion code for every booked flat whose units were
- * confirmed. Every other booking (holds nobody confirmed, a Service Day that didn't reach its
- * minimum) is cancelled and its seat given back.
+ * confirmed, each given to one of the vendor's technicians (round-robin within each slot). Every
+ * other booking (holds nobody confirmed, a Service Day that didn't reach its minimum) is cancelled
+ * and its seat given back.
  */
 async function scheduleVisits(tx: Tx, round: FinalizeRound, confirmedFlats: Map<string, Set<string>>, now: Date): Promise<number> {
   const service = round.service?.name ?? round.title;
   let visits = 0;
   const bookings = [...round.bookings].sort((a, b) => a.slot.startsAt.getTime() - b.slot.startsAt.getTime());
+  const toVisit = bookings.filter((b) => b.status === "ACTIVE" && confirmedFlats.has(b.flatId));
+  const technicians = round.vendorId
+    ? await tx.user.findMany({ where: { vendorId: round.vendorId, role: "TECHNICIAN" }, orderBy: [{ createdAt: "asc" }, { id: "asc" }], select: { id: true, name: true } })
+    : [];
+  const assigned = assignTechnicians(
+    toVisit.map((b) => ({ id: b.id, startsAt: b.slot.startsAt })),
+    technicians.map((t) => t.id),
+  );
   for (const booking of bookings) {
     const residents = confirmedFlats.get(booking.flatId);
     if (booking.status === "ACTIVE" && residents) {
+      const technicianId = assigned.get(booking.id) ?? null;
       const visit = await tx.serviceVisit.create({
         data: {
           roundId: round.id,
@@ -254,6 +265,8 @@ async function scheduleVisits(tx: Tx, round: FinalizeRound, confirmedFlats: Map<
           status: "SCHEDULED",
           startsAt: booking.slot.startsAt,
           endsAt: booking.slot.endsAt,
+          technicianId,
+          technicianName: technicians.find((t) => t.id === technicianId)?.name ?? null,
           completionCode: newCode(),
           createdAt: now,
         },

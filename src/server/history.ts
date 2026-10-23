@@ -4,8 +4,10 @@ import { t } from "@/i18n";
 import { getEnv } from "@/lib/env";
 import { prisma } from "@/lib/db";
 import { roundMoney } from "@/lib/history";
+import { isRepairService } from "@/lib/categories";
 import { buildInvoice, invoiceNumber } from "@/lib/invoice";
 import { checkReport, issueDeadline } from "@/lib/services/issues";
+import { PARTS_GST_BPS, readParts, repairBill } from "@/lib/services/parts";
 import { visitTimeline } from "@/lib/services/timeline";
 import { walletBalance } from "./wallet";
 
@@ -42,7 +44,7 @@ export async function listOrderHistory(user: HistoryUser) {
       finalizedAt: true,
       service: { select: { name: true } },
       orderItems: { where: { userId: user.id }, select: { quantity: true, status: true } },
-      payments: { where: { userId: user.id }, select: { status: true, chargePaise: true } },
+      payments: { where: { userId: user.id }, select: { status: true, chargePaise: true, gatewayPaise: true } },
       walletTransactions: { where: { userId: user.id }, select: { type: true, amountPaise: true } },
       visits: { where: { flatId: user.flatId }, orderBy: { startsAt: "asc" }, select: { status: true, startsAt: true } },
     },
@@ -90,7 +92,7 @@ export async function getRoundHistory(user: HistoryUser, roundId: string, now: D
       cancelledAt: true,
       cancelReason: true,
       requirePickupCode: true,
-      service: { select: { name: true, vendor: { select: { name: true } } } },
+      service: { select: { name: true, category: true, vendor: { select: { name: true } } } },
       orderItems: {
         where: { userId: user.id },
         orderBy: { createdAt: "asc" },
@@ -118,7 +120,7 @@ export async function getRoundHistory(user: HistoryUser, roundId: string, now: D
           },
         },
       },
-      payments: { where: { userId: user.id }, select: { status: true, chargePaise: true } },
+      payments: { where: { userId: user.id }, select: { status: true, chargePaise: true, gatewayPaise: true } },
       walletTransactions: { where: { userId: user.id }, orderBy: [{ createdAt: "asc" }, { id: "asc" }], select: { id: true, type: true, amountPaise: true, createdAt: true } },
       visits: {
         where: { flatId: user.flatId },
@@ -140,6 +142,11 @@ export async function getRoundHistory(user: HistoryUser, roundId: string, now: D
           cancelReason: true,
           rating: { select: { rating: true, comment: true, userId: true } },
           issue: { select: { kind: true, status: true, note: true, resolution: true, createdAt: true } },
+          booking: { select: { problemNote: true, photo: { select: { id: true, width: true, height: true } } } },
+          partsRequests: {
+            orderBy: { createdAt: "asc" },
+            select: { id: true, status: true, items: true, totalPaise: true, createdAt: true, decidedAt: true, refundedAt: true },
+          },
         },
       },
       distributionRecords: { where: { flatId: user.flatId }, select: { pickupCode: true, status: true, collectedAt: true } },
@@ -166,11 +173,19 @@ export async function getRoundHistory(user: HistoryUser, roundId: string, now: D
       issueRefundPaise: i.issueRefundPaise,
     }));
 
+  const repair = isRepairService(round.service?.category);
+  // The visit charge at the group price: what this resident's confirmed units came to.
+  const visitChargePaise = round.orderItems.filter((i) => i.status === "CONFIRMED").reduce((s, i) => s + (i.finalPaise ?? 0), 0);
   const visits = round.visits.map((v) => {
     const report = checkReport({ visit: v, hasIssue: v.issue !== null, now });
     const ended = v.status === "COMPLETED" ? v.completedAt : v.status === "NO_ACCESS" ? v.noAccessAt : null;
+    const partsRequests = v.partsRequests.map((r) => ({ ...r, items: readParts(r.items) }));
     return {
       ...v,
+      partsRequests,
+      bill: repair ? repairBill(v.kind === "STANDARD" ? visitChargePaise : 0, partsRequests) : null,
+      // The problem can change until the technician sets out.
+      problemEditable: repair && v.status === "SCHEDULED",
       // The code is only needed until the job is done.
       completionCode: v.status === "SCHEDULED" || v.status === "ON_THE_WAY" || v.status === "IN_PROGRESS" ? v.completionCode : null,
       timeline: visitTimeline(v),
@@ -197,6 +212,7 @@ export async function getRoundHistory(user: HistoryUser, roundId: string, now: D
       requirePickupCode: round.requirePickupCode,
       serviceName: round.service?.name ?? null,
       vendor: round.service?.vendor.name ?? null,
+      repair,
     },
     items,
     money: roundMoney(round.payments, round.walletTransactions),
@@ -237,8 +253,14 @@ export async function getInvoice(user: HistoryUser & { name: string | null }, ro
           offering: { select: { gstBps: true, product: { select: { name: true, unit: true, packSize: true } }, serviceOption: { select: { name: true } }, round: { select: { service: { select: { name: true } } } } } },
         },
       },
-      payments: { where: { userId: user.id }, select: { status: true, chargePaise: true } },
+      payments: { where: { userId: user.id }, select: { status: true, chargePaise: true, gatewayPaise: true } },
       walletTransactions: { where: { userId: user.id }, select: { type: true, amountPaise: true } },
+      // Parts this resident paid for and that were used.
+      partsRequests: {
+        where: { status: "APPROVED", payments: { some: { userId: user.id, status: "PAID" } } },
+        orderBy: { createdAt: "asc" },
+        select: { items: true },
+      },
     },
   });
   if (!round || !round.finalizedAt || !hasInvoice(round)) return null;
@@ -260,7 +282,12 @@ export async function getInvoice(user: HistoryUser & { name: string | null }, ro
         const service = i.offering.round.service?.name;
         const name = itemName(i.offering);
         return { description: service ? `${service} · ${name}` : name, quantity: i.quantity, amountPaise: i.finalPaise ?? 0, gstBps: i.offering.gstBps };
-      }),
+      })
+      .concat(
+        round.partsRequests.flatMap((r) =>
+          readParts(r.items).map((p) => ({ description: t("invoice.part", { name: p.name }), quantity: p.qty, amountPaise: p.qty * p.unitPaise, gstBps: PARTS_GST_BPS })),
+        ),
+      ),
   });
   return { invoice, round: { id: round.id, title: round.title }, money: roundMoney(round.payments, round.walletTransactions) };
 }

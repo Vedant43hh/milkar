@@ -21,14 +21,15 @@ describe("visit transitions", () => {
     ["ON_THE_WAY", "NO_ACCESS", "noAccessAt", "NO_ACCESS_REFUND"],
     ["ON_THE_WAY", "CANCELLED", "cancelledAt", "FULL_REFUND"],
     ["IN_PROGRESS", "COMPLETED", "completedAt", "NONE"],
+    ["IN_PROGRESS", "CANCELLED", "cancelledAt", "FULL_REFUND"], // a job called off once started
   ] as const)("%s → %s is allowed for the vendor", (from, to, stamp, money) => {
     const result = transitionVisit(visit(from), { to, actor: "VENDOR", now, code: "4821" });
     expect(result).toEqual({ ok: true, status: to, stamp, money });
   });
 
-  it("lists exactly six valid transitions; everything else is rejected", () => {
+  it("lists exactly seven valid transitions; everything else is rejected", () => {
     const valid = ALL.flatMap((from) => ALL.filter((to) => canTransition(from, to)).map((to) => `${from}→${to}`));
-    expect(valid).toHaveLength(6);
+    expect(valid).toHaveLength(7);
     expect(valid).toEqual(Object.entries(VISIT_TRANSITIONS).flatMap(([from, tos]) => tos.map((to) => `${from}→${to}`)));
   });
 
@@ -37,7 +38,6 @@ describe("visit transitions", () => {
     ["SCHEDULED", "COMPLETED"],
     ["SCHEDULED", "NO_ACCESS"],
     ["IN_PROGRESS", "NO_ACCESS"], // already inside the flat
-    ["IN_PROGRESS", "CANCELLED"],
     ["COMPLETED", "CANCELLED"],
     ["NO_ACCESS", "IN_PROGRESS"],
     ["CANCELLED", "ON_THE_WAY"],
@@ -52,6 +52,7 @@ describe("visit transitions", () => {
   it("lets managers and admins cancel but not run the visit", () => {
     expect(transitionVisit(visit("SCHEDULED"), { to: "CANCELLED", actor: "MANAGER", now }).ok).toBe(true);
     expect(transitionVisit(visit("ON_THE_WAY"), { to: "CANCELLED", actor: "ADMIN", now }).ok).toBe(true);
+    expect(transitionVisit(visit("IN_PROGRESS"), { to: "CANCELLED", actor: "MANAGER", now }).ok).toBe(true);
     expect(transitionVisit(visit("SCHEDULED"), { to: "ON_THE_WAY", actor: "MANAGER", now })).toEqual({ ok: false, error: "NOT_ALLOWED" });
     expect(transitionVisit(visit("ON_THE_WAY"), { to: "NO_ACCESS", actor: "MANAGER", now })).toEqual({ ok: false, error: "NOT_ALLOWED" });
   });
