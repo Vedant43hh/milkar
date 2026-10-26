@@ -5,6 +5,7 @@ import { notificationKeys } from "@/lib/notifications";
 import { applyBps } from "@/lib/pricing/money";
 import { allocateNoAccessRefunds, noAccessRefund, noAccessRefundKey, noAccessVendorAdjustment, visitCancelRefundKey } from "@/lib/services/no-access";
 import { transitionVisit, type VisitActor, type VisitTransition } from "@/lib/services/visit";
+import { resolveByRevisit } from "./issues";
 import { notify } from "./notifications";
 import { refundParts } from "./parts";
 import { lockRound } from "./round-lock";
@@ -40,6 +41,7 @@ export async function moveVisit(user: VisitUser, visitId: string, step: { to: Vi
       select: {
         id: true,
         kind: true,
+        revisitOfId: true,
         status: true,
         completionCode: true,
         codeAttempts: true,
@@ -74,6 +76,8 @@ export async function moveVisit(user: VisitUser, visitId: string, step: { to: Vi
       await notify(tx, residents, { type: "TECHNICIAN_ON_THE_WAY", params: { service, technician: visit.technicianName ?? user.name ?? "" }, href: `/app/orders/${visit.roundId}` }, { dedupeKey: notificationKeys.visit(visitId, "ON_THE_WAY"), now });
     } else if (result.status === "COMPLETED") {
       await notify(tx, residents, { type: "VISIT_COMPLETED", params: { service }, href: `/app/orders/${visit.roundId}` }, { dedupeKey: notificationKeys.visit(visitId, "COMPLETED"), now });
+      // A free revisit done answers the complaint that asked for it.
+      if (visit.revisitOfId) await resolveByRevisit(tx, visit.revisitOfId, now);
     } else if (result.money === "NO_ACCESS_REFUND") {
       const fee = visit.round.noAccessFeePaise ?? visit.round.service?.noAccessFeePaise ?? 0;
       const { refundedPaise, feeKeptPaise } = await noAccessRefunds(tx, visit, fee, now);

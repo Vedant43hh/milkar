@@ -8,7 +8,9 @@ import { requirePortal } from "@/lib/auth/current-user";
 import { setFlash } from "@/lib/flash";
 import { formatINR } from "@/lib/pricing/money";
 import { istDateToUtc, istLocalToUtc } from "@/lib/time";
+import { collectPickup, reportDeliveryIssue } from "@/server/distribution";
 import { finalizeRound } from "@/server/finalize";
+import { resolveServiceIssue } from "@/server/issues";
 import { decideJoinRequest } from "@/server/registration";
 import { closePoll, convertPollToRound, createPoll, publishSuggestion, type PollError } from "@/server/polls";
 import {
@@ -21,6 +23,9 @@ import {
   type CreateRoundError,
   type RoundActionError,
 } from "@/server/rounds";
+import { inviteAssistant, removeAssistant, removeResident, updateCommunitySettings, type SettingsInput } from "@/server/team";
+import { moveVisit } from "@/server/visits";
+import type { ManagerUser } from "@/server/session";
 
 /** Result of a create form: errors to show (translated), and the values to put back in the fields. */
 export type FormState = { errors?: string[]; values?: Record<string, string>; checked?: string[] };
@@ -195,4 +200,115 @@ export async function decideJoinAction(_prev: ActionResult, formData: FormData):
   if (!result.ok) return { ok: false, message: t(`approvals.errors.${result.error}`) };
   refresh();
   return { ok: true, message: t(decision === "APPROVED" ? "approvals.residentApproved" : "approvals.residentDeclined") };
+}
+
+// ---------- residents, team and settings ----------
+
+/** Take a resident out of the community (not while they have an order on the go). */
+export async function removeResidentAction(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  const user = await requirePortal("manager");
+  const result = await removeResident(actorOf(user), user.staff.community.id, String(formData.get("userId") ?? ""), new Date());
+  if (!result.ok) return { ok: false, message: t(`team.errors.${result.error}`) };
+  refresh();
+  return { ok: true, message: t("team.residentRemoved") };
+}
+
+export async function inviteAssistantAction(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  const user = await requirePortal("manager");
+  const result = await inviteAssistant(actorOf(user), user.staff.community.id, { name: String(formData.get("name") ?? ""), phone: String(formData.get("phone") ?? "") }, new Date());
+  if (!result.ok) return { ok: false, message: t(`team.errors.${result.error}`) };
+  refresh();
+  return { ok: true, message: t("team.invited") };
+}
+
+export async function removeAssistantAction(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  const user = await requirePortal("manager");
+  const result = await removeAssistant(actorOf(user), user.staff.community.id, String(formData.get("staffId") ?? ""));
+  if (!result.ok) return { ok: false, message: t(`team.errors.${result.error}`) };
+  refresh();
+  return { ok: true, message: t("team.removed") };
+}
+
+export async function saveSettingsAction(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  const user = await requirePortal("manager");
+  const field = (name: string) => String(formData.get(name) ?? "");
+  const result = await updateCommunitySettings(actorOf(user), user.staff.community.id, {
+    name: field("name"),
+    type: field("type") as SettingsInput["type"],
+    address: field("address"),
+    city: field("city"),
+    pincode: field("pincode"),
+    blockLabel: field("blockLabel"),
+    unitLabel: field("unitLabel"),
+  });
+  if (!result.ok) return { ok: false, message: t(`team.settingsErrors.${result.error}`) };
+  refresh();
+  return { ok: true, message: t("team.settingsSaved") };
+}
+
+// ---------- distribution day ----------
+
+export async function collectPickupAction(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  const user = await requirePortal("manager");
+  const result = await collectPickup(actorOf(user), String(formData.get("roundId") ?? ""), String(formData.get("flatId") ?? ""), String(formData.get("code") ?? ""), new Date());
+  if (!result.ok) return { ok: false, message: t(`distribution.errors.${result.error}`) };
+  refresh();
+  return { ok: true, message: t(result.completed ? "distribution.allCollected" : "distribution.collected") };
+}
+
+export async function reportDeliveryIssueAction(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  const user = await requirePortal("manager");
+  const result = await reportDeliveryIssue(
+    actorOf(user),
+    String(formData.get("orderItemId") ?? ""),
+    { short: Number(formData.get("short") ?? 0), damaged: Number(formData.get("damaged") ?? 0), note: String(formData.get("note") ?? "") },
+    new Date(),
+  );
+  if (!result.ok) return { ok: false, message: t(`distribution.errors.${result.error}`) };
+  refresh();
+  return { ok: true, message: result.refundPaise > 0 ? t("distribution.refunded", { amount: formatINR(result.refundPaise) }) : t("distribution.noChange") };
+}
+
+// ---------- visit days and complaints ----------
+
+const visitUser = (user: ManagerUser) => ({
+  id: user.id,
+  role: user.role,
+  name: user.name,
+  vendorId: null,
+  managesCommunityId: user.staff.community.id,
+});
+
+/** Call a visit off: everything the flat paid for it comes back, parts included. */
+export async function cancelVisitAction(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  const user = await requirePortal("manager");
+  const result = await moveVisit(visitUser(user), String(formData.get("visitId") ?? ""), { to: "CANCELLED", reason: String(formData.get("reason") ?? "") }, new Date());
+  if (!result.ok) return { ok: false, message: t(`visitBoard.errors.${result.error}`) };
+  refresh();
+  return { ok: true, message: t("visitBoard.cancelled") };
+}
+
+/** After five wrong codes only a manager can say the job was done. */
+export async function confirmVisitAction(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  const user = await requirePortal("manager");
+  const result = await moveVisit(visitUser(user), String(formData.get("visitId") ?? ""), { to: "COMPLETED" }, new Date());
+  if (!result.ok) return { ok: false, message: t(`visitBoard.errors.${result.error}`) };
+  refresh();
+  return { ok: true, message: t("visitBoard.confirmed") };
+}
+
+export async function resolveIssueAction(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  const user = await requirePortal("manager");
+  const resolution = String(formData.get("resolution") ?? "");
+  if (resolution !== "REVISIT" && resolution !== "REFUND" && resolution !== "REJECT") return { ok: false, message: t("issues.errors.NOT_ALLOWED") };
+  const result = await resolveServiceIssue(
+    actorOf(user),
+    String(formData.get("issueId") ?? ""),
+    { resolution, revisitAt: resolution === "REVISIT" ? istInstant(formData.get("revisitAt")) : null, note: String(formData.get("note") ?? "") },
+    new Date(),
+  );
+  if (!result.ok) return { ok: false, message: t(`issues.errors.${result.error}`) };
+  refresh();
+  if (resolution === "REFUND") return { ok: true, message: t("issues.refunded", { amount: formatINR(result.refundedPaise) }) };
+  return { ok: true, message: t(resolution === "REVISIT" ? "issues.revisitBooked" : "issues.closed") };
 }

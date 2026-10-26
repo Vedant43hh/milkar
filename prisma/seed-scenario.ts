@@ -1105,6 +1105,73 @@ export function buildWorld(now: Date) {
     world.notify([sunita.userId], { type: "POLL_SUGGESTION", params: { poll: suggestion.title, by: kavita.name }, href: "/manager/polls" }, suggestionAt, notificationKeys.pollSuggestion(suggestion.id as string)),
   );
 
+  // ---------- for the Society Manager's day (added last, so the data above stays as it was) ----------
+  // Weekend staples: confirmed last night, delivered this morning; every bag still to hand out.
+  {
+    const cutoffAt = istAt(-1, 20);
+    const round = groceryRound({
+      title: "Weekend staples",
+      communityId: gm.id,
+      createdById: sunita.userId,
+      cutoffAt,
+      deliveryAt: istAt(0, 10),
+      createdAt: plus(cutoffAt, -4 * DAY),
+      keys: ["rice", "toor", "sugar", "eggs"],
+    });
+    announce(round, gmUserIds);
+    const people = [kavya, ...random.shuffle(othersInGm.filter((p) => !reserved.has(p.name))).slice(0, 9)];
+    schedule(planGroceryEvents(world, round, people, { rice: 22, toor: 20, sugar: 16, eggs: 24 }, plus(cutoffAt, -3 * DAY), plus(cutoffAt, -HOUR)));
+    world.at(plus(cutoffAt, MINUTE), () => {
+      const finalizedAt = plus(cutoffAt, MINUTE);
+      const { confirmed } = world.finalize(round, finalizedAt);
+      const orders = world.issueVendorOrders(round, confirmed, finalizedAt, plus(finalizedAt, 2 * HOUR));
+      notifyVendorOrders(orders, round, DEMO_COMMUNITIES.greenMeadows.name, finalizedAt);
+      const flats = new Set([...round.items.values()].filter((i) => round.outcomes.get(i.id)?.status === "CONFIRMED").map((i) => i.flatId));
+      for (const flatId of flats) rec.distribution.push({ id: id(), roundId: round.id, flatId, pickupCode: random.code(), status: "PENDING" });
+    });
+  }
+
+  // Two complaints waiting for Sunita: Fatima's electrician visit, and Vikram disputing the
+  // no-access fee from the deep clean.
+  const managersOfGm = () => rec.communityStaff.filter((s) => s.communityId === gm.id).map((s) => s.userId);
+  const openComplaint = (input: { visitTitle: string; flatId: string; status: "COMPLETED" | "NO_ACCESS"; kind: "NOT_DONE_PROPERLY" | "NO_ACCESS_DISPUTE"; note: string; afterHours: number; who: Participant; at: Date }) => {
+    world.at(input.at, () => {
+      const round = rec.rounds.find((r) => r.title === input.visitTitle)!;
+      const visit = rec.visits.find((v) => v.roundId === round.id && v.flatId === input.flatId && v.status === input.status && v.kind === "STANDARD")!;
+      const ended = (input.status === "NO_ACCESS" ? visit.noAccessAt : visit.completedAt) as Date;
+      const reportedAt = plus(ended, input.afterHours * HOUR);
+      const issueId = id();
+      rec.serviceIssues.push({ id: issueId, visitId: visit.id!, roundId: round.id!, flatId: input.flatId, kind: input.kind, reportedById: input.who.userId, note: input.note, status: "OPEN", createdAt: reportedAt });
+      const service = rec.services.find((s) => s.id === round.serviceId)?.name ?? input.visitTitle;
+      const home = rec.flats.find((f) => f.id === input.flatId)!;
+      const flat = `Flat ${home.tower}-${home.number}`;
+      world.notify(managersOfGm(), { type: "ISSUE_REPORTED", params: { service, flat, kind: input.kind }, href: `/manager/rounds/${round.id}` }, reportedAt, notificationKeys.issueReported(issueId));
+      world.notify([input.who.userId], { type: "ISSUE_UPDATE", params: { service, status: "OPEN" }, href: `/app/orders/${round.id}` }, reportedAt, notificationKeys.issue(issueId, "OPEN"));
+    });
+  };
+  const fatima = person("Fatima Sheikh");
+  openComplaint({
+    visitTitle: "Electrician Day",
+    flatId: fatima.flatId,
+    status: "COMPLETED",
+    kind: "NOT_DONE_PROPERLY",
+    note: "One of the two switchboards still sparks when the fan is switched on.",
+    afterHours: 20,
+    who: fatima,
+    at: istAt(-3, 9),
+  });
+  const vikramJ = person("Vikram Joshi");
+  openComplaint({
+    visitTitle: "Pre-Diwali deep cleaning",
+    flatId: vikramJ.flatId,
+    status: "NO_ACCESS",
+    kind: "NO_ACCESS_DISPUTE",
+    note: "I was home all morning; the guard says nobody came to the gate.",
+    afterHours: 6,
+    who: vikramJ,
+    at: istAt(-7, 9),
+  });
+
   // ---------- run everything in time order ----------
   world.run();
 

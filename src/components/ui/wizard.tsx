@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowLeft, ArrowRight, CircleAlert } from "lucide-react";
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useId, useRef, useState, type MouseEvent, type ReactNode } from "react";
 import { tu } from "@/i18n/ui";
 import { Button } from "./button";
 import { cn } from "./cn";
@@ -34,7 +34,8 @@ export function Wizard({ steps, submit }: { steps: WizardStep[]; submit: ReactNo
     refs.current[current]?.querySelector<HTMLElement>("[data-step-title]")?.focus();
   }, [current]);
 
-  function next() {
+  function next(e: MouseEvent<HTMLButtonElement>) {
+    e.preventDefault(); // moving on never submits the form
     const fields = refs.current[current]?.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>("input, select, textarea") ?? [];
     for (const field of fields) {
       if (!field.checkValidity()) {
@@ -95,10 +96,12 @@ export function Wizard({ steps, submit }: { steps: WizardStep[]; submit: ReactNo
             {tu("wizard.back")}
           </Button>
         )}
+        {/* Different keys, so "Next" and the submit button are never the same element: React would
+            otherwise turn the tapped "Next" into a submit button mid-click, and the form would submit. */}
         {last ? (
-          submit
+          <Fragment key="submit">{submit}</Fragment>
         ) : (
-          <Button type="button" onClick={next}>
+          <Button key="next" type="button" onClick={next}>
             {tu("wizard.next")}
             <ArrowRight aria-hidden className="size-4" />
           </Button>

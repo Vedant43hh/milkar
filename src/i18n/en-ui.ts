@@ -27,6 +27,8 @@ export const enUi = {
     distribution: "Distribution",
     residents: "Residents",
     visitDays: "Visit days",
+    issues: "Complaints",
+    team: "Team",
     technicians: "Technicians",
     vendorOrders: "Orders",
     schedule: "Schedule",

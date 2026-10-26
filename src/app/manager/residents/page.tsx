@@ -1,7 +1,8 @@
-import { House, Link2, UserCheck, Users } from "lucide-react";
+import { House, Link2, UserCheck, UserMinus, Users } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { DecisionButtons } from "@/components/approvals/decision-buttons";
+import { ConfirmAction } from "@/components/manager/confirm-action";
 import { ShareRound } from "@/components/manager/share-round";
 import { Card, CardHeader, PageHeader, SectionTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/display";
@@ -12,7 +13,7 @@ import { getEnv } from "@/lib/env";
 import { relativeTime } from "@/lib/notifications";
 import { formatPhone } from "@/lib/phone";
 import { whatsappUrl } from "@/lib/share";
-import { decideJoinAction } from "@/server/actions/manager";
+import { decideJoinAction, removeResidentAction } from "@/server/actions/manager";
 import { communityResidents } from "@/server/registration";
 
 export const metadata: Metadata = { title: t("approvals.residentsTitle") };
@@ -94,10 +95,26 @@ async function Residents() {
         ) : (
           <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
             {members.map((m) => (
-              <li key={m.id} className="flex items-center gap-3 px-4 py-2.5 text-sm">
+              <li key={m.id} className="flex items-center gap-3 px-4 py-2 text-sm">
                 <House aria-hidden className="size-4 shrink-0 text-muted" />
-                <span className="w-24 shrink-0 font-medium text-fg tabular-nums">{m.flat ? `${m.flat.tower}-${m.flat.number}` : ""}</span>
-                <span className="min-w-0 truncate text-muted">{m.name}</span>
+                <span className="w-20 shrink-0 font-medium text-fg tabular-nums">{m.flat ? `${m.flat.tower}-${m.flat.number}` : ""}</span>
+                <span className="min-w-0 flex-1 truncate text-muted">{m.name}</span>
+                <ConfirmAction
+                  action={removeResidentAction}
+                  fields={{ userId: m.id }}
+                  trigger={
+                    <>
+                      <UserMinus aria-hidden className="size-4" />
+                      <span className="sr-only sm:not-sr-only">{t("team.removeResident")}</span>
+                      <span className="sr-only">{` ${m.name ?? ""}`}</span>
+                    </>
+                  }
+                  triggerVariant="ghost"
+                  title={t("team.removeResidentTitle", { name: m.name ?? "" })}
+                  body={t("team.removeResidentBody", { community: community.name })}
+                  confirm={t("team.removeResidentConfirm")}
+                  danger
+                />
               </li>
             ))}
           </ul>

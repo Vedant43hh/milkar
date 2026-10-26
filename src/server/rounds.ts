@@ -22,12 +22,15 @@ import { lockRound } from "./round-lock";
 type Db = PrismaClient | Prisma.TransactionClient;
 type Tx = Prisma.TransactionClient;
 
-/** Who is acting, and the community they belong to (managers act for their own community). */
-export type Actor = { id: string; role: Role; communityId: string | null };
+/**
+ * Who is acting, and the community they belong to (managers act for their own community).
+ * `staffKind`: a primary Society Manager or an assistant (assistants can't run the team or settings).
+ */
+export type Actor = { id: string; role: Role; communityId: string | null; staffKind?: "PRIMARY" | "ASSISTANT" | null };
 
 /** The community a Society Manager runs (not where anyone lives). */
 export function actorOf(user: SessionUser): Actor {
-  return { id: user.id, role: user.role, communityId: user.staff?.community.id ?? null };
+  return { id: user.id, role: user.role, communityId: user.staff?.community.id ?? null, staffKind: user.staff?.kind ?? null };
 }
 
 async function platformSettings(db: Db) {

@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
-import { demoLogin, logout } from "./helpers";
+import { demoLogin, logout, nextStep } from "./helpers";
 
 // Uses the seeded demo data (npm run db:seed) and changes it: reseed before running the suite again.
 
@@ -21,8 +21,11 @@ test("a manager opens a grocery round, extends it, and cancels it", async ({ pag
   await expectNoSeriousA11yIssues(page);
 
   await page.getByLabel("Name").fill("E2E staples drive");
+  await nextStep(page);
   await page.getByLabel("Most per flat for Toor Dal · 1 kg").fill("3");
   await page.getByRole("checkbox", { name: /Iodised Salt/ }).uncheck();
+  await nextStep(page);
+  await expect(page.getByText(/^\d+ products, up to the limits you set$/)).toBeVisible(); // the check step
   await page.getByRole("button", { name: "Open grocery round" }).click();
 
   // The first server-action call compiles on demand under `next dev`, which can take a while.
@@ -53,12 +56,16 @@ test("a manager opens a grocery round, extends it, and cancels it", async ({ pag
 test("a manager opens a Service Day from a vendor's service", async ({ page }) => {
   await demoLogin(page, MANAGER);
   await page.goto("/manager/rounds/new");
-  await page.getByRole("link", { name: /New Service Day/ }).click();
+  await page.getByRole("link", { name: /Home services/ }).click();
+  await expect(page.getByRole("link", { name: /^Plumber/ })).toHaveCount(0); // repairs are their own kind
   await page.getByRole("link", { name: /^Kitchen chimney cleaning/ }).click();
   await expect(page.getByText("Kitchen chimney: ₹799 → ₹499 at 12+")).toBeVisible();
   await expect(page.getByLabel("Name")).toHaveValue("Kitchen chimney cleaning Service Day");
   await expectNoSeriousA11yIssues(page);
 
+  await nextStep(page);
+  await nextStep(page);
+  await expect(page.getByText(/^Visits on /)).toBeVisible();
   await page.getByRole("button", { name: "Open Service Day" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Kitchen chimney cleaning Service Day" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Time slots" })).toBeVisible();
@@ -130,6 +137,8 @@ test("closing a round early runs the cutoff at once and shows the results", asyn
   await demoLogin(page, MANAGER);
   await page.goto("/manager/rounds/new/grocery");
   await page.getByLabel("Name").fill("E2E early close");
+  await nextStep(page);
+  await nextStep(page);
   await page.getByRole("button", { name: "Open grocery round" }).click();
   await expect(page).toHaveURL(/\/manager\/rounds\/[\w-]+$/, { timeout: 60_000 });
 

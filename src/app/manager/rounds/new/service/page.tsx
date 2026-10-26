@@ -6,9 +6,11 @@ import { ServiceRoundForm } from "@/components/manager/service-round-form";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, PageHeader } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/display";
 import { PageSkeleton } from "@/components/ui/skeleton";
 import { messages, t } from "@/i18n";
 import { requirePortal } from "@/lib/auth/current-user";
+import { isRepairService } from "@/lib/categories";
 import { defaultRoundDates } from "@/lib/polls";
 import { unitWordsFor } from "@/lib/rounds";
 import { formatINR } from "@/lib/pricing/money";
@@ -55,22 +57,40 @@ function priceLines(service: CatalogueService, marginBps: number): string[] {
   });
 }
 
+type Kind = "home-services" | "repairs" | "subscriptions";
+
+/** Which kind of group buy a service makes: a repair, a weekly subscription, or a home service. */
+function kindOf(service: CatalogueService): Kind {
+  if (isRepairService(service.category)) return "repairs";
+  return service.weeklyByDefault ? "subscriptions" : "home-services";
+}
+
+const KIND_TEXT = {
+  "home-services": { heading: "manager.newService", title: "manager.form.serviceTitle", kind: "HOME_SERVICES" },
+  repairs: { heading: "manager.form.newRepair", title: "manager.form.repairTitle", kind: "REPAIRS" },
+  subscriptions: { heading: "manager.form.newSubscription", title: "manager.form.subscriptionTitle", kind: "SUBSCRIPTIONS" },
+} as const;
+
 async function NewServiceRound({ searchParams }: { searchParams: PageProps<"/manager/rounds/new/service">["searchParams"] }) {
   const user = await requirePortal("manager");
   const now = new Date();
   const [params, services, settings] = await Promise.all([searchParams, listServices(), currentSettings()]);
   const chosen = typeof params.service === "string" ? services.find((s) => s.id === params.service) : undefined;
+  const kind: Kind = chosen ? kindOf(chosen) : params.kind === "repairs" || params.kind === "subscriptions" ? params.kind : "home-services";
+  const text = KIND_TEXT[kind];
   const units = unitWordsFor(user.staff.community.unitLabel).other;
 
   if (!chosen) {
+    const offered = services.filter((s) => kindOf(s) === kind);
     return (
       <div>
-        <PageHeader title={t("manager.form.chooseService")} subtitle={t("manager.form.chooseServiceIntro")} />
+        <PageHeader title={t(text.heading)} subtitle={t("manager.form.chooseServiceIntro")} />
+        {offered.length === 0 && <EmptyState title={t("manager.form.noServices")} body={t("manager.form.noServicesBody")} />}
         <ul className="grid gap-3 md:grid-cols-2">
-          {services.map((service) => (
+          {offered.map((service) => (
             <li key={service.id}>
               <Link
-                href={`/manager/rounds/new/service?service=${service.id}`}
+                href={`/manager/rounds/new/service?kind=${kind}&service=${service.id}`}
                 className="group flex h-full items-start gap-3 rounded-card border border-border bg-surface p-4 shadow-card transition-colors hover:border-brand/50"
               >
                 <span className="min-w-0 flex-1 space-y-1">
@@ -96,14 +116,14 @@ async function NewServiceRound({ searchParams }: { searchParams: PageProps<"/man
   const visitsPerDay = chosen.slotTemplates.reduce((n, s) => n + s.technicians, 0);
   return (
     <div className="space-y-5">
-      <PageHeader title={t("manager.newService")} />
+      <PageHeader title={t(text.heading)} />
       <Card className="space-y-2">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 space-y-1">
             <h2 className="font-semibold text-fg">{chosen.name}</h2>
             <VendorLine service={chosen} />
           </div>
-          <ButtonLink href="/manager/rounds/new/service" variant="ghost" size="sm">
+          <ButtonLink href={`/manager/rounds/new/service?kind=${kind}`} variant="ghost" size="sm">
             {t("manager.form.changeService")}
           </ButtonLink>
         </div>
@@ -122,7 +142,7 @@ async function NewServiceRound({ searchParams }: { searchParams: PageProps<"/man
         text={messages().manager}
         serviceId={chosen.id}
         defaults={{
-          title: t("manager.form.serviceTitle", { service: chosen.name }),
+          title: t(text.title, { service: chosen.name }),
           cutoffAt: utcToIstLocal(defaultRoundDates(now).cutoffAt),
           day1: utcToIstDate(startOfIstDay(now, 5)),
           repeatWeekly: chosen.weeklyByDefault,

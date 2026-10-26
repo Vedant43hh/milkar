@@ -265,6 +265,7 @@ enum NotificationType {
   ISSUE_UPDATE
   ISSUE_REPORTED // to a community's Society Managers: a resident reported a problem with a visit
   PARTS_APPROVAL // to a flat: the technician needs parts, approve and pay or decline
+  MEMBER_REMOVED // to a resident: their Society Manager removed them from the community
   VENDOR_ORDER
   JOIN_REQUEST
   JOIN_DECIDED

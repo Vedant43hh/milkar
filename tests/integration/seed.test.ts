@@ -75,11 +75,11 @@ describe("seeded demo data", () => {
   });
 
   it("resolves the deep-clean complaint with exactly one revisit, and refunds the no-access visit minus the fee", async () => {
-    const issue = await prisma.serviceIssue.findFirstOrThrow({ include: { visit: { include: { revisit: true } } } });
+    const issue = await prisma.serviceIssue.findFirstOrThrow({ where: { kind: "NOT_DONE_PROPERLY", round: { title: "Pre-Diwali deep cleaning" } }, include: { visit: { include: { revisit: true } } } });
     expect(issue).toMatchObject({ kind: "NOT_DONE_PROPERLY", status: "RESOLVED" });
     expect(issue.visit.revisit).toMatchObject({ kind: "REVISIT", status: "COMPLETED" });
 
-    const noAccess = await prisma.serviceVisit.findFirstOrThrow({ where: { status: "NO_ACCESS" }, include: { round: true } });
+    const noAccess = await prisma.serviceVisit.findFirstOrThrow({ where: { status: "NO_ACCESS", round: { title: "Pre-Diwali deep cleaning" } }, include: { round: true } });
     const items = await prisma.orderItem.findMany({ where: { roundId: noAccess.roundId, flatId: noAccess.flatId } });
     const paid = items.reduce((s, i) => s + (i.finalPaise ?? 0), 0);
     const refunds = await prisma.walletTransaction.aggregate({ where: { type: "NO_ACCESS_REFUND", orderItemId: { in: items.map((i) => i.id) } }, _sum: { amountPaise: true } });
@@ -106,6 +106,17 @@ describe("seeded demo data", () => {
   it("gives the demo resident unread notifications to look at", async () => {
     const rahul = await prisma.user.findUniqueOrThrow({ where: { phone: "+919000000003" } });
     expect(await prisma.notification.count({ where: { userId: rahul.id, readAt: null } })).toBeGreaterThan(0);
+  });
+
+  it("leaves Sunita a day to run: bags to hand out today and two complaints to sort out", async () => {
+    const weekend = await prisma.orderRound.findFirstOrThrow({ where: { title: "Weekend staples" }, include: { distributionRecords: true } });
+    expect(weekend.status).toBe("FINALIZED");
+    expect(weekend.distributionRecords.length).toBeGreaterThan(5);
+    expect(weekend.distributionRecords.every((d) => d.status === "PENDING")).toBe(true);
+    const kavya = await prisma.user.findUniqueOrThrow({ where: { phone: "+919000000005" } });
+    expect(weekend.distributionRecords.some((d) => d.flatId === kavya.flatId)).toBe(true);
+    const open = await prisma.serviceIssue.findMany({ where: { status: "OPEN" }, select: { kind: true } });
+    expect(open.map((i) => i.kind).sort()).toEqual(["NOT_DONE_PROPERLY", "NO_ACCESS_DISPUTE"]);
   });
 
   it("leaves Rahul's and Kavya's chimney visits from yesterday to rate, and open for a complaint", async () => {
