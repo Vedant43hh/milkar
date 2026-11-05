@@ -1124,7 +1124,8 @@ export function buildWorld(now: Date) {
     world.at(plus(cutoffAt, MINUTE), () => {
       const finalizedAt = plus(cutoffAt, MINUTE);
       const { confirmed } = world.finalize(round, finalizedAt);
-      const orders = world.issueVendorOrders(round, confirmed, finalizedAt, plus(finalizedAt, 2 * HOUR));
+      // Not acknowledged yet: the vendors have it waiting on their overview.
+      const orders = world.issueVendorOrders(round, confirmed, finalizedAt, null);
       notifyVendorOrders(orders, round, DEMO_COMMUNITIES.greenMeadows.name, finalizedAt);
       const flats = new Set([...round.items.values()].filter((i) => round.outcomes.get(i.id)?.status === "CONFIRMED").map((i) => i.flatId));
       for (const flatId of flats) rec.distribution.push({ id: id(), roundId: round.id, flatId, pickupCode: random.code(), status: "PENDING" });
@@ -1188,6 +1189,16 @@ export function buildWorld(now: Date) {
     const ratings = ratingsByVendor.get(vendor.id as string) ?? [];
     vendor.ratingCount = ratings.length;
     vendor.ratingSum = ratings.reduce((a, b) => a + b, 0);
+  }
+  // Milkar has paid for every round finished more than a week ago, three days after it finished.
+  for (const order of rec.vendorOrders) {
+    const round = rec.rounds.find((r) => r.id === order.roundId);
+    const completedAt = round?.status === "COMPLETED" && round.completedAt ? new Date(round.completedAt) : null;
+    if (completedAt && completedAt.getTime() < now.getTime() - 7 * DAY) {
+      order.status = "PAID";
+      order.acknowledgedAt ??= order.createdAt;
+      order.paidAt = plus(completedAt, 3 * DAY);
+    }
   }
 
   return { world, openGrocery, gm, communities };

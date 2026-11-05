@@ -34,6 +34,7 @@ export const enUi = {
     schedule: "Schedule",
     catalogue: "Catalogue",
     profile: "Profile",
+    earnings: "Earnings",
     communities: "Communities",
     vendors: "Vendors",
     settings: "Settings",

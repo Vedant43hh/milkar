@@ -41,6 +41,8 @@ export async function loginAction(prev: LoginState, formData: FormData): Promise
     // Logging in never creates an account. Someone new is offered registration instead.
     const user = await findUserByPhone(phone);
     if (!user) return { step: "noAccount", phone };
+    // A technician their vendor turned off.
+    if (user.deactivatedAt) return { step: "phone", phoneInput: phone.slice(3), error: t("errors.accountOff") };
     await startSession(user.id);
     redirect(safeNextPath(String(formData.get("next") ?? "")) ?? homePathFor(user));
   }
@@ -50,7 +52,7 @@ export async function loginAction(prev: LoginState, formData: FormData): Promise
 
 export async function demoLoginAction(formData: FormData): Promise<void> {
   const result = await resolveDemoLogin(String(formData.get("key") ?? ""), getEnv().DEMO_MODE);
-  if (!result.ok) redirect("/login?error=demo");
+  if (!result.ok) redirect(result.error === "ACCOUNT_OFF" ? "/login?error=off" : "/login?error=demo");
   await startSession(result.user.id);
   redirect(safeNextPath(String(formData.get("next") ?? "")) ?? homePathFor(result.user));
 }

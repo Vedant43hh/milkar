@@ -46,9 +46,9 @@ async function LoginSection({ searchParams }: { searchParams: PageProps<"/login"
   const env = getEnv();
   return (
     <div className="space-y-6">
-      {params.error === "demo" && (
+      {(params.error === "demo" || params.error === "off") && (
         <Banner tone="danger" role="alert" icon={<CircleAlert aria-hidden className="size-4" />}>
-          {t("errors.demoDisabled")}
+          {t(params.error === "off" ? "errors.accountOff" : "errors.demoDisabled")}
         </Banner>
       )}
       <Card>

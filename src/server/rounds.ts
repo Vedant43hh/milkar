@@ -33,7 +33,8 @@ export function actorOf(user: SessionUser): Actor {
   return { id: user.id, role: user.role, communityId: user.staff?.community.id ?? null, staffKind: user.staff?.kind ?? null };
 }
 
-async function platformSettings(db: Db) {
+/** Milkar's margin and the reduction freeze, as they stand now (defaults until the admin sets them). */
+export async function platformSettings(db: Db) {
   const s = await db.platformSetting.findUnique({ where: { id: 1 } });
   return { marginBps: s?.marginBps ?? 300, reductionFreezeMinutes: s?.reductionFreezeMinutes ?? 720 };
 }

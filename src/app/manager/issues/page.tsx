@@ -1,7 +1,7 @@
 import { Ban, CalendarPlus, MessageSquareWarning, Undo2 } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { ConfirmAction } from "@/components/manager/confirm-action";
+import { ConfirmAction } from "@/components/ui/confirm-action";
 import { Badge, type Tone } from "@/components/ui/badge";
 import { PageHeader, SectionTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/display";

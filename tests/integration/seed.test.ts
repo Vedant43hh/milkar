@@ -119,6 +119,19 @@ describe("seeded demo data", () => {
     expect(open.map((i) => i.kind).sort()).toEqual(["NOT_DONE_PROPERLY", "NO_ACCESS_DISPUTE"]);
   });
 
+  it("gives vendors orders to acknowledge and payouts already made", async () => {
+    const weekend = await prisma.vendorOrder.findMany({ where: { round: { title: "Weekend staples" } } });
+    expect(weekend.length).toBeGreaterThan(0);
+    expect(weekend.every((o) => o.status === "ISSUED" && o.acknowledgedAt === null)).toBe(true);
+    const paid = await prisma.vendorOrder.findMany({ where: { status: "PAID" }, include: { round: true } });
+    expect(paid.length).toBeGreaterThan(0);
+    for (const o of paid) {
+      expect(o.round.status).toBe("COMPLETED");
+      expect(o.paidAt!.getTime()).toBeGreaterThan(o.round.completedAt!.getTime());
+      expect(o.paidAt!.getTime()).toBeLessThan(now.getTime());
+    }
+  });
+
   it("leaves Rahul's and Kavya's chimney visits from yesterday to rate, and open for a complaint", async () => {
     const round = await prisma.orderRound.findFirstOrThrow({ where: { title: "Kitchen chimney cleaning" }, include: { visits: { include: { rating: true } } } });
     expect(round.status).toBe("COMPLETED");

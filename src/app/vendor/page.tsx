@@ -1,71 +1,128 @@
-import { BadgeCheck, Ban, CircleCheck, Circle, Package } from "lucide-react";
+import { ArrowRight, CalendarClock, IndianRupee, Package, Star, Truck } from "lucide-react";
+import Link from "next/link";
 import { Suspense } from "react";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, PageHeader } from "@/components/ui/card";
-import { cn } from "@/components/ui/cn";
-import { Banner, EmptyState } from "@/components/ui/display";
+import { EmptyState, Stat } from "@/components/ui/display";
 import { PageSkeleton } from "@/components/ui/skeleton";
+import { OrderStatusBadge } from "@/components/vendor/payout";
+import { Verification } from "@/components/vendor/verification";
 import { t } from "@/i18n";
 import { requirePortal } from "@/lib/auth/current-user";
-import { vendorChecklist } from "@/lib/registration";
+import { formatINR } from "@/lib/pricing/money";
+import { formatIST } from "@/lib/time";
 import { vendorStanding } from "@/server/registration";
+import { getVendorHome } from "@/server/vendor-home";
 
 export default function VendorPage() {
   return (
-    <Suspense fallback={<PageSkeleton cards={2} />}>
+    <Suspense fallback={<PageSkeleton cards={3} />}>
       <VendorHome />
     </Suspense>
   );
 }
 
+const linkClass = "inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-brand";
+
 async function VendorHome() {
   const user = await requirePortal("vendor");
-  const vendor = await vendorStanding(user.vendor.id);
+  const now = new Date();
+  const [home, standing] = await Promise.all([getVendorHome(user.vendor.id, now), vendorStanding(user.vendor.id)]);
+  const { today, earnings, vendor } = home;
+  const nothing = today.visits === 0 && home.toAcknowledge.length === 0 && home.deliveries.length === 0 && earnings.owedPaise === 0 && earnings.paidPaise === 0;
+  const rating = vendor.ratingCount > 0 ? (vendor.ratingSum / vendor.ratingCount).toFixed(1) : null;
+
   return (
     <div className="space-y-5">
       <PageHeader title={`${t("areas.vendorTitle")} · ${vendor.name}`} subtitle={t("areas.signedInAs", { name: user.name ?? user.phone, role: t(`roles.${user.role}`) })} />
-      <Verification vendor={vendor} />
-      <EmptyState icon={<Package aria-hidden className="size-6" />} title={t("nav.vendorOrders")} body={t("placeholder.staffBody", { phase: 14 })} />
-    </div>
-  );
-}
+      {vendor.verificationStatus !== "VERIFIED" && <Verification vendor={standing} />}
 
-/** Where verification stands: a checklist until Milkar has verified the business. */
-function Verification({ vendor }: { vendor: Awaited<ReturnType<typeof vendorStanding>> }) {
-  if (vendor.verificationStatus === "VERIFIED") {
-    return (
-      <Banner tone="success" icon={<BadgeCheck aria-hidden className="size-4" />} title={t("verification.verifiedTitle")}>
-        {t("verification.verifiedBody")}
-      </Banner>
-    );
-  }
-  const items = vendorChecklist({ ...vendor, catalogueItems: vendor._count.products + vendor._count.services });
-  return (
-    <Card>
-      <CardHeader title={t("verification.title")} subtitle={vendor.verificationStatus === "REJECTED" ? undefined : t("verification.pendingBody")} />
-      {vendor.verificationStatus === "REJECTED" && (
-        <Banner tone="danger" icon={<Ban aria-hidden className="size-4" />} title={t("verification.rejectedTitle")}>
-          {vendor.verificationNote ? t("verification.rejectedNote", { note: vendor.verificationNote }) : undefined}
-        </Banner>
+      {today.visits > 0 && (
+        <Card labelledBy="today-title">
+          <CardHeader titleId="today-title" title={t("vendorHome.todayTitle")} />
+          <div className="grid gap-3 sm:grid-cols-3">
+            <Stat label={t("vendorHome.visitsToday")} value={String(today.visits)} hint={t("vendorHome.doneToday", { done: today.done, total: today.visits })} icon={<CalendarClock aria-hidden className="size-5" />} />
+            {today.unassigned > 0 && <Stat tone="accent" label={t("vendorHome.unassigned")} value={String(today.unassigned)} />}
+          </div>
+          <Link href="/vendor/schedule" className={linkClass}>
+            {t("vendorHome.openSchedule")}
+            <ArrowRight aria-hidden className="size-4" />
+          </Link>
+        </Card>
       )}
-      <ul className="mt-3 space-y-3">
-        {items.map((item) => {
-          const Icon = item.done ? CircleCheck : Circle;
-          return (
-            <li key={item.key} className="flex items-start gap-3">
-              <Icon aria-hidden className={cn("mt-0.5 size-5 shrink-0", item.done ? "text-success" : "text-subtle")} />
-              <span className="min-w-0 flex-1">
-                <span className="flex flex-wrap items-center gap-1.5 font-medium text-fg">
-                  {t(`verification.items.${item.key}.title`)}
-                  {item.optional && <Badge>{t("verification.optional")}</Badge>}
-                </span>
-                <span className="block text-sm text-muted">{t(`verification.items.${item.key}.body`)}</span>
-              </span>
-              <span className={cn("text-xs font-semibold", item.done ? "text-success" : "text-muted")}>{item.done ? t("verification.done") : t("verification.todo")}</span>
-            </li>
-          );
-        })}
-      </ul>
-    </Card>
+
+      {home.toAcknowledge.length > 0 && (
+        <Card labelledBy="ack-title">
+          <CardHeader titleId="ack-title" title={t("vendorHome.acknowledgeTitle")} subtitle={t("vendorHome.acknowledgeBody")} />
+          <ul className="divide-y divide-border">
+            {home.toAcknowledge.map((o) => (
+              <li key={o.id}>
+                <Link href={`/vendor/orders/${o.id}`} className="flex min-h-11 items-center justify-between gap-3 py-2.5 text-sm">
+                  <span className="min-w-0">
+                    <span className="block font-medium text-fg">
+                      {t("vendorOrders.number", { n: o.number })} · {o.round.title}
+                    </span>
+                    <span className="block text-muted">{o.round.community.name}</span>
+                  </span>
+                  <span className="flex shrink-0 items-center gap-2">
+                    <OrderStatusBadge status={o.status} />
+                    <span className="font-semibold text-fg tabular-nums">{formatINR(o.totalPaise)}</span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
+
+      {home.deliveries.length > 0 && (
+        <Card labelledBy="deliveries-title">
+          <CardHeader titleId="deliveries-title" title={t("vendorHome.deliveriesTitle")} />
+          <ul className="divide-y divide-border">
+            {home.deliveries.map((o) => (
+              <li key={o.id}>
+                <Link href={`/vendor/orders/${o.id}`} className="flex min-h-11 items-center gap-3 py-2.5 text-sm">
+                  <Truck aria-hidden className="size-5 shrink-0 text-muted" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-medium text-fg">
+                      {o.round.title} · {o.round.community.name}
+                    </span>
+                    <span className="block text-muted">{t("vendorHome.deliverBy", { when: formatIST(o.round.deliveryAt) })}</span>
+                  </span>
+                  <OrderStatusBadge status={o.status} />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
+
+      <Card labelledBy="earnings-title">
+        <CardHeader titleId="earnings-title" title={t("vendorHome.earningsTitle")} />
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Stat tone="brand" label={t("vendorHome.owed")} value={formatINR(earnings.owedPaise)} icon={<IndianRupee aria-hidden className="size-5" />} />
+          <Stat label={t("vendorHome.paid")} value={formatINR(earnings.paidPaise)} />
+          <Stat label={t("vendorHome.thisMonth")} value={formatINR(earnings.thisMonthPaise)} />
+        </div>
+        <Link href="/vendor/earnings" className={linkClass}>
+          {t("vendorHome.allEarnings")}
+          <ArrowRight aria-hidden className="size-4" />
+        </Link>
+      </Card>
+
+      <Card labelledBy="rating-title">
+        <CardHeader titleId="rating-title" title={t("vendorHome.ratingTitle")} />
+        {rating ? (
+          <p className="flex items-center gap-2 text-fg">
+            <Star aria-hidden className="size-5 fill-current text-accent" />
+            <span className="text-2xl font-semibold tabular-nums">{t("vendorHome.rating", { rating })}</span>
+            <span className="text-sm text-muted">{t("vendorHome.ratingCount", { n: vendor.ratingCount })}</span>
+          </p>
+        ) : (
+          <p className="text-sm text-muted">{t("vendorHome.noRatings")}</p>
+        )}
+      </Card>
+
+      {nothing && <EmptyState icon={<Package aria-hidden className="size-6" />} title={t("vendorHome.nothingYet")} body={t("vendorHome.nothingYetBody")} />}
+    </div>
   );
 }

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { ConfirmAction } from "@/components/manager/confirm-action";
+import { ConfirmAction } from "@/components/ui/confirm-action";
 import { AutoRefresh } from "@/components/ui/auto-refresh";
 import { Badge, type Tone } from "@/components/ui/badge";
 import { PageHeader, SectionTitle } from "@/components/ui/card";

@@ -245,7 +245,7 @@ async function scheduleVisits(tx: Tx, round: FinalizeRound, confirmedFlats: Map<
   const bookings = [...round.bookings].sort((a, b) => a.slot.startsAt.getTime() - b.slot.startsAt.getTime());
   const toVisit = bookings.filter((b) => b.status === "ACTIVE" && confirmedFlats.has(b.flatId));
   const technicians = round.vendorId
-    ? await tx.user.findMany({ where: { vendorId: round.vendorId, role: "TECHNICIAN" }, orderBy: [{ createdAt: "asc" }, { id: "asc" }], select: { id: true, name: true } })
+    ? await tx.user.findMany({ where: { vendorId: round.vendorId, role: "TECHNICIAN", deactivatedAt: null }, orderBy: [{ createdAt: "asc" }, { id: "asc" }], select: { id: true, name: true } })
     : [];
   const assigned = assignTechnicians(
     toVisit.map((b) => ({ id: b.id, startsAt: b.slot.startsAt })),

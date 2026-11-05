@@ -1,7 +1,7 @@
 import { ShieldCheck, UserMinus, UserPlus, UserRound } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { ConfirmAction } from "@/components/manager/confirm-action";
+import { ConfirmAction } from "@/components/ui/confirm-action";
 import { ActionForm, SubmitButton } from "@/components/ui/action-form";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, PageHeader } from "@/components/ui/card";

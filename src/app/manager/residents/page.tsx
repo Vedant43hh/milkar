@@ -2,7 +2,7 @@ import { House, Link2, UserCheck, UserMinus, Users } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { DecisionButtons } from "@/components/approvals/decision-buttons";
-import { ConfirmAction } from "@/components/manager/confirm-action";
+import { ConfirmAction } from "@/components/ui/confirm-action";
 import { ShareRound } from "@/components/manager/share-round";
 import { Card, CardHeader, PageHeader, SectionTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/display";

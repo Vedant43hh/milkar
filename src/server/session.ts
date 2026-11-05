@@ -67,6 +67,7 @@ export async function findSessionUser(token: string, now: Date): Promise<Session
   });
   if (!session || session.expiresAt.getTime() <= now.getTime()) return null;
   const { user } = session;
+  if (user.deactivatedAt) return null;
   return {
     id: user.id,
     name: user.name,

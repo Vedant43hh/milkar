@@ -112,7 +112,7 @@ describe("accounts and sessions", () => {
     expect(await findUserByPhone(phone)).toBeNull();
     expect(await prisma.user.count()).toBe(0);
     const user = await prisma.user.create({ data: { phone, role: "RESIDENT" } });
-    expect(await findUserByPhone(phone)).toEqual({ id: user.id, role: "RESIDENT", flatId: null });
+    expect(await findUserByPhone(phone)).toEqual({ id: user.id, role: "RESIDENT", flatId: null, deactivatedAt: null });
   });
 
   it("stores only a hash of the session token and expires sessions", async () => {

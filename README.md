@@ -118,6 +118,16 @@ After a schema change (`prisma generate`), restart `npm run dev`: the dev server
 - Every round has a stable link, `/round/<id>`, used in notifications and invites.
 - **Close now** stops orders and runs the cutoff for that round straight away. Once a round is finalized, its dashboard shows the results: what was confirmed and at what price, what fell short of its minimum, money back to wallets, what's owed to vendors, the cost of price protection, pickup codes or visits, the vendor orders, and next week's round for a weekly Service Day.
 
+## Vendor portal (`/vendor`)
+
+- **Overview:** today's visits (how many are done, any without a technician), orders waiting to be acknowledged, grocery deliveries coming up, what's owed and paid, and the rating. Until Milkar verifies the business, the verification checklist shows here too.
+- **Orders** (`/vendor/orders`): one per group buy the vendor supplies, issued at cutoff: a purchase order for goods, a job sheet for services. Each shows the lines at the vendor's tier price plus GST, where and when to deliver, and what the vendor is paid. **Download CSV** gives a spreadsheet copy (amounts as plain numbers, UTF-8 for Excel, spreadsheet formulas defused); **Print or save as PDF** prints the page. **Acknowledge order** tells the Society Manager they're on it; doing it twice changes nothing. Another vendor's order, or its CSV, is a 404.
+- **Schedule** (`/vendor/schedule`): the next two weeks of visits, by day, time slot, then tower and flat in natural order (A-2 before A-10). **Change technician** moves a visit nobody has set out for to another of the vendor's technicians, only if they're free then; it runs under the round lock and locks the technician, so two moves can't double-book anyone.
+- **Catalogue** (`/vendor/catalogue`): products (groceries vendors) and services (home-services and repair vendors, each in their own categories), with a price-tier editor: "from N packs (or flats), my price ₹X", GST excluded. Each tier shows what residents would pay (the vendor's price plus Milkar's margin plus GST); prices must fall as quantities rise (the engine's `validateTiers`), and residents never pay more than the MRP. Services have bookable options (with their own tiers by flats) and daily time slots with how many technicians work each; slots of a service can't overlap. Group buys copy prices and slots when they open, so changes apply to new group buys only. Items can be stopped and offered again, never deleted.
+- **Technicians** (`/vendor/technicians`): add by name and mobile number (the only way a technician account is made), see how many visits each has to do, and **Turn off** someone who has left: they're logged out, can't log in, and get no visits at cutoff or by reassignment. Someone with visits still to do keeps them until they're moved; **Turn back on** undoes it.
+- **Earnings** (`/vendor/earnings`): per order, the total as issued plus each change (couldn't get in, visits cancelled, refunds for short or damaged goods and complaints, parts paid at cost) gives the payout (`src/lib/vendor/payout.ts`). Status: To acknowledge, Acknowledged or Paid; Milkar marks payouts paid (the admin screen comes in Phase 15).
+- **Profile** (`/vendor/profile`): the business details, the Verified badge, the rating and the verification checklist.
+
 ## Cutoff and scheduled jobs
 
 When a round's cutoff passes, the cutoff job finalizes it in one transaction under the round lock:
@@ -160,17 +170,19 @@ Any 6-digit OTP works in mock mode.
 | Vendor | 9000000013 | Suresh Pillai | CoolCare AC & Appliance (verified) |
 | Vendor | 9000000014 | Nisha Thomas | SparkleHome Cleaning & Pest Control (verified, rated) |
 | Vendor | 9000000015 | Manoj Yadav | WashWell Car Wash (verification pending) |
-| Vendor | 9000000016 | Sameer Kulkarni | FixRight Home Repairs (plumber, electrician, carpenter) |
-| Vendor | 9000000011 | Ramesh Agarwal | Shree Balaji Wholesale Traders (groceries) |
+| Vendor | 9000000016 | Sameer Kulkarni | FixRight Home Repairs (plumber, electrician, carpenter): today's Carpenter Day on the schedule |
+| Vendor | 9000000011 | Ramesh Agarwal | Shree Balaji Wholesale Traders (groceries): the Weekend staples order to acknowledge, payouts already made |
 | Vendor | 9000000012 | Imran Shaikh | Annapurna Home Care Distributors (groceries) |
 | Technician | 9000000021 | Raju Thapa | WashWell: this week's car-wash visits |
 | Technician | 9000000022 | Lata Pawar | SparkleHome: the completed deep-clean visits |
 | Technician | 9000000023 | Mahesh Kale | FixRight: today's carpentry at Kavya's, Joseph's and Rahul's flats |
 | Admin | 9000000001 | Priya Nair | Lakeview Residency and WashWell are waiting for her |
 
-The seed (`prisma/seed-scenario.ts`) prices every order through the real engine, on one timeline, so wallets, tier unlocks, refunds and notifications agree. It includes two completed grocery rounds and one open round; a completed deep-cleaning Service Day (ratings, a complaint fixed by a free revisit, a no-access visit with the visit fee kept); a kitchen chimney cleaning day finished yesterday, where Rahul's and Kavya's visits are still waiting for a rating and can still get a complaint; FixRight's Repair Days (an Electrician Day done, with parts approved and paid for one flat and ratings; a Carpenter Day with visits today; a Plumber Day open at 7 flats, where 3 more unlock ₹249); an open AC Service Day at 14 flats (6 more unlock ₹400, some slots full); a weekly car wash with last week's slots held for 24 hours; "Weekend staples", delivered this morning with every bag still to hand out; two open complaints (Fatima Sheikh's electrician visit, and Vikram Joshi disputing a no-access fee); and four interest polls. GST rates and GSTINs are illustrative samples.
+The seed (`prisma/seed-scenario.ts`) prices every order through the real engine, on one timeline, so wallets, tier unlocks, refunds and notifications agree. It includes two completed grocery rounds and one open round; a completed deep-cleaning Service Day (ratings, a complaint fixed by a free revisit, a no-access visit with the visit fee kept); a kitchen chimney cleaning day finished yesterday, where Rahul's and Kavya's visits are still waiting for a rating and can still get a complaint; FixRight's Repair Days (an Electrician Day done, with parts approved and paid for one flat and ratings; a Carpenter Day with visits today; a Plumber Day open at 7 flats, where 3 more unlock ₹249); an open AC Service Day at 14 flats (6 more unlock ₹400, some slots full); a weekly car wash with last week's slots held for 24 hours; "Weekend staples", delivered this morning with every bag still to hand out; two open complaints (Fatima Sheikh's electrician visit, and Vikram Joshi disputing a no-access fee); and four interest polls. Vendor orders for rounds finished more than a week ago are marked paid; the Weekend staples orders are still waiting to be acknowledged. GST rates and GSTINs are illustrative samples.
 
 ## Database migrations
+
+`20261026090000_vendor_portal` adds the PAID status and payment date to vendor orders, and lets a vendor turn a technician off (`User.deactivatedAt`).
 
 `20261023090000_member_removed_notification` adds the notification a resident gets when a Society Manager removes them from the community.
 

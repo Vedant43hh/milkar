@@ -84,11 +84,17 @@ const formatters = {
     minute: "2-digit",
     hour12: true,
   }),
+  weekdayDate: new Intl.DateTimeFormat("en-IN", {
+    timeZone: IST_TIME_ZONE,
+    weekday: "long",
+    day: "numeric",
+    month: "short",
+  }),
 };
 
 export type IstFormat = keyof typeof formatters;
 
-/** "Fri, 23 Oct, 8:00 pm" (dateTime), "23 Oct 2026" (date), "8:00 pm" (time). */
+/** "Fri, 23 Oct, 8:00 pm" (dateTime), "23 Oct 2026" (date), "8:00 pm" (time), "Friday, 23 Oct" (weekdayDate). */
 export function formatIST(date: Date, format: IstFormat = "dateTime"): string {
   // ICU versions differ on (narrow) no-break spaces before am/pm; normalise so server and
   // browser render identical text.
