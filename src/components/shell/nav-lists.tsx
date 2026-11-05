@@ -51,7 +51,7 @@ function SideItem({ item, pathname }: { item: NavItem; pathname: string }) {
       <span aria-disabled className={cn(classes, "cursor-default text-subtle")}>
         <Icon aria-hidden className="size-5" />
         {tu(item.label)}
-        <span className="ml-auto rounded-full bg-surface-2 px-2 py-0.5 text-[0.65rem] font-medium tracking-wide text-muted uppercase">{tu("ui.soon")}</span>
+        <span className="ml-auto rounded-full bg-surface-2 px-2 py-0.5 text-xs font-medium tracking-wide text-muted uppercase">{tu("ui.soon")}</span>
       </span>
     );
   }

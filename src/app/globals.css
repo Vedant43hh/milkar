@@ -244,6 +244,17 @@
     background: var(--brand-soft);
     color: var(--brand-soft-fg);
   }
+  /* Even lines in headings, no lone last word in running text. */
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  p,
+  li,
+  dd {
+    text-wrap: pretty;
+  }
 }
 
 /* ---------- Page transitions (React <ViewTransition default="page-fade">) ---------- */

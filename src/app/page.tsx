@@ -14,10 +14,10 @@ export const metadata: Metadata = { title: { absolute: `${t("app.name")}: ${t("l
 const STEP_ART = [OpenIllustration, JoinIllustration, DeliverIllustration];
 const WHY_ICONS: LucideIcon[] = [PackageCheck, Truck, Megaphone];
 const CATEGORY_ICONS: Record<BuyCategory, { icon: LucideIcon; tint: string }> = {
-  GROCERIES: { icon: ShoppingBasket, tint: "bg-success-soft text-success" },
-  HOME_SERVICES: { icon: Sparkles, tint: "bg-brand-soft text-brand-soft-fg" },
-  REPAIRS: { icon: Wrench, tint: "bg-warning-soft text-warning" },
-  SUBSCRIPTIONS: { icon: Repeat, tint: "bg-accent-soft text-accent-soft-fg" },
+  GROCERIES: { icon: ShoppingBasket, tint: "text-success" },
+  HOME_SERVICES: { icon: Sparkles, tint: "text-brand" },
+  REPAIRS: { icon: Wrench, tint: "text-warning" },
+  SUBSCRIPTIONS: { icon: Repeat, tint: "text-accent-soft-fg" },
 };
 const ROLES: { role: "RESIDENT" | "MANAGER" | "VENDOR"; slug: string; icon: LucideIcon; portal: string }[] = [
   { role: "RESIDENT", slug: "resident", icon: UserRound, portal: "app" },
@@ -123,12 +123,12 @@ export default function LandingPage() {
             {BUY_CATEGORIES.map((category) => {
               const { icon: Icon, tint } = CATEGORY_ICONS[category];
               return (
-                <li key={category} className="space-y-2 rounded-card border border-border bg-surface p-4 shadow-card">
-                  <span className={cn("flex size-11 items-center justify-center rounded-2xl", tint)}>
-                    <Icon aria-hidden className="size-5" />
+                <li key={category} className="rounded-card border border-border bg-surface p-4 shadow-card">
+                  <span className="flex items-start gap-2 font-semibold text-fg">
+                    <Icon aria-hidden className={cn("mt-0.5 size-5 shrink-0", tint)} />
+                    {t(`buys.categories.${category}.name`)}
                   </span>
-                  <span className="block font-semibold text-fg">{t(`buys.categories.${category}.name`)}</span>
-                  <span className="block text-sm text-muted">{t(`buys.categories.${category}.body`)}</span>
+                  <span className="mt-1 block text-sm text-muted">{t(`buys.categories.${category}.body`)}</span>
                 </li>
               );
             })}

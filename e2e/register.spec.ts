@@ -210,6 +210,8 @@ test("a vendor registers, sees the checklist, and is verified by the admin", asy
 
   await loginWithOtp(page, phone);
   await expect(page).toHaveURL("/vendor");
+  // Once verified, the overview stays quiet; the profile says so.
+  await page.goto("/vendor/profile");
   await expect(page.getByText("You're verified")).toBeVisible();
 });
 

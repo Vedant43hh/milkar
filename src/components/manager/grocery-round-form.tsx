@@ -96,7 +96,7 @@ export function GroceryRoundForm({
                     aria-label={interpolate(text.form.capFor, { product: p.name })}
                     className="w-16 px-2 text-center"
                   />
-                  <span aria-hidden className="mt-0.5 text-[0.65rem] text-subtle">
+                  <span aria-hidden className="mt-0.5 text-xs text-subtle">
                     {text.form.perFlat}
                   </span>
                 </span>

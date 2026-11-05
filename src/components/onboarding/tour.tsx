@@ -53,9 +53,10 @@ export function OnboardingTour({ userId, cards, text }: { userId: string; cards:
           ))}
         </div>
         <div className="flex gap-3">
-          <Button type="button" variant="ghost" onClick={finish}>
-            {text.skip}
-          </Button>
+          {/* Closing natively (no script needed): the sheet reports the close and finish() runs. */}
+          <form method="dialog" className="contents">
+            <Button variant="ghost">{text.skip}</Button>
+          </form>
           <Button type="button" block onClick={() => (last ? finish() : setIndex(index + 1))}>
             {last ? text.done : text.next}
             {!last && <ArrowRight aria-hidden className="size-4" />}

@@ -64,7 +64,7 @@ function BellLink({ href, count }: { href: string; count: number }) {
         <span
           aria-hidden
           data-testid="unread-badge"
-          className="absolute top-1.5 right-1.5 flex h-4.5 min-w-4.5 animate-pop items-center justify-center rounded-full bg-danger px-1 text-[0.65rem] leading-none font-bold text-white ring-2 ring-surface dark:text-surface"
+          className="absolute top-1.5 right-1.5 flex h-4.5 min-w-4.5 animate-pop items-center justify-center rounded-full bg-danger px-1 text-[11px] leading-none font-bold text-white ring-2 ring-surface dark:text-surface"
         >
           {shown}
         </span>
