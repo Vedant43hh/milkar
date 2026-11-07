@@ -267,6 +267,7 @@ enum NotificationType {
   ISSUE_REPORTED // to a community's Society Managers: a resident reported a problem with a visit
   PARTS_APPROVAL // to a flat: the technician needs parts, approve and pay or decline
   MEMBER_REMOVED // to a resident: their Society Manager removed them from the community
+  PAYOUT_PAID // to a vendor: Milkar paid what an order came to
   VENDOR_ORDER
   JOIN_REQUEST
   JOIN_DECIDED
@@ -564,10 +565,16 @@ model VendorSlotTemplate {
 }
 
 model PlatformSetting {
-  id                     Int      @id @default(1)
-  marginBps              Int      @default(300)
-  reductionFreezeMinutes Int      @default(720)
-  updatedAt              DateTime @updatedAt @db.Timestamptz(3)
+  id                      Int      @id @default(1)
+  marginBps               Int      @default(300)
+  reductionFreezeMinutes  Int      @default(720)
+  defaultNoAccessFeePaise Int      @default(19900) // suggested visit fee for a vendor's new service
+  // Community impact estimates: metres a vendor trip, millilitres of fuel a km, grams of CO2 a litre.
+  impactMetresPerTrip     Int      @default(8000)
+  impactMlPerKm           Int      @default(40)
+  impactGramsCo2PerLitre  Int      @default(2300)
+  updatedById             String?
+  updatedAt               DateTime @updatedAt @db.Timestamptz(3)
 }
 
 // A grocery order round, or a Service Day (kind SERVICE) for one service from one vendor.
@@ -788,6 +795,7 @@ model VendorOrder {
   totalPaise     Int
   acknowledgedAt DateTime?         @db.Timestamptz(3)
   paidAt         DateTime?         @db.Timestamptz(3)
+  paidById       String? // the platform admin who marked it paid
   createdAt      DateTime          @default(now()) @db.Timestamptz(3)
 
   round       OrderRound         @relation(fields: [roundId], references: [id], onDelete: Cascade)

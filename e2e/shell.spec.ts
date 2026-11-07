@@ -119,6 +119,11 @@ const PAGES: [path: string, user: string | null][] = [
   ["/admin", "Priya Nair"],
   ["/admin/communities", "Priya Nair"],
   ["/admin/vendors", "Priya Nair"],
+  ["/admin/disputes", "Priya Nair"],
+  ["/admin/payouts", "Priya Nair"],
+  ["/admin/stats", "Priya Nair"],
+  ["/admin/settings", "Priya Nair"],
+  ["/admin/admins", "Priya Nair"],
 ];
 
 async function visitAs(page: Page, path: string, user: string | null) {

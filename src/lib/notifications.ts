@@ -22,6 +22,7 @@ export const NOTIFICATION_TYPES = [
   "ISSUE_REPORTED",
   "PARTS_APPROVAL",
   "MEMBER_REMOVED",
+  "PAYOUT_PAID",
   "VENDOR_ORDER",
   "JOIN_REQUEST",
   "JOIN_DECIDED",
@@ -76,6 +77,8 @@ export type NotificationParams = {
   PARTS_APPROVAL: { service: string; technician: string; totalPaise: number };
   /** To a resident taken out of their community by its Society Manager. */
   MEMBER_REMOVED: { community: string };
+  /** To a vendor: Milkar paid what an order came to. */
+  PAYOUT_PAID: { amountPaise: number; round: string };
   VENDOR_ORDER: { round: string; community: string };
   /** To a community's Society Managers: someone asked to join. `flat` is e.g. "Flat A-101". */
   JOIN_REQUEST: { name: string; flat: string };
@@ -178,6 +181,7 @@ export const notificationKeys = {
   issueReported: (issueId: string) => `ISSUE_REPORTED:${issueId}`,
   partsApproval: (requestId: string) => `PARTS_APPROVAL:${requestId}`,
   memberRemoved: (userId: string, at: number) => `MEMBER_REMOVED:${userId}:${at}`,
+  payoutPaid: (vendorOrderId: string) => `PAYOUT_PAID:${vendorOrderId}`,
   vendorOrder: (vendorOrderId: string) => `VENDOR_ORDER:${vendorOrderId}`,
   joinRequest: (requestId: string) => `JOIN_REQUEST:${requestId}`,
   joinDecided: (requestId: string) => `JOIN_DECIDED:${requestId}`,

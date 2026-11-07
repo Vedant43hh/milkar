@@ -1,6 +1,7 @@
 import {
   BadgeCheck,
   BadgePercent,
+  IndianRupee,
   Store,
   Building2,
   UserPlus,
@@ -50,6 +51,7 @@ const ICONS: Record<NotificationType, { icon: LucideIcon; tone: string }> = {
   ISSUE_REPORTED: { icon: MessageSquareWarning, tone: "bg-warning-soft text-warning" },
   PARTS_APPROVAL: { icon: Wrench, tone: "bg-accent-soft text-accent-soft-fg" },
   MEMBER_REMOVED: { icon: Users, tone: "bg-surface-2 text-muted" },
+  PAYOUT_PAID: { icon: IndianRupee, tone: "bg-success-soft text-success" },
   VENDOR_ORDER: { icon: Package, tone: "bg-brand-soft text-brand-soft-fg" },
   JOIN_REQUEST: { icon: UserPlus, tone: "bg-accent-soft text-accent-soft-fg" },
   JOIN_DECIDED: { icon: Users, tone: "bg-success-soft text-success" },

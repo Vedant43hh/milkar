@@ -49,7 +49,7 @@ async function Service({ params }: { params: PageProps<"/vendor/catalogue/servic
         gstBps: String(service.gstBps),
         weeklyByDefault: service.weeklyByDefault,
       }
-    : { serviceId: "new", name: "", category: catalogue.serviceCategories[0], description: "", minFlats: "10", fee: "200", durationMinutes: "60", gstBps: "1800", weeklyByDefault: false };
+    : { serviceId: "new", name: "", category: catalogue.serviceCategories[0], description: "", minFlats: "10", fee: rupeesText(catalogue.defaultFeePaise), durationMinutes: "60", gstBps: "1800", weeklyByDefault: false };
   // A service already set up in a category the vendor no longer lists stays editable in it.
   const categories = [...new Set([...catalogue.serviceCategories, ...(service ? [service.category] : [])])];
 

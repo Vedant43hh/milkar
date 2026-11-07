@@ -20,8 +20,13 @@ import type { Actor } from "./rounds";
 type Tx = Prisma.TransactionClient;
 
 export async function listCommunityIssues(communityId: string) {
+  return listIssues({ round: { communityId } });
+}
+
+/** Issues matching `where`, open first, each with what can still be done about it. */
+export async function listIssues(where: Prisma.ServiceIssueWhereInput) {
   const issues = await prisma.serviceIssue.findMany({
-    where: { round: { communityId } },
+    where,
     orderBy: [{ createdAt: "desc" }],
     select: {
       id: true,
@@ -33,7 +38,7 @@ export async function listCommunityIssues(communityId: string) {
       resolvedAt: true,
       reportedBy: { select: { name: true } },
       flat: { select: { tower: true, number: true } },
-      round: { select: { id: true, title: true, service: { select: { name: true } } } },
+      round: { select: { id: true, title: true, service: { select: { name: true } }, community: { select: { name: true, unitLabel: true } } } },
       visit: {
         select: {
           kind: true,

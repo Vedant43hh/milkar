@@ -14,7 +14,7 @@ export type ImpactAssumptions = {
   kgCo2PerLitre: number;
 };
 
-/** Defaults until the platform admin can edit them (Phase 15). */
+/** Milkar's starting estimates; the platform admin can change them in Settings. */
 export const DEFAULT_IMPACT_ASSUMPTIONS: ImpactAssumptions = { kmPerTrip: 8, litresPerKm: 0.04, kgCo2PerLitre: 2.3 };
 
 /** One flat's confirmed goods from one vendor in one grocery round: a delivery it would have had alone. */

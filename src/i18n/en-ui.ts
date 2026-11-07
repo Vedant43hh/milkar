@@ -39,6 +39,9 @@ export const enUi = {
     vendors: "Vendors",
     settings: "Settings",
     stats: "Stats",
+    disputes: "Disputes",
+    payouts: "Payouts",
+    admins: "Admins",
   },
   wizard: {
     back: "Back",

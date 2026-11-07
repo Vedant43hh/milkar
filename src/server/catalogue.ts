@@ -15,6 +15,7 @@ import {
 } from "@/lib/vendor/catalogue";
 import { checkSlot, type SlotInput, type SlotProblem } from "@/lib/vendor/slot-templates";
 import { platformSettings } from "./rounds";
+import { loadPlatformSettings } from "./settings";
 import { runsVendor, type VendorActor } from "./vendor-actor";
 
 // A vendor's catalogue: what Society Managers can put in a round. Prices are copied into a round
@@ -45,12 +46,13 @@ export async function vendorCatalogue(vendorId: string) {
         slotTemplates: { orderBy: { startTime: "asc" } },
       },
     }),
-    platformSettings(prisma),
+    loadPlatformSettings(),
   ]);
   return {
     sellsProducts: sellsProducts(vendor.categories),
     serviceCategories: allowedServiceCategories(vendor.categories),
     marginBps: settings.marginBps,
+    defaultFeePaise: settings.defaultNoAccessFeePaise,
     products,
     services,
   };

@@ -72,8 +72,11 @@ export const PORTAL_NAV: Record<Portal, NavItem[]> = {
     { href: "/admin", label: "nav.overview", icon: LayoutDashboard, exact: true },
     { href: "/admin/communities", label: "nav.communities", icon: Building2 },
     { href: "/admin/vendors", label: "nav.vendors", icon: Store },
-    { href: "/admin/stats", label: "nav.stats", icon: ChartColumn, soon: true },
-    { href: "/admin/settings", label: "nav.settings", icon: Settings, soon: true },
+    { href: "/admin/disputes", label: "nav.disputes", icon: MessageSquareWarning },
+    { href: "/admin/payouts", label: "nav.payouts", icon: IndianRupee },
+    { href: "/admin/stats", label: "nav.stats", icon: ChartColumn },
+    { href: "/admin/settings", label: "nav.settings", icon: Settings },
+    { href: "/admin/admins", label: "nav.admins", icon: ShieldCheck },
   ],
 };
 
