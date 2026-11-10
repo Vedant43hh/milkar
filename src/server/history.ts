@@ -92,6 +92,7 @@ export async function getRoundHistory(user: HistoryUser, roundId: string, now: D
       cancelledAt: true,
       cancelReason: true,
       requirePickupCode: true,
+      repeatWeekly: true,
       service: { select: { name: true, category: true, vendor: { select: { name: true } } } },
       orderItems: {
         where: { userId: user.id },
@@ -210,6 +211,7 @@ export async function getRoundHistory(user: HistoryUser, roundId: string, now: D
       cancelledAt: round.cancelledAt,
       cancelReason: round.cancelReason,
       requirePickupCode: round.requirePickupCode,
+      repeatWeekly: round.repeatWeekly,
       serviceName: round.service?.name ?? null,
       vendor: round.service?.vendor.name ?? null,
       repair,

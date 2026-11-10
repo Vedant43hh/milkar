@@ -23,6 +23,8 @@ export const NOTIFICATION_TYPES = [
   "PARTS_APPROVAL",
   "MEMBER_REMOVED",
   "PAYOUT_PAID",
+  "SUBSCRIPTION_ORDERED",
+  "SUBSCRIPTION_CONFIRM",
   "VENDOR_ORDER",
   "JOIN_REQUEST",
   "JOIN_DECIDED",
@@ -79,6 +81,10 @@ export type NotificationParams = {
   MEMBER_REMOVED: { community: string };
   /** To a vendor: Milkar paid what an order came to. */
   PAYOUT_PAID: { amountPaise: number; round: string };
+  /** To a resident: this week's standing order was placed and paid from the wallet. */
+  SUBSCRIPTION_ORDERED: { round: string; amountPaise: number };
+  /** To a resident: this week's standing order is ready to confirm and pay. */
+  SUBSCRIPTION_CONFIRM: { round: string };
   VENDOR_ORDER: { round: string; community: string };
   /** To a community's Society Managers: someone asked to join. `flat` is e.g. "Flat A-101". */
   JOIN_REQUEST: { name: string; flat: string };
@@ -182,6 +188,7 @@ export const notificationKeys = {
   partsApproval: (requestId: string) => `PARTS_APPROVAL:${requestId}`,
   memberRemoved: (userId: string, at: number) => `MEMBER_REMOVED:${userId}:${at}`,
   payoutPaid: (vendorOrderId: string) => `PAYOUT_PAID:${vendorOrderId}`,
+  subscription: (standingOrderId: string, roundId: string) => `SUBSCRIPTION:${standingOrderId}:${roundId}`,
   vendorOrder: (vendorOrderId: string) => `VENDOR_ORDER:${vendorOrderId}`,
   joinRequest: (requestId: string) => `JOIN_REQUEST:${requestId}`,
   joinDecided: (requestId: string) => `JOIN_DECIDED:${requestId}`,

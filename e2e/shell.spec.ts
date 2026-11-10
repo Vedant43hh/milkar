@@ -91,6 +91,7 @@ const PAGES: [path: string, user: string | null][] = [
   ["/app/buys/repairs", "Rahul Deshmukh"],
   ["/app/orders", "Rahul Deshmukh"],
   ["/app/wallet", "Rahul Deshmukh"],
+  ["/app/subscriptions", "Rahul Deshmukh"],
   ["/manager", "Sunita Kulkarni"],
   ["/manager/rounds", "Sunita Kulkarni"],
   ["/manager/polls", "Sunita Kulkarni"],

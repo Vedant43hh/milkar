@@ -119,6 +119,16 @@ describe("seeded demo data", () => {
     expect(open.map((i) => i.kind).sort()).toEqual(["NOT_DONE_PROPERLY", "NO_ACCESS_DISPUTE"]);
   });
 
+  it("keeps Rahul's weekly milk every week, with enough in his wallet for auto-pay", async () => {
+    const dairy = await prisma.orderRound.findFirstOrThrow({ where: { title: "Weekly milk & eggs" }, include: { standingOrders: true, offerings: { include: { product: true } } } });
+    expect(dairy).toMatchObject({ kind: "GROCERY", repeatWeekly: true, status: "OPEN" });
+    const rahul = await prisma.user.findUniqueOrThrow({ where: { phone: "+919000000003" } });
+    expect(dairy.standingOrders).toEqual([expect.objectContaining({ userId: rahul.id, status: "ACTIVE", autoPayFromWallet: true })]);
+    const milk = dairy.offerings.find((o) => o.product?.name === "Toned Milk (pouch)")!;
+    const wallet = await prisma.walletTransaction.aggregate({ where: { userId: rahul.id }, _sum: { amountPaise: true } });
+    expect(wallet._sum.amountPaise!).toBeGreaterThan(milk.mrpPaise);
+  });
+
   it("gives vendors orders to acknowledge and payouts already made", async () => {
     const weekend = await prisma.vendorOrder.findMany({ where: { round: { title: "Weekend staples" } } });
     expect(weekend.length).toBeGreaterThan(0);

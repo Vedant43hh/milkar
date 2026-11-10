@@ -94,6 +94,12 @@ After a schema change (`prisma generate`), restart `npm run dev`: the dev server
 - **GST invoices** (`/app/orders/<round>/invoice`): once a round is confirmed, an invoice from Milkar for your confirmed items at their final prices, each split into taxable value and GST (CGST + SGST inside Milkar's state, IGST to another; the state comes from the GSTIN and the pincode), with a tax summary per rate and the round's payments and refunds. Print it or save it as a PDF. Without `PLATFORM_GSTIN` it is marked as a sample.
 - **Wallet** (`/app/wallet`): the balance and the full ledger, each entry with its reason and a link to its order.
 
+## Subscriptions
+
+- **Weekly groceries:** a Society Manager can make a grocery round repeat every week ("Repeat every week" in the wizard), for milk, eggs, bread and other regulars. Like weekly Service Days, they're listed under **Subscriptions**. At each cutoff, next week's round opens once, with the same products, limits and times a week later (products the vendor stopped offering drop out).
+- **Keep my order every week:** on a weekly round's order page, a resident turns their order into a standing order, with "pay from my wallet automatically" if they like. At cutoff it moves to next week's round, taking that week's order if they changed it. With auto-pay on and enough in the wallet, next week is ordered and paid there and then (the same checkout path as any wallet payment, under the round and wallet locks); otherwise they're asked to confirm. Someone who has moved out of the flat has theirs ended.
+- **Manage subscriptions** (`/app/subscriptions`, linked from Orders): what's in each, this week's status, auto-pay on or off, **Order this week** (wallet first, then UPI), **Pause** (it moves on each week but orders nothing) and **Resume**, and **Cancel** (it stops for good).
+
 ## Repair Days and technicians
 
 - **Repair Days** are Service Days for plumbers, electricians, carpenters and painters (listed under **Repairs**). One "Visit & labour" option is priced by flats booked, so the more flats join, the less each visit costs.
@@ -170,7 +176,7 @@ Any 6-digit OTP works in mock mode.
 
 | Role | Phone | Name | Notes |
 |---|---|---|---|
-| Resident | 9000000003 | Rahul Deshmukh | Green Meadows, Flat A-101: orders, an AC booking, a held car-wash slot, a resolved complaint, yesterday's chimney visit to rate or complain about |
+| Resident | 9000000003 | Rahul Deshmukh | Green Meadows, Flat A-101: orders, an AC booking, a held car-wash slot, a resolved complaint, yesterday's chimney visit to rate or complain about, and weekly milk kept every week with auto-pay |
 | Resident | 9000000005 | Kavya Deshpande | Green Meadows, Flat B-402: groceries (Weekend staples to collect today, with her pickup code), a deep clean, yesterday's chimney visit to rate, poll votes; hasn't booked the AC Service Day |
 | Resident | 9000000004 | Arnav Sinha | Sunrise Co-living (PG), Room A-103 |
 | Resident | 9000000008 | Nikhil Bhosale | Asked to join Green Meadows as Flat C-301; waiting for Sunita |
@@ -191,6 +197,8 @@ Any 6-digit OTP works in mock mode.
 The seed (`prisma/seed-scenario.ts`) prices every order through the real engine, on one timeline, so wallets, tier unlocks, refunds and notifications agree. It includes two completed grocery rounds and one open round; a completed deep-cleaning Service Day (ratings, a complaint fixed by a free revisit, a no-access visit with the visit fee kept); a kitchen chimney cleaning day finished yesterday, where Rahul's and Kavya's visits are still waiting for a rating and can still get a complaint; FixRight's Repair Days (an Electrician Day done, with parts approved and paid for one flat and ratings; a Carpenter Day with visits today; a Plumber Day open at 7 flats, where 3 more unlock ₹249); an open AC Service Day at 14 flats (6 more unlock ₹400, some slots full); a weekly car wash with last week's slots held for 24 hours; "Weekend staples", delivered this morning with every bag still to hand out; two open complaints (Fatima Sheikh's electrician visit, and Vikram Joshi disputing a no-access fee); and four interest polls. Vendor orders for rounds finished more than a week ago are marked paid; the Weekend staples orders are still waiting to be acknowledged. GST rates and GSTINs are illustrative samples.
 
 ## Database migrations
+
+`20261107090000_subscriptions` adds standing weekly orders (`StandingOrder`: the resident, their flat, the week it's on, the products and quantities, auto-pay, and active, paused or cancelled) and the SUBSCRIPTION_ORDERED and SUBSCRIPTION_CONFIRM notifications.
 
 `20261105090000_admin_portal` adds the platform settings for the suggested visit fee and the impact estimates, who marked a vendor payout paid, and the PAYOUT_PAID notification.
 

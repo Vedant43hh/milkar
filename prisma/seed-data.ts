@@ -106,6 +106,7 @@ export const PRODUCTS: SeedProduct[] = [
   { key: "toilet", vendor: "annapurna", name: "Toilet Cleaner", category: "HOME_CARE", unit: "LITRE", packSize: 1, mrp: 210, gstPct: 18, minOrderQty: 6, maxPerFlat: 3, tiers: [[1, 184], [12, 173], [30, 165]] },
   { key: "soap", vendor: "annapurna", name: "Bathing Soap, pack of 4", category: "PERSONAL_CARE", unit: "PACKET", packSize: 1, mrp: 180, gstPct: 5, minOrderQty: 8, maxPerFlat: 3, tiers: [[1, 156], [15, 148], [40, 140]] },
   { key: "eggs", vendor: "annapurna", name: "Farm Eggs", category: "EGGS_DAIRY", unit: "DOZEN", packSize: 1, mrp: 96, gstPct: 0, minOrderQty: 10, maxPerFlat: 4, tiers: [[1, 84], [20, 79], [50, 75]] },
+  { key: "milk", vendor: "annapurna", name: "Toned Milk (pouch)", category: "EGGS_DAIRY", unit: "LITRE", packSize: 1, mrp: 56, gstPct: 0, minOrderQty: 10, maxPerFlat: 7, tiers: [[1, 54], [20, 52], [50, 50]] },
 ];
 
 export type SeedServiceOption = {

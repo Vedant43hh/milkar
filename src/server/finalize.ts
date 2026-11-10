@@ -14,6 +14,7 @@ import { autoPayHoldIn } from "./bookings";
 import { notify } from "./notifications";
 import { lockRound } from "./round-lock";
 import { openRoundInTx } from "./rounds";
+import { carrySubscriptions } from "./subscriptions";
 import { releaseSeat, takeSeat } from "./slots";
 
 type Tx = Prisma.TransactionClient;
@@ -182,7 +183,7 @@ export async function finalizeRound(roundId: string, now: Date): Promise<Finaliz
     const confirmedUsers = [...new Set([...confirmedFlats.values()].flatMap((users) => [...users]))];
     await notify(tx, confirmedUsers, { type: "ROUND_FINALIZED", params: { round: round.title }, href: `/round/${roundId}` }, { dedupeKey: notificationKeys.roundFinalized(roundId), now });
 
-    const next = round.kind === "SERVICE" && round.repeatWeekly ? await openNextWeek(tx, round, now) : { nextRoundId: null, held: 0, autoPaid: 0 };
+    const next = !round.repeatWeekly ? { nextRoundId: null, held: 0, autoPaid: 0 } : round.kind === "SERVICE" ? await openNextWeek(tx, round, now) : await openNextGroceryWeek(tx, round, now);
 
     return {
       status: "FINALIZED",
@@ -284,6 +285,44 @@ async function scheduleVisits(tx: Tx, round: FinalizeRound, confirmedFlats: Map<
     }
   }
   return visits;
+}
+
+/**
+ * Weekly groceries: opens next week's round (once) with the same products, limits and times a week
+ * later, and moves standing orders to it (auto-paid ones are ordered from the wallet). `held`
+ * counts the residents asked to confirm.
+ */
+async function openNextGroceryWeek(tx: Tx, round: FinalizeRound, now: Date): Promise<{ nextRoundId: string | null; held: number; autoPaid: number }> {
+  const none = { nextRoundId: null, held: 0, autoPaid: 0 };
+  const existing = await tx.orderRound.findUnique({ where: { repeatOfRoundId: round.id }, select: { id: true } });
+  if (existing) return { ...none, nextRoundId: existing.id };
+  // Products the vendor has stopped offering drop out of next week.
+  const ids = round.offerings.flatMap((o) => (o.productId ? [o.productId] : []));
+  const active = new Set((await tx.product.findMany({ where: { id: { in: ids }, active: true }, select: { id: true } })).map((p) => p.id));
+  const opened = await openRoundInTx(
+    tx,
+    { id: round.createdById, role: "MANAGER", communityId: round.communityId },
+    round.communityId,
+    {
+      kind: "GROCERY",
+      round: {
+        title: round.title,
+        cutoffAt: oneWeekLater(round.cutoffAt),
+        deliveryAt: oneWeekLater(round.deliveryAt),
+        requirePickupCode: round.requirePickupCode,
+        products: round.offerings.filter((o) => o.productId && active.has(o.productId)).map((o) => ({ productId: o.productId!, maxQtyPerFlat: o.maxQtyPerFlat })),
+        repeatWeekly: true,
+        repeatOfRoundId: round.id,
+      },
+    },
+    now,
+  );
+  if (!opened.ok) {
+    console.warn(`[milkar] couldn't open next week's "${round.title}": ${opened.errors.join(", ")}`);
+    return none;
+  }
+  const carried = await carrySubscriptions(tx, round, opened.roundId, now);
+  return { nextRoundId: opened.roundId, held: carried.toConfirm, autoPaid: carried.ordered };
 }
 
 /**

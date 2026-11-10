@@ -1,4 +1,4 @@
-import { ArrowRight, CalendarClock, ReceiptText, ShoppingBasket, Sparkles } from "lucide-react";
+import { ArrowRight, CalendarClock, ReceiptText, ShoppingBasket, Sparkles, Repeat } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -40,7 +40,15 @@ async function Orders() {
 
   return (
     <PullToRefresh>
-      <PageHeader title={t("orders.title")} subtitle={t("orders.intro", { unit: community.unitLabel.toLowerCase() })} />
+      <PageHeader
+        title={t("orders.title")}
+        subtitle={t("orders.intro", { unit: community.unitLabel.toLowerCase() })}
+        action={
+          <ButtonLink href="/app/subscriptions" variant="secondary" size="sm" icon={<Repeat aria-hidden className="size-4" />}>
+            {t("subscriptions.title")}
+          </ButtonLink>
+        }
+      />
       {history.length === 0 ? (
         <EmptyState
           icon={<ReceiptText aria-hidden className="size-6" />}

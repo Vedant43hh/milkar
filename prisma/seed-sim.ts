@@ -163,6 +163,7 @@ function emptyRecords() {
     polls: [] as Prisma.InterestPollCreateManyInput[],
     votes: [] as Prisma.PollVoteCreateManyInput[],
     notifications: [] as Prisma.NotificationCreateManyInput[],
+    standingOrders: [] as Prisma.StandingOrderCreateManyInput[],
   };
 }
 

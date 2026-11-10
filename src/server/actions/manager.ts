@@ -73,6 +73,7 @@ export async function createGroceryRoundAction(_prev: FormState, formData: FormD
       cutoffAt,
       deliveryAt,
       requirePickupCode: formData.get("requirePickupCode") === "on",
+      repeatWeekly: formData.get("repeatWeekly") === "on",
       products: checked.map((productId) => ({ productId, maxQtyPerFlat: Number(formData.get(`cap:${productId}`)) })),
     },
     new Date(),

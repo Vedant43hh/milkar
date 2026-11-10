@@ -1,20 +1,24 @@
-import { Ban, ChevronLeft, Clock, FileText, KeyRound, PackageCheck, Pencil, Truck } from "lucide-react";
+import { Ban, ChevronLeft, Clock, FileText, KeyRound, PackageCheck, Pencil, Repeat, Truck } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { VisitCard } from "@/components/orders/visit-card";
+import { ActionForm, SubmitButton } from "@/components/ui/action-form";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardHeader, PageHeader, SectionTitle } from "@/components/ui/card";
 import { Banner } from "@/components/ui/display";
+import { Switch } from "@/components/ui/form";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { PageSkeleton } from "@/components/ui/skeleton";
 import { t } from "@/i18n";
 import { requirePortal } from "@/lib/auth/current-user";
 import { formatINR } from "@/lib/pricing/money";
 import { formatIST } from "@/lib/time";
+import { keepOrderWeeklyAction } from "@/server/actions/subscriptions";
 import { getRoundHistory, type RoundHistory } from "@/server/history";
+import { standingOrderFor } from "@/server/subscriptions";
 
 export const metadata: Metadata = { title: t("orders.title") };
 
@@ -33,6 +37,9 @@ async function Order({ params }: { params: PageProps<"/app/orders/[roundId]">["p
   const history = await getRoundHistory({ id: user.id, flatId: user.flatId, communityId: community.id }, roundId, new Date());
   if (!history) notFound();
   const { round, items, money, credits, visits, pickup } = history;
+  // A weekly grocery round that's still taking orders: offer to keep this order every week.
+  const weekly = round.kind === "GROCERY" && round.repeatWeekly && round.status === "OPEN" && items.some((i) => i.quantity > 0);
+  const standing = weekly ? await standingOrderFor(user.id, round.id) : null;
   const shopHref = round.kind === "SERVICE" ? `/app/services/${round.id}` : `/app/groceries?round=${round.id}`;
 
   return (
@@ -68,6 +75,27 @@ async function Order({ params }: { params: PageProps<"/app/orders/[roundId]">["p
           </Banner>
         )}
       </div>
+
+      {weekly && (
+        <Card labelledBy="weekly-title" className="mt-4 space-y-3">
+          <CardHeader titleId="weekly-title" title={t("subscriptions.keepTitle")} subtitle={standing && standing.status !== "CANCELLED" ? undefined : t("subscriptions.keepBody")} />
+          {standing && standing.status !== "CANCELLED" ? (
+            <p className="flex flex-wrap items-center gap-2 text-sm text-fg">
+              <Repeat aria-hidden className="size-4 text-brand" />
+              {t("subscriptions.keeping", { status: t(`subscriptions.status.${standing.status}`).toLowerCase() })}
+              <Link href="/app/subscriptions" className="font-semibold text-brand">
+                {t("subscriptions.manage")}
+              </Link>
+            </p>
+          ) : (
+            <ActionForm action={keepOrderWeeklyAction} className="space-y-3">
+              <input type="hidden" name="roundId" value={round.id} />
+              <Switch name="autoPayFromWallet" label={t("subscriptions.autoPay")} />
+              <SubmitButton icon={<Repeat aria-hidden className="size-4" />}>{t("subscriptions.keep")}</SubmitButton>
+            </ActionForm>
+          )}
+        </Card>
+      )}
 
       {visits.length > 0 && (
         <section aria-labelledby="visits">

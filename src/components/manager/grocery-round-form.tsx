@@ -1,6 +1,6 @@
 "use client";
 
-import { Clock, PackageCheck, Truck } from "lucide-react";
+import { Clock, PackageCheck, Repeat, Truck } from "lucide-react";
 import { useActionState, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Switch } from "@/components/ui/form";
@@ -36,10 +36,10 @@ export function GroceryRoundForm({
   const values = state.values;
   const checked = state.checked ? new Set(state.checked) : null;
   const allProducts = groups.reduce((n, g) => n + g.products.length, 0);
-  const [live, setLive] = useState({ cutoffAt: defaults.cutoffAt, deliveryAt: defaults.deliveryAt, products: checked ? checked.size : allProducts });
+  const [live, setLive] = useState({ cutoffAt: defaults.cutoffAt, deliveryAt: defaults.deliveryAt, products: checked ? checked.size : allProducts, weekly: values?.repeatWeekly === "on" });
   const onChange = (e: FormEvent<HTMLFormElement>) => {
     const data = new FormData(e.currentTarget);
-    setLive({ cutoffAt: String(data.get("cutoffAt") ?? ""), deliveryAt: String(data.get("deliveryAt") ?? ""), products: data.getAll("product").length });
+    setLive({ cutoffAt: String(data.get("cutoffAt") ?? ""), deliveryAt: String(data.get("deliveryAt") ?? ""), products: data.getAll("product").length, weekly: data.get("repeatWeekly") === "on" });
   };
   const f = text.form;
 
@@ -57,6 +57,10 @@ export function GroceryRoundForm({
         </Field>
       </div>
       <Switch name="requirePickupCode" label={text.form.pickupCode} defaultChecked={values ? values.requirePickupCode === "on" : true} />
+      <div>
+        <Switch name="repeatWeekly" label={text.form.repeatWeeklyGrocery} defaultChecked={values ? values.repeatWeekly === "on" : false} />
+        <p className="text-sm text-muted">{text.form.repeatWeeklyGroceryHint}</p>
+      </div>
     </>
   );
 
@@ -124,6 +128,12 @@ export function GroceryRoundForm({
           <Truck aria-hidden className="size-4 text-muted" />
           {interpolate(f.checkDelivery, { when: showFieldDate(live.deliveryAt, f.notSet) })}
         </li>
+        {live.weekly && (
+          <li className="flex items-center gap-2">
+            <Repeat aria-hidden className="size-4 text-muted" />
+            {f.checkWeekly}
+          </li>
+        )}
       </ul>
       <p className="text-muted">{f.checkShare}</p>
     </div>

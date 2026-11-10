@@ -1105,6 +1105,18 @@ export function buildWorld(now: Date) {
     world.notify([sunita.userId], { type: "POLL_SUGGESTION", params: { poll: suggestion.title, by: kavita.name }, href: "/manager/polls" }, suggestionAt, notificationKeys.pollSuggestion(suggestion.id as string)),
   );
 
+  // ---------- a weekly subscription (added last, so the data above stays as it was) ----------
+  // Weekly milk & eggs, still taking orders. Rahul keeps his order every week with auto-pay, so
+  // when it closes, next week's round opens with his order placed and paid from his wallet.
+  const dairy = groceryRound({ title: "Weekly milk & eggs", communityId: gm.id, createdById: sunita.userId, cutoffAt: istAt(2, 20), deliveryAt: istAt(3, 7), createdAt: plus(now, -2 * DAY), keys: ["milk", "eggs"] });
+  dairy.record.repeatWeekly = true;
+  announce(dairy, gmUserIds);
+  const dairyPeople = random.shuffle(othersInGm.filter((p) => !reserved.has(p.name) && p.flatId !== rahul.flatId)).slice(0, 8);
+  schedule([
+    ...planGroceryEvents(world, dairy, dairyPeople, { milk: 22, eggs: 9 }, plus(now, -DAY), plus(now, -2 * HOUR)),
+    { round: dairy, userId: rahul.userId, flatId: rahul.flatId, at: plus(now, -5 * HOUR), targets: { [world.offering(dairy, "milk").id]: 1 } },
+  ]);
+
   // ---------- for the Society Manager's day (added last, so the data above stays as it was) ----------
   // Weekend staples: confirmed last night, delivered this morning; every bag still to hand out.
   {
@@ -1181,6 +1193,24 @@ export function buildWorld(now: Date) {
     world.recordItems(round);
     world.recordBookings(round, bookingMeta);
   }
+  // Rahul's standing order: whatever he ordered in the weekly round.
+  {
+    const mine = [...dairy.items.values()].filter((i) => i.userId === rahul.userId && lotsQty(i.lots) > 0);
+    if (mine.length > 0) {
+      rec.standingOrders.push({
+        id: id(),
+        userId: rahul.userId,
+        flatId: rahul.flatId,
+        roundId: dairy.id,
+        items: mine.map((i) => ({ productId: rec.offerings.find((o) => o.id === i.offering.id)!.productId!, quantity: lotsQty(i.lots) })),
+        autoPayFromWallet: true,
+        status: "ACTIVE",
+        createdAt: plus(now, -4 * HOUR),
+      });
+      // A credit from Milkar, so next week's auto-pay has enough in the wallet.
+      rec.walletTxns.push({ id: id(), userId: rahul.userId, amountPaise: 20_000, type: "ADJUSTMENT", idempotencyKey: `SEED:welcome:${rahul.userId}`, createdAt: plus(now, -HOUR) });
+    }
+  }
   for (const p of problemNotes) {
     const booking = rec.bookings.find((b) => b.roundId === p.roundId && b.flatId === p.flatId);
     if (booking) booking.problemNote = p.note;
@@ -1247,4 +1277,5 @@ export async function writeWorld(prisma: PrismaClient, world: SeedWorld): Promis
   await prisma.interestPoll.createMany({ data: rec.polls });
   await prisma.pollVote.createMany({ data: rec.votes });
   await prisma.notification.createMany({ data: rec.notifications });
+  await prisma.standingOrder.createMany({ data: rec.standingOrders });
 }

@@ -268,6 +268,8 @@ enum NotificationType {
   PARTS_APPROVAL // to a flat: the technician needs parts, approve and pay or decline
   MEMBER_REMOVED // to a resident: their Society Manager removed them from the community
   PAYOUT_PAID // to a vendor: Milkar paid what an order came to
+  SUBSCRIPTION_ORDERED // to a resident: this week's order placed and paid from the wallet
+  SUBSCRIPTION_CONFIRM // to a resident: this week's order is ready to confirm and pay
   VENDOR_ORDER
   JOIN_REQUEST
   JOIN_DECIDED
@@ -361,6 +363,7 @@ model Flat {
   pollVotes           PollVote[]
   joinRequests        JoinRequest[]
   partsRequests       PartsRequest[]
+  standingOrders      StandingOrder[]
 
   @@unique([communityId, tower, number])
 }
@@ -402,6 +405,7 @@ model User {
   bookingPhotos          BookingPhoto[]       @relation("BookingPhotoUploader")
   partsRequested         PartsRequest[]       @relation("PartsRequester")
   partsDecided           PartsRequest[]       @relation("PartsDecider")
+  standingOrders         StandingOrder[]
 
   @@index([flatId])
   @@index([vendorId])
@@ -604,6 +608,7 @@ model OrderRound {
   createdAt              DateTime    @default(now()) @db.Timestamptz(3)
 
   community           Community            @relation(fields: [communityId], references: [id])
+  standingOrders      StandingOrder[]
   createdBy           User                 @relation(fields: [createdById], references: [id])
   service             Service?             @relation(fields: [serviceId], references: [id], onDelete: Restrict)
   vendor              Vendor?              @relation(fields: [vendorId], references: [id], onDelete: Restrict)
@@ -1095,4 +1100,31 @@ model Notification {
   @@unique([userId, dedupeKey])
   @@index([userId, readAt])
   @@index([userId, createdAt])
+}
+
+enum StandingOrderStatus {
+  ACTIVE
+  PAUSED // kept, but nothing is ordered until it's resumed
+  CANCELLED
+}
+
+// "Keep my order every week" on a weekly grocery round. It sits on the week it's for and moves to
+// next week's round when this one closes; with auto-pay on, that week is paid from the wallet.
+model StandingOrder {
+  id                String              @id @default(cuid())
+  userId            String
+  flatId            String
+  roundId           String // the week it's on now
+  items             Json // [{ productId, quantity }]: what to order each week
+  autoPayFromWallet Boolean             @default(false)
+  status            StandingOrderStatus @default(ACTIVE)
+  createdAt         DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime            @updatedAt @db.Timestamptz(3)
+
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  flat  Flat       @relation(fields: [flatId], references: [id], onDelete: Cascade)
+  round OrderRound @relation(fields: [roundId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roundId])
+  @@index([roundId, status])
 }

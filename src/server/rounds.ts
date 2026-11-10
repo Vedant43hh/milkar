@@ -100,6 +100,9 @@ export type GroceryRoundInput = {
   deliveryAt: Date;
   requirePickupCode: boolean;
   products: { productId: string; maxQtyPerFlat: number }[];
+  /** Weekly groceries (milk, bread): next week's round opens at each cutoff. */
+  repeatWeekly?: boolean;
+  repeatOfRoundId?: string;
 };
 
 type GroceryPlan = {
@@ -132,6 +135,8 @@ async function insertGroceryRound(tx: Tx, actor: Actor, communityId: string, pla
       cutoffAt: input.cutoffAt,
       deliveryAt: input.deliveryAt,
       requirePickupCode: input.requirePickupCode,
+      repeatWeekly: input.repeatWeekly ?? false,
+      repeatOfRoundId: input.repeatOfRoundId ?? null,
       ...settings,
       createdAt: now,
     },
