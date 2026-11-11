@@ -790,6 +790,7 @@ export const en = {
       CANNOT_DECREASE: "Counts can only go up; refunds already given stay.",
       TOO_MANY: "That's more than they ordered.",
       INVALID_QUANTITY: "Enter whole numbers.",
+      VENDOR_PAID: "The vendor has already been paid for this round, so it can't be refunded here. Ask the platform admin.",
     },
   },
   visitBoard: {

@@ -111,6 +111,16 @@ describe("distribution day", () => {
     expect(adjustments.every((a) => a.amountPaise < 0)).toBe(true);
   });
 
+  it("refunds nothing once the vendor has been paid for the round", async () => {
+    const s = await deliveredRound();
+    const item = s.items[0];
+    await prisma.vendorOrder.updateMany({ where: { roundId: s.roundId }, data: { status: "PAID", paidAt: at(80) } });
+    const before = await walletBalance(prisma, item.userId);
+    expect(await reportDeliveryIssue(s.primary, item.id, { short: 0, damaged: 2 }, at(81))).toEqual({ ok: false, error: "VENDOR_PAID" });
+    expect(await walletBalance(prisma, item.userId)).toBe(before);
+    expect(await prisma.vendorAdjustment.count({ where: { type: "ISSUE_REFUND" } })).toBe(0);
+  });
+
   it("isn't open to another community's managers", async () => {
     const s = await deliveredRound();
     const other = await makeNeighbourhood(`OTH${++seq}`, 1);

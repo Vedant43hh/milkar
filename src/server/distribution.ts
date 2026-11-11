@@ -108,7 +108,7 @@ export async function collectPickup(actor: Actor, roundId: string, flatId: strin
   });
 }
 
-export type DeliveryReportError = DeliveryIssueError | "NOT_FOUND";
+export type DeliveryReportError = DeliveryIssueError | "NOT_FOUND" | "VENDOR_PAID";
 
 /**
  * Records short and damaged units for one resident's item (cumulative counts that can only grow)
@@ -146,6 +146,9 @@ export async function reportDeliveryIssue(
     }
     const problem = checkDeliveryIssue({ quantity: item.quantity, prevShort: item.shortQty, prevDamaged: item.damagedQty, short: input.short, damaged: input.damaged });
     if (problem) return { ok: false, error: problem } as const;
+    // Once Milkar has paid the vendor, a refund here could no longer come off their payout.
+    const order = await tx.vendorOrder.findUnique({ where: { roundId_vendorId: { roundId: round.id, vendorId: item.offering.vendorId } }, select: { status: true } });
+    if (order?.status === "PAID") return { ok: false, error: "VENDOR_PAID" } as const;
 
     const lots = item.lots.map((l, i) => ({ quantity: l.quantity, unitPricePaise: l.unitPricePaise, seq: i + 1 }));
     const finalUnit = item.offering.finalUnitPricePaise ?? 0;
