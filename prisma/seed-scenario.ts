@@ -1106,9 +1106,10 @@ export function buildWorld(now: Date) {
   );
 
   // ---------- a weekly subscription (added last, so the data above stays as it was) ----------
-  // Weekly milk & eggs, still taking orders. Rahul keeps his order every week with auto-pay, so
-  // when it closes, next week's round opens with his order placed and paid from his wallet.
-  const dairy = groceryRound({ title: "Weekly milk & eggs", communityId: gm.id, createdById: sunita.userId, cutoffAt: istAt(2, 20), deliveryAt: istAt(3, 7), createdAt: plus(now, -2 * DAY), keys: ["milk", "eggs"] });
+  // Weekly milk & eggs, still taking orders; it closes after the main round, which the groceries
+  // page opens on. Rahul keeps his order every week with auto-pay, so when it closes, next week's
+  // round opens with his order placed and paid from his wallet.
+  const dairy = groceryRound({ title: "Weekly milk & eggs", communityId: gm.id, createdById: sunita.userId, cutoffAt: istAt(6, 20), deliveryAt: istAt(7, 7), createdAt: plus(now, -2 * DAY), keys: ["milk", "eggs"] });
   dairy.record.repeatWeekly = true;
   announce(dairy, gmUserIds);
   const dairyPeople = random.shuffle(othersInGm.filter((p) => !reserved.has(p.name) && p.flatId !== rahul.flatId)).slice(0, 8);
@@ -1208,7 +1209,7 @@ export function buildWorld(now: Date) {
         createdAt: plus(now, -4 * HOUR),
       });
       // A credit from Milkar, so next week's auto-pay has enough in the wallet.
-      rec.walletTxns.push({ id: id(), userId: rahul.userId, amountPaise: 20_000, type: "ADJUSTMENT", idempotencyKey: `SEED:welcome:${rahul.userId}`, createdAt: plus(now, -HOUR) });
+      rec.walletTxns.push({ id: id(), userId: rahul.userId, amountPaise: 100_000, type: "ADJUSTMENT", idempotencyKey: `SEED:welcome:${rahul.userId}`, createdAt: plus(now, -HOUR) });
     }
   }
   for (const p of problemNotes) {
