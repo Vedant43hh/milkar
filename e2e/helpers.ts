@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page } from "@playwright/test";
 
 let phoneCounter = 0;
@@ -39,4 +40,12 @@ export async function verifyPhoneAndSubmit(page: Page, phone: string, submit: st
 /** "Next" in a step-by-step form. */
 export async function nextStep(page: Page) {
   await page.getByRole("button", { name: "Next", exact: true }).click();
+}
+
+/** Fails on any serious or critical WCAG 2.1 A/AA problem axe finds on the page (reduced motion on). */
+export async function expectNoSeriousA11yIssues(page: Page) {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).exclude("nextjs-portal").analyze();
+  const serious = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical").map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).slice(0, 3).join(", ")}`);
+  expect(serious).toEqual([]);
 }

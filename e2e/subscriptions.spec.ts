@@ -1,16 +1,8 @@
-import AxeBuilder from "@axe-core/playwright";
-import { expect, test, type Page } from "@playwright/test";
-import { demoLogin, logout } from "./helpers";
+import { expect, test } from "@playwright/test";
+import { demoLogin, expectNoSeriousA11yIssues, logout } from "./helpers";
 
 // Weekly groceries: Rahul keeps his "Weekly milk & eggs" order every week with auto-pay. Uses the
 // seeded demo data (npm run db:seed) and changes it: reseed before running again.
-
-async function expectNoSeriousA11yIssues(page: Page) {
-  await page.emulateMedia({ reducedMotion: "reduce" });
-  const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).exclude("nextjs-portal").analyze();
-  const serious = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical").map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).slice(0, 3).join(", ")}`);
-  expect(serious).toEqual([]);
-}
 
 test("a resident sees their weekly order, pauses and resumes it", async ({ page }) => {
   await demoLogin(page, "Rahul Deshmukh");

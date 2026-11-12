@@ -1,16 +1,8 @@
-import AxeBuilder from "@axe-core/playwright";
-import { expect, test, type Page } from "@playwright/test";
-import { demoLogin, uniquePhone } from "./helpers";
+import { expect, test } from "@playwright/test";
+import { demoLogin, expectNoSeriousA11yIssues, uniquePhone } from "./helpers";
 
 // The Platform Admin portal: queues, disputes, payouts, stats, settings and admins.
 // Uses the seeded demo data (npm run db:seed) and changes it: reseed before running again.
-
-async function expectNoSeriousA11yIssues(page: Page) {
-  await page.emulateMedia({ reducedMotion: "reduce" });
-  const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).exclude("nextjs-portal").analyze();
-  const serious = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical").map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).slice(0, 3).join(", ")}`);
-  expect(serious).toEqual([]);
-}
 
 test.beforeEach(async ({ page }) => {
   await demoLogin(page, "Priya Nair");

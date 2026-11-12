@@ -1,16 +1,8 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
-import { demoLogin, logout } from "./helpers";
+import { demoLogin, expectNoSeriousA11yIssues, logout } from "./helpers";
 
 // Uses the seeded demo data (npm run db:seed): the chimney visits from yesterday are rated and
 // complained about here, so reseed before running the suite again.
-
-async function expectNoSeriousA11yIssues(page: Page) {
-  await page.emulateMedia({ reducedMotion: "reduce" });
-  const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).exclude("nextjs-portal").analyze();
-  const serious = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical").map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).slice(0, 3).join(", ")}`);
-  expect(serious).toEqual([]);
-}
 
 /** Opens a round from the orders list by its title. */
 async function openOrder(page: Page, title: string) {
