@@ -2,6 +2,7 @@
 // paid once, and only when the round can't change any more; disputes reach the admin; stats add up.
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { prisma } from "@/lib/db";
+import { countTrips } from "@/lib/impact";
 import { adminStats, createAdmin, listDisputes, listPayouts, loadPlatformSettings, markPayoutPaid, savePlatformSettings } from "@/server/admin";
 import { startCheckout } from "@/server/checkout";
 import { collectPickup } from "@/server/distribution";
@@ -158,5 +159,15 @@ describe("stats", () => {
     expect(stats.total.refundsPaise).toBe(refunds.reduce((sum, r) => sum + r.amountPaise, 0));
     expect(groceries.marginPaise).toBeGreaterThan(0);
     expect(groceries.rounds).toBe(1);
+  });
+
+  it("counts vendor trips in the database the same way countTrips does", async () => {
+    const s = await groceryRound();
+    const pickups = await prisma.distributionRecord.findMany({ where: { roundId: s.roundId } });
+    for (const p of pickups) await collectPickup({ ...s.actor, staffKind: "PRIMARY" }, s.roundId, p.flatId, p.pickupCode, at(73));
+    const items = await prisma.orderItem.findMany({ where: { roundId: s.roundId, status: "CONFIRMED", quantity: { gt: 0 } }, select: { roundId: true, flatId: true, offering: { select: { vendorId: true } } } });
+    const expected = countTrips(items.map((i) => ({ roundId: i.roundId, flatId: i.flatId, vendorId: i.offering.vendorId })), []);
+    expect(expected).toEqual({ separate: 4, together: 1, avoided: 3 });
+    expect((await adminStats()).impact.trips).toEqual(expected);
   });
 });

@@ -50,14 +50,16 @@ describe("platformStats", () => {
         { vertical: "GROCERIES", type: "ORDER_DEBIT", amountPaise: -105_000 },
       ],
       visits: [
-        { vertical: "REPAIRS", status: "COMPLETED" },
-        { vertical: "REPAIRS", status: "NO_ACCESS" },
+        { vertical: "REPAIRS", status: "COMPLETED", count: 1 },
+        { vertical: "REPAIRS", status: "NO_ACCESS", count: 1 },
       ],
-      ratings: [
-        { vertical: "REPAIRS", stars: 5 },
-        { vertical: "REPAIRS", stars: 4 },
+      ratings: [{ vertical: "REPAIRS", count: 2, starsSum: 9 }],
+      polls: [
+        { status: "CONVERTED", count: 1 },
+        { status: "OPEN", count: 1 },
+        { status: "CLOSED", count: 1 },
+        { status: "SUGGESTED", count: 1 },
       ],
-      polls: [{ status: "CONVERTED" }, { status: "OPEN" }, { status: "CLOSED" }, { status: "SUGGESTED" }],
     },
     ["GROCERIES", "HOME_SERVICES", "REPAIRS", "SUBSCRIPTIONS"],
   );

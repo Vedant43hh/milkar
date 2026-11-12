@@ -1,13 +1,12 @@
 import "server-only";
 import { BUY_CATEGORIES, buyCategoryOf } from "@/lib/categories";
 import { prisma } from "@/lib/db";
-import { communityImpact, countTrips } from "@/lib/impact";
+import { communityImpact, type Trips } from "@/lib/impact";
 import { notificationKeys } from "@/lib/notifications";
 import { payoutBlocker, type NotReady } from "@/lib/admin/payouts";
 import { checkSettings, impactAssumptionsOf, type PlatformSettings, type SettingsProblem } from "@/lib/admin/settings";
 import { platformStats } from "@/lib/admin/stats";
 import { ISSUE_WINDOW_MS } from "@/lib/services/issues";
-import { utcToIstDate } from "@/lib/time";
 import { vendorPayout } from "@/lib/vendor/payout";
 import { isUniqueViolation } from "./db-errors";
 import { listIssues } from "./issues";
@@ -135,47 +134,68 @@ export async function markPayoutPaid(actor: Actor, orderId: string, now: Date): 
 // ---------- numbers ----------
 
 /** Every vertical's money, refunds, visits, ratings and polls, plus the platform's impact estimate. */
+/**
+ * Every vertical's money, refunds, visits, ratings and polls, plus the platform's impact estimate.
+ * The database adds things up (per offering, refund kind, visit status), so this stays quick as
+ * orders pile up: only the rounds and their offerings are read row by row.
+ */
 export async function adminStats() {
-  const [rounds, items, refunds, visits, ratings, polls, settings] = await Promise.all([
-    prisma.orderRound.findMany({ where: { status: { not: "CANCELLED" } }, select: { id: true, kind: true, repeatWeekly: true, status: true, service: { select: { category: true } } } }),
-    prisma.orderItem.findMany({
-      where: { status: "CONFIRMED", quantity: { gt: 0 } },
-      select: { roundId: true, flatId: true, quantity: true, finalPaise: true, absorbedPaise: true, offering: { select: { mrpPaise: true, gstBps: true, finalVendorPricePaise: true, vendorId: true } } },
-    }),
-    prisma.walletTransaction.findMany({ where: { amountPaise: { gt: 0 } }, select: { type: true, amountPaise: true, roundId: true } }),
-    prisma.serviceVisit.findMany({ select: { roundId: true, status: true, startsAt: true } }),
-    prisma.visitRating.findMany({ select: { rating: true, visit: { select: { roundId: true } } } }),
-    prisma.interestPoll.findMany({ select: { status: true } }),
+  const [rounds, items, refunds, visits, ratings, polls, trips, settings] = await Promise.all([
+    prisma.orderRound.findMany({ where: { status: { not: "CANCELLED" } }, select: { id: true, kind: true, repeatWeekly: true, service: { select: { category: true } } } }),
+    prisma.orderItem.groupBy({ by: ["offeringId"], where: { status: "CONFIRMED", quantity: { gt: 0 } }, _sum: { quantity: true, finalPaise: true, absorbedPaise: true } }),
+    prisma.walletTransaction.groupBy({ by: ["roundId", "type"], where: { amountPaise: { gt: 0 } }, _sum: { amountPaise: true } }),
+    prisma.serviceVisit.groupBy({ by: ["roundId", "status"], _count: { _all: true } }),
+    prisma.$queryRaw<{ roundId: string; count: number; starsSum: number }[]>`
+      SELECT v."roundId", count(*)::int AS count, sum(r.rating)::int AS "starsSum"
+      FROM "VisitRating" r JOIN "ServiceVisit" v ON v.id = r."visitId" GROUP BY v."roundId"`,
+    prisma.interestPoll.groupBy({ by: ["status"], _count: { _all: true } }),
+    tripCounts(),
     loadPlatformSettings(),
   ]);
   const vertical = new Map(rounds.map((r) => [r.id, buyCategoryOf({ kind: r.kind, repeatWeekly: r.repeatWeekly, serviceCategory: r.service?.category })]));
-  const status = new Map(rounds.map((r) => [r.id, r]));
-  const known = items.filter((i) => vertical.has(i.roundId));
+  const offerings = await prisma.roundOffering.findMany({
+    where: { id: { in: items.map((i) => i.offeringId) } },
+    select: { id: true, roundId: true, mrpPaise: true, gstBps: true, finalVendorPricePaise: true },
+  });
+  const offeringById = new Map(offerings.map((o) => [o.id, o]));
   const stats = platformStats(
     {
       rounds: rounds.map((r) => ({ vertical: vertical.get(r.id)! })),
-      items: known.map((i) => ({
-        vertical: vertical.get(i.roundId)!,
-        quantity: i.quantity,
-        finalPaise: i.finalPaise ?? 0,
-        mrpPaise: i.offering.mrpPaise,
-        gstBps: i.offering.gstBps,
-        vendorUnitPaise: i.offering.finalVendorPricePaise ?? 0,
-        absorbedPaise: i.absorbedPaise ?? 0,
-      })),
-      refunds: refunds.map((r) => ({ vertical: (r.roundId && vertical.get(r.roundId)) || null, type: r.type, amountPaise: r.amountPaise })),
-      visits: visits.filter((v) => vertical.has(v.roundId)).map((v) => ({ vertical: vertical.get(v.roundId)!, status: v.status })),
-      ratings: ratings.filter((r) => vertical.has(r.visit.roundId)).map((r) => ({ vertical: vertical.get(r.visit.roundId)!, stars: r.rating })),
-      polls,
+      items: items.flatMap((i) => {
+        const o = offeringById.get(i.offeringId);
+        const v = o && vertical.get(o.roundId);
+        if (!o || !v) return [];
+        return [{ vertical: v, quantity: i._sum.quantity ?? 0, finalPaise: i._sum.finalPaise ?? 0, mrpPaise: o.mrpPaise, gstBps: o.gstBps, vendorUnitPaise: o.finalVendorPricePaise ?? 0, absorbedPaise: i._sum.absorbedPaise ?? 0 }];
+      }),
+      refunds: refunds.map((r) => ({ vertical: (r.roundId && vertical.get(r.roundId)) || null, type: r.type, amountPaise: r._sum.amountPaise ?? 0 })),
+      visits: visits.flatMap((v) => (vertical.has(v.roundId) ? [{ vertical: vertical.get(v.roundId)!, status: v.status, count: v._count._all }] : [])),
+      ratings: ratings.flatMap((r) => (vertical.has(r.roundId) ? [{ vertical: vertical.get(r.roundId)!, count: r.count, starsSum: r.starsSum }] : [])),
+      polls: polls.map((p) => ({ status: p.status, count: p._count._all })),
     },
     BUY_CATEGORIES,
   );
-  const deliveries = known.filter((i) => status.get(i.roundId)?.kind === "GROCERY" && status.get(i.roundId)?.status === "COMPLETED").map((i) => ({ roundId: i.roundId, flatId: i.flatId, vendorId: i.offering.vendorId }));
-  const trips = countTrips(
-    deliveries,
-    visits.filter((v) => v.status === "COMPLETED").map((v) => ({ roundId: v.roundId, day: utcToIstDate(v.startsAt) })),
-  );
   return { stats, impact: communityImpact({ savedPaise: stats.total.savedPaise, trips }, impactAssumptionsOf(settings)) };
+}
+
+/**
+ * Vendor trips, counted by the database the way countTrips counts them: without Milkar, one
+ * delivery per flat per vendor in each delivered grocery round and one trip per finished visit;
+ * together, one run per vendor per round and one trip per Service Day.
+ */
+async function tripCounts(): Promise<Trips> {
+  const [row] = await prisma.$queryRaw<{ deliveries: number; runs: number; visits: number; visitDays: number }[]>`
+    SELECT
+      (SELECT count(DISTINCT (i."roundId", i."flatId", o."vendorId")) FROM "OrderItem" i
+         JOIN "RoundOffering" o ON o.id = i."offeringId" JOIN "OrderRound" r ON r.id = i."roundId"
+        WHERE i.status = 'CONFIRMED' AND i.quantity > 0 AND r.kind = 'GROCERY' AND r.status = 'COMPLETED')::int AS deliveries,
+      (SELECT count(DISTINCT (i."roundId", o."vendorId")) FROM "OrderItem" i
+         JOIN "RoundOffering" o ON o.id = i."offeringId" JOIN "OrderRound" r ON r.id = i."roundId"
+        WHERE i.status = 'CONFIRMED' AND i.quantity > 0 AND r.kind = 'GROCERY' AND r.status = 'COMPLETED')::int AS runs,
+      (SELECT count(*) FROM "ServiceVisit" WHERE status = 'COMPLETED')::int AS visits,
+      (SELECT count(DISTINCT ("roundId", ("startsAt" AT TIME ZONE 'Asia/Kolkata')::date)) FROM "ServiceVisit" WHERE status = 'COMPLETED')::int AS "visitDays"`;
+  const separate = row.deliveries + row.visits;
+  const together = row.runs + row.visitDays;
+  return { separate, together, avoided: Math.max(0, separate - together) };
 }
 
 /** Counts for the overview. */

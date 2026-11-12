@@ -45,13 +45,14 @@ export const REFUND_TYPES = [
 ] as const;
 export type RefundType = (typeof REFUND_TYPES)[number];
 
+/** Already added up by the database: one row per offering, refund kind, visit status or poll status. */
 export type StatsInput = {
   rounds: readonly { vertical: BuyCategory }[];
   items: readonly StatItem[];
   refunds: readonly { vertical: BuyCategory | null; type: string; amountPaise: number }[];
-  visits: readonly { vertical: BuyCategory; status: string }[];
-  ratings: readonly { vertical: BuyCategory; stars: number }[];
-  polls: readonly { status: string }[];
+  visits: readonly { vertical: BuyCategory; status: string; count: number }[];
+  ratings: readonly { vertical: BuyCategory; count: number; starsSum: number }[];
+  polls: readonly { status: string; count: number }[];
 };
 
 export function platformStats(input: StatsInput, verticals: readonly BuyCategory[]) {
@@ -77,20 +78,20 @@ export function platformStats(input: StatsInput, verticals: readonly BuyCategory
     refundsByType[r.type as RefundType] += r.amountPaise;
     both(r.vertical, (s) => (s.refundsPaise += r.amountPaise));
   }
-  for (const v of input.visits) if (v.status === "COMPLETED") both(v.vertical, (s) => s.visitsCompleted++);
+  for (const v of input.visits) if (v.status === "COMPLETED") both(v.vertical, (s) => (s.visitsCompleted += v.count));
   for (const r of input.ratings)
     both(r.vertical, (s) => {
-      s.ratingCount++;
-      s.ratingSum += r.stars;
+      s.ratingCount += r.count;
+      s.ratingSum += r.starsSum;
     });
   // Of the polls residents could vote in, how many turned into a round.
-  const decided = input.polls.filter((p) => p.status !== "SUGGESTED");
-  const converted = decided.filter((p) => p.status === "CONVERTED").length;
+  const decided = input.polls.filter((p) => p.status !== "SUGGESTED").reduce((n, p) => n + p.count, 0);
+  const converted = input.polls.filter((p) => p.status === "CONVERTED").reduce((n, p) => n + p.count, 0);
   return {
     verticals: verticals.map((v) => ({ vertical: v, ...by.get(v)! })),
     total,
     refundsByType,
-    polls: { total: decided.length, converted, rate: decided.length ? converted / decided.length : 0 },
+    polls: { total: decided, converted, rate: decided ? converted / decided : 0 },
   };
 }
 
