@@ -119,3 +119,16 @@ export async function makeCatalogue() {
   });
   return { goods, rice, services, ac };
 }
+
+/** The moment most integration tests run at: Tue 20 Oct 2026, 11:30 am IST. */
+export const now = new Date("2026-10-20T06:00:00Z");
+export const HOUR = 3_600_000;
+/** `hours` after now. */
+export const at = (hours: number) => new Date(now.getTime() + hours * HOUR);
+/** IST midnight, `offset` days after now's date. */
+export const istDay = (offset: number) => new Date(Date.UTC(2026, 9, 20 + offset) - 330 * 60_000);
+
+let topUps = 0;
+/** Puts money in a resident's wallet, as an adjustment. */
+export const topUp = (userId: string, amountPaise: number) =>
+  prisma.walletTransaction.create({ data: { userId, amountPaise, type: "ADJUSTMENT", idempotencyKey: `TEST:${userId}:${++topUps}` } });

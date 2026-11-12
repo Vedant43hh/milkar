@@ -7,7 +7,7 @@ import { createServiceRound } from "@/server/rounds";
 import { takeSeat } from "@/server/slots";
 import { walletBalance } from "@/server/wallet";
 import { truncateAll } from "../../prisma/truncate";
-import { makeCatalogue, makeNeighbourhood, nextPhone } from "./helpers";
+import { istDay, makeCatalogue, makeNeighbourhood, nextPhone, now, topUp } from "./helpers";
 
 beforeAll(() => {
   vi.spyOn(console, "info").mockImplementation(() => {});
@@ -21,14 +21,10 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
-const now = new Date("2026-10-20T06:00:00Z");
 const minutes = (m: number) => new Date(now.getTime() + m * 60_000);
-const istDay = (offset: number) => new Date(Date.UTC(2026, 9, 20 + offset) - 330 * 60_000);
 const P699 = 69900;
 
 let seq = 0;
-const topUp = (userId: string, amountPaise: number) =>
-  prisma.walletTransaction.create({ data: { userId, amountPaise, type: "ADJUSTMENT", idempotencyKey: `TEST:${userId}:${++seq}` } });
 
 async function setup(flats = 6) {
   const hood = await makeNeighbourhood(`BOOK${++seq}`, flats);

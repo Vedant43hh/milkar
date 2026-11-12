@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { castVote, convertPollToRound, createPoll, publishSuggestion, suggestPoll, MAX_OPEN_SUGGESTIONS } from "@/server/polls";
 import { cancelRound, closeRoundNow, createGroceryRound, createServiceRound, extendCutoff } from "@/server/rounds";
 import { truncateAll } from "../../prisma/truncate";
-import { makeCatalogue, makeNeighbourhood } from "./helpers";
+import { istDay, makeCatalogue, makeNeighbourhood, now } from "./helpers";
 
 beforeAll(() => {
   vi.spyOn(console, "info").mockImplementation(() => {});
@@ -18,9 +18,7 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
-const now = new Date("2026-10-20T06:00:00Z"); // Tue 11:30 AM IST
 const hours = (h: number) => new Date(now.getTime() + h * 3_600_000);
-const istDay = (offset: number) => new Date(Date.UTC(2026, 9, 20 + offset) - 330 * 60_000);
 
 async function groceryRound(actor: Awaited<ReturnType<typeof makeNeighbourhood>>["actor"], productId: string, cap = 4) {
   const result = await createGroceryRound(actor, { title: "Weekly staples", cutoffAt: hours(48), deliveryAt: hours(72), requirePickupCode: true, products: [{ productId, maxQtyPerFlat: cap }] }, now);

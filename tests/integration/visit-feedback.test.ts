@@ -4,9 +4,8 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { prisma } from "@/lib/db";
 import { rateVisit, reportVisitIssue } from "@/server/visit-feedback";
 import { truncateAll } from "../../prisma/truncate";
-import { makeServiceDay, nextPhone } from "./helpers";
+import { HOUR, makeServiceDay, nextPhone } from "./helpers";
 
-const HOUR = 3_600_000;
 const doneAt = new Date("2026-10-25T05:00:00Z");
 const after = (hours: number) => new Date(doneAt.getTime() + hours * HOUR);
 

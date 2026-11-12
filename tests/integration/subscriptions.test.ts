@@ -8,7 +8,7 @@ import { finalizeRound } from "@/server/finalize";
 import { createGroceryRound, createServiceRound } from "@/server/rounds";
 import { changeSubscription, keepOrderWeekly, listSubscriptions, orderThisWeek } from "@/server/subscriptions";
 import { truncateAll } from "../../prisma/truncate";
-import { makeCatalogue, makeNeighbourhood } from "./helpers";
+import { at, HOUR, makeCatalogue, makeNeighbourhood, now, topUp } from "./helpers";
 
 beforeAll(() => {
   vi.spyOn(console, "info").mockImplementation(() => {});
@@ -20,14 +20,9 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
-const now = new Date("2026-10-20T06:00:00Z");
-const HOUR = 3_600_000;
 const WEEK = 7 * 24 * HOUR;
-const at = (hours: number) => new Date(now.getTime() + hours * HOUR);
 const BAG = 50000; // rice at the first tier
 let seq = 0;
-const topUp = (userId: string, amountPaise: number) =>
-  prisma.walletTransaction.create({ data: { userId, amountPaise, type: "ADJUSTMENT", idempotencyKey: `TEST:${userId}:${++seq}` } });
 
 /** A weekly rice round where the first `buyers` residents each ordered one bag (wallet topped up by `extra` bags). */
 async function weeklyRound(extra: number[]) {

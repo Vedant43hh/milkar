@@ -12,7 +12,7 @@ import { createServiceRound } from "@/server/rounds";
 import { moveVisit, type VisitUser } from "@/server/visits";
 import { walletBalance } from "@/server/wallet";
 import { truncateAll } from "../../prisma/truncate";
-import { makeCatalogue, makeNeighbourhood, nextPhone } from "./helpers";
+import { at, istDay, makeCatalogue, makeNeighbourhood, nextPhone, now, topUp } from "./helpers";
 
 beforeAll(() => {
   vi.spyOn(console, "info").mockImplementation(() => {});
@@ -26,17 +26,11 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
-const now = new Date("2026-10-20T06:00:00Z");
-const HOUR = 3_600_000;
-const at = (hours: number) => new Date(now.getTime() + hours * HOUR);
-const istDay = (offset: number) => new Date(Date.UTC(2026, 9, 20 + offset) - 330 * 60_000);
 const P549 = 54900; // split AC, 5+ flats
 const P699 = 69900; // split AC, 1+ flats
 const HINGE = { name: "Hinge", qty: 2, unitPaise: 18000 };
 
 let seq = 0;
-const topUp = (userId: string, amountPaise: number) =>
-  prisma.walletTransaction.create({ data: { userId, amountPaise, type: "ADJUSTMENT", idempotencyKey: `TEST:${userId}:${++seq}` } });
 
 /** A confirmed repair day: five flats booked (one each), two technicians, visits scheduled. */
 async function repairDay() {

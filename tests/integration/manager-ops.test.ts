@@ -13,7 +13,7 @@ import { reportVisitIssue } from "@/server/visit-feedback";
 import { moveVisit, type VisitUser } from "@/server/visits";
 import { walletBalance } from "@/server/wallet";
 import { truncateAll } from "../../prisma/truncate";
-import { makeCatalogue, makeNeighbourhood, nextPhone } from "./helpers";
+import { at, istDay, makeCatalogue, makeNeighbourhood, nextPhone, now, topUp } from "./helpers";
 
 beforeAll(() => {
   vi.spyOn(console, "info").mockImplementation(() => {});
@@ -27,15 +27,9 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
-const now = new Date("2026-10-20T06:00:00Z");
-const HOUR = 3_600_000;
-const at = (hours: number) => new Date(now.getTime() + hours * HOUR);
-const istDay = (offset: number) => new Date(Date.UTC(2026, 9, 20 + offset) - 330 * 60_000);
 const P500 = 50000; // rice, 1+ bags (until 20)
 
 let seq = 0;
-const topUp = (userId: string, amountPaise: number) =>
-  prisma.walletTransaction.create({ data: { userId, amountPaise, type: "ADJUSTMENT", idempotencyKey: `TEST:${userId}:${++seq}` } });
 
 async function assistantOf(communityId: string): Promise<Actor> {
   const user = await prisma.user.create({ data: { phone: nextPhone(), name: "Deepak", role: "MANAGER", staffRole: { create: { communityId, kind: "ASSISTANT" } } } });

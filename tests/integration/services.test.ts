@@ -4,7 +4,7 @@ import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { prisma } from "@/lib/db";
 import { expireHolds, moveSeat, takeSeat } from "@/server/slots";
 import { truncateAll } from "../../prisma/truncate";
-import { makeServiceDay, nextPhone } from "./helpers";
+import { makeServiceDay, nextPhone, now } from "./helpers";
 
 beforeEach(async () => {
   await truncateAll(prisma);
@@ -13,8 +13,6 @@ beforeEach(async () => {
 afterAll(async () => {
   await prisma.$disconnect();
 });
-
-const now = new Date("2026-10-20T06:00:00Z");
 
 describe("slot capacity", () => {
   it("lets exactly one of ten simultaneous bookings take the last seat", async () => {

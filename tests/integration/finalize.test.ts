@@ -9,7 +9,7 @@ import { runScheduledJobs, sendCutoffReminders } from "@/server/jobs";
 import { createGroceryRound, createServiceRound } from "@/server/rounds";
 import { walletBalance } from "@/server/wallet";
 import { truncateAll } from "../../prisma/truncate";
-import { makeCatalogue, makeNeighbourhood, nextPhone } from "./helpers";
+import { at, HOUR, istDay, makeCatalogue, makeNeighbourhood, nextPhone, now, topUp } from "./helpers";
 
 beforeAll(() => {
   vi.spyOn(console, "info").mockImplementation(() => {});
@@ -23,20 +23,14 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
-const now = new Date("2026-10-20T06:00:00Z");
-const HOUR = 3_600_000;
-const at = (hours: number) => new Date(now.getTime() + hours * HOUR);
 const CUTOFF = at(48);
 const AFTER = at(48 + 1 / 60); // the job's first run after cutoff
-const istDay = (offset: number) => new Date(Date.UTC(2026, 9, 20 + offset) - 330 * 60_000);
 const P500 = 50000; // rice, 1+ units
 const P465 = 46500; // rice, 20+ units
 const P699 = 69900; // split AC, 1+ flats
 const P549 = 54900; // split AC, 5+ flats
 
 let seq = 0;
-const topUp = (userId: string, amountPaise: number) =>
-  prisma.walletTransaction.create({ data: { userId, amountPaise, type: "ADJUSTMENT", idempotencyKey: `TEST:${userId}:${++seq}` } });
 
 const shopperOf = (communityId: string) => (u: { id: string; flatId: string | null }): Shopper => ({ id: u.id, flatId: u.flatId!, communityId });
 

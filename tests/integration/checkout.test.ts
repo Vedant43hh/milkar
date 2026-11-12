@@ -6,7 +6,7 @@ import { confirmPayment, quoteCart, startCheckout, type Shopper } from "@/server
 import { cancelRound, createGroceryRound } from "@/server/rounds";
 import { walletBalance } from "@/server/wallet";
 import { truncateAll } from "../../prisma/truncate";
-import { makeCatalogue, makeNeighbourhood, nextPhone } from "./helpers";
+import { makeCatalogue, makeNeighbourhood, nextPhone, now } from "./helpers";
 
 beforeAll(() => {
   vi.spyOn(console, "info").mockImplementation(() => {});
@@ -20,7 +20,6 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
-const now = new Date("2026-10-20T06:00:00Z");
 const minutes = (m: number) => new Date(now.getTime() + m * 60_000);
 const P500 = 50000;
 const P465 = 46500;
