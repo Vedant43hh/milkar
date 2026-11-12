@@ -585,6 +585,7 @@ export class SeedWorld {
         userId: b.userId,
         status: b.status,
         holdExpiresAt: meta?.holdExpiresAt ?? null,
+        autoPayCheckedAt: b.status === "HELD" ? (meta?.createdAt ?? null) : null,
         keepSlotWeekly: b.keepSlotWeekly,
         autoPayFromWallet: b.autoPayFromWallet,
         repeatOfBookingId: meta?.repeatOfBookingId ?? null,

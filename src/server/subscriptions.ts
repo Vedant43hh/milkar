@@ -23,7 +23,7 @@ export async function keepOrderWeekly(shopper: Shopper, roundId: string, prefs: 
   const rows = await prisma.orderItem.findMany({ where: { roundId, userId: shopper.id, quantity: { gt: 0 } }, select: { quantity: true, offering: { select: { productId: true } } } });
   const items = itemsFromOrder(rows.map((r) => ({ productId: r.offering.productId, quantity: r.quantity })));
   if (items.length === 0) return { ok: false, error: "NO_ORDER" };
-  const data = { items: items as unknown as Prisma.InputJsonValue, autoPayFromWallet: prefs.autoPayFromWallet, status: "ACTIVE" as const, flatId: shopper.flatId };
+  const data = { items: items as unknown as Prisma.InputJsonValue, autoPayFromWallet: prefs.autoPayFromWallet, status: "ACTIVE" as const, flatId: shopper.flatId, placedRoundId: roundId };
   await prisma.standingOrder.upsert({ where: { userId_roundId: { userId: shopper.id, roundId } }, create: { userId: shopper.id, roundId, ...data }, update: data });
   return { ok: true };
 }
@@ -98,22 +98,16 @@ export async function orderThisWeek(shopper: Shopper, id: string, now: Date): Pr
 // ---------- at cutoff ----------
 
 /**
- * Moves this week's standing orders to next week's round (called by the cutoff job, in its
- * transaction, once next week has opened). Each takes the resident's order this week if they had
- * one, so changes they made carry on. Active ones with auto-pay are ordered and paid from the
- * wallet; the rest of the active ones are asked to confirm. Paused ones move without ordering.
+ * Moves this week's standing orders to next week's round (inside the cutoff, so it's quick). Each
+ * takes the resident's order this week if they had one, so changes they made carry on. Nothing is
+ * ordered here: placeStandingOrder does that afterwards, one resident at a time.
  */
-export async function carrySubscriptions(
+export async function moveSubscriptions(
   tx: Tx,
-  round: { id: string; title: string; communityId: string; offerings: { productId: string | null; orderItems: { userId: string; quantity: number }[] }[] },
+  round: { id: string; offerings: { productId: string | null; orderItems: { userId: string; quantity: number }[] }[] },
   nextRoundId: string,
-  now: Date,
-): Promise<{ ordered: number; toConfirm: number }> {
+): Promise<void> {
   const standing = await tx.standingOrder.findMany({ where: { roundId: round.id, status: { not: "CANCELLED" } }, include: { user: { select: { flatId: true } } } });
-  const nextOfferings = await tx.roundOffering.findMany({ where: { roundId: nextRoundId }, select: { id: true, productId: true, maxQtyPerFlat: true } });
-  const href = `/round/${nextRoundId}`;
-  let ordered = 0;
-  let toConfirm = 0;
   for (const s of standing) {
     // Moved out of the flat since: the subscription ends with that.
     if (s.user.flatId !== s.flatId) {
@@ -123,20 +117,36 @@ export async function carrySubscriptions(
     const thisWeek = itemsFromOrder(round.offerings.flatMap((o) => o.orderItems.filter((i) => i.userId === s.userId).map((i) => ({ productId: o.productId, quantity: i.quantity }))));
     const items: StandingItem[] = thisWeek.length > 0 ? thisWeek : readStandingItems(s.items);
     await tx.standingOrder.update({ where: { id: s.id }, data: { roundId: nextRoundId, items: items as unknown as Prisma.InputJsonValue } });
-    if (s.status !== "ACTIVE") continue;
-    const targets = standingTargets(items, nextOfferings);
-    if (Object.keys(targets).length === 0) continue;
+  }
+}
+
+/**
+ * Places one standing order in the week it's on, once: from the wallet with auto-pay when it
+ * covers the order, otherwise the resident is asked to confirm. Its own transaction, under the
+ * standing order's row lock, so overlapping runs do it once.
+ */
+export async function placeStandingOrder(id: string, now: Date): Promise<"PAID" | "TO_CONFIRM" | "SKIPPED"> {
+  return prisma.$transaction(async (tx) => {
+    const rows = await tx.$queryRaw<{ id: string }[]>`SELECT id FROM "StandingOrder" WHERE id = ${id} FOR UPDATE`;
+    if (rows.length === 0) return "SKIPPED";
+    const s = await tx.standingOrder.findUniqueOrThrow({ where: { id }, include: { round: { select: { status: true, title: true, communityId: true } } } });
+    if (s.status !== "ACTIVE" || s.placedRoundId === s.roundId || s.round.status !== "OPEN") return "SKIPPED";
+    await tx.standingOrder.update({ where: { id }, data: { placedRoundId: s.roundId } });
+    // Already ordered this week themselves: nothing to do.
+    if ((await tx.orderItem.count({ where: { roundId: s.roundId, userId: s.userId, quantity: { gt: 0 } } })) > 0) return "SKIPPED";
+    const offerings = await tx.roundOffering.findMany({ where: { roundId: s.roundId }, select: { id: true, productId: true, maxQtyPerFlat: true } });
+    const targets = standingTargets(readStandingItems(s.items), offerings);
+    if (Object.keys(targets).length === 0) return "SKIPPED";
+    const key = notificationKeys.subscription(s.id, s.roundId);
     if (s.autoPayFromWallet) {
-      const result = await checkoutFromWallet(tx, { id: s.userId, flatId: s.flatId, communityId: round.communityId }, nextRoundId, targets, now);
+      const result = await checkoutFromWallet(tx, { id: s.userId, flatId: s.flatId, communityId: s.round.communityId }, s.roundId, targets, now);
       if (result.status === "PAID") {
         const payment = await tx.payment.findUniqueOrThrow({ where: { id: result.paymentId }, select: { walletAppliedPaise: true } });
-        ordered++;
-        await notify(tx, [s.userId], { type: "SUBSCRIPTION_ORDERED", params: { round: round.title, amountPaise: payment.walletAppliedPaise }, href }, { dedupeKey: notificationKeys.subscription(s.id, nextRoundId), now });
-        continue;
+        await notify(tx, [s.userId], { type: "SUBSCRIPTION_ORDERED", params: { round: s.round.title, amountPaise: payment.walletAppliedPaise }, href: `/round/${s.roundId}` }, { dedupeKey: key, now });
+        return "PAID";
       }
     }
-    toConfirm++;
-    await notify(tx, [s.userId], { type: "SUBSCRIPTION_CONFIRM", params: { round: round.title }, href: "/app/subscriptions" }, { dedupeKey: notificationKeys.subscription(s.id, nextRoundId), now });
-  }
-  return { ordered, toConfirm };
+    await notify(tx, [s.userId], { type: "SUBSCRIPTION_CONFIRM", params: { round: s.round.title }, href: "/app/subscriptions" }, { dedupeKey: key, now });
+    return "TO_CONFIRM";
+  });
 }

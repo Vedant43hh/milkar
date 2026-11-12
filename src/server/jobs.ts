@@ -6,6 +6,7 @@ import { finalizeRound, type FinalizeSummary } from "./finalize";
 import { notify } from "./notifications";
 import { communityResidentIds } from "./rounds";
 import { expireHolds } from "./slots";
+import { placeWeeklyOrders } from "./weekly";
 
 /** Finalizes every open round past its cutoff, oldest first. One failing round doesn't stop the rest. */
 export async function finalizeDueRounds(now: Date): Promise<FinalizeSummary[]> {
@@ -46,7 +47,7 @@ export async function sendCutoffReminders(now: Date): Promise<number> {
   return sent;
 }
 
-export type JobsReport = { finalized: FinalizeSummary[]; reminders: number; expiredHolds: number };
+export type JobsReport = { finalized: FinalizeSummary[]; reminders: number; expiredHolds: number; weekly: { paid: number; toConfirm: number } };
 
 /**
  * Everything that runs on a clock: the cutoff job, "closes soon" reminders and weekly holds that
@@ -55,7 +56,9 @@ export type JobsReport = { finalized: FinalizeSummary[]; reminders: number; expi
  */
 export async function runScheduledJobs(now: Date): Promise<JobsReport> {
   const finalized = await finalizeDueRounds(now);
+  // Weekly auto-pay a crashed cutoff didn't get to (normally nothing: the cutoff did it).
+  const weekly = await placeWeeklyOrders(now);
   const reminders = await sendCutoffReminders(now);
   const expiredHolds = await expireHolds(now);
-  return { finalized, reminders, expiredHolds };
+  return { finalized, reminders, expiredHolds, weekly };
 }

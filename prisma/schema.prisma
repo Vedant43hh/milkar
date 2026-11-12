@@ -891,6 +891,7 @@ model ServiceBooking {
   holdExpiresAt     DateTime?     @db.Timestamptz(3)
   keepSlotWeekly    Boolean       @default(false)
   autoPayFromWallet Boolean       @default(false)
+  autoPayCheckedAt  DateTime?     @db.Timestamptz(3) // a held slot's auto-pay was tried (paid, or the resident told to confirm)
   problemNote       String? // repair visits: what's wrong, in the resident's words
   repeatOfBookingId String?       @unique // last week's booking this hold came from
   createdAt         DateTime      @default(now()) @db.Timestamptz(3)
@@ -1117,6 +1118,7 @@ model StandingOrder {
   roundId           String // the week it's on now
   items             Json // [{ productId, quantity }]: what to order each week
   autoPayFromWallet Boolean             @default(false)
+  placedRoundId     String? // the week it last ordered in (or asked the resident to); behind roundId = still to do
   status            StandingOrderStatus @default(ACTIVE)
   createdAt         DateTime            @default(now()) @db.Timestamptz(3)
   updatedAt         DateTime            @updatedAt @db.Timestamptz(3)

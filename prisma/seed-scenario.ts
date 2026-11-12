@@ -1203,6 +1203,7 @@ export function buildWorld(now: Date) {
         userId: rahul.userId,
         flatId: rahul.flatId,
         roundId: dairy.id,
+        placedRoundId: dairy.id,
         items: mine.map((i) => ({ productId: rec.offerings.find((o) => o.id === i.offering.id)!.productId!, quantity: lotsQty(i.lots) })),
         autoPayFromWallet: true,
         status: "ACTIVE",

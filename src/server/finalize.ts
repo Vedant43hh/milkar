@@ -10,11 +10,11 @@ import { isDueForFinalize } from "@/lib/rounds";
 import { assignTechnicians } from "@/lib/services/assign";
 import { holdExpiresAt, nextWeekDays, oneWeekLater, planHolds } from "@/lib/services/slots";
 import { formatCompletionCode } from "@/lib/services/visit";
-import { autoPayHoldIn } from "./bookings";
 import { notify } from "./notifications";
 import { lockRound } from "./round-lock";
 import { openRoundInTx } from "./rounds";
-import { carrySubscriptions } from "./subscriptions";
+import { moveSubscriptions } from "./subscriptions";
+import { placeWeeklyOrders } from "./weekly";
 import { releaseSeat, takeSeat } from "./slots";
 
 type Tx = Prisma.TransactionClient;
@@ -80,6 +80,15 @@ type FinalizeRound = Awaited<ReturnType<typeof loadForFinalize>>;
  * finds the round already finalized.
  */
 export async function finalizeRound(roundId: string, now: Date): Promise<FinalizeOutcome> {
+  const outcome = await finalizeInTx(roundId, now);
+  // Next week's auto-pay, one resident at a time, now the cutoff has committed. The scheduled job
+  // sweeps up anything this misses (a crash, a timeout).
+  if (outcome.status !== "FINALIZED" || !outcome.nextRoundId) return outcome;
+  const placed = await placeWeeklyOrders(now, outcome.nextRoundId);
+  return { ...outcome, held: outcome.held + placed.toConfirm, autoPaid: outcome.autoPaid + placed.paid };
+}
+
+async function finalizeInTx(roundId: string, now: Date): Promise<FinalizeOutcome> {
   return prisma.$transaction(async (tx): Promise<FinalizeOutcome> => {
     if (!(await lockRound(tx, roundId))) return { status: "NOT_FOUND" };
     const round = await loadForFinalize(tx, roundId);
@@ -321,8 +330,8 @@ async function openNextGroceryWeek(tx: Tx, round: FinalizeRound, now: Date): Pro
     console.warn(`[milkar] couldn't open next week's "${round.title}": ${opened.errors.join(", ")}`);
     return none;
   }
-  const carried = await carrySubscriptions(tx, round, opened.roundId, now);
-  return { nextRoundId: opened.roundId, held: carried.toConfirm, autoPaid: carried.ordered };
+  await moveSubscriptions(tx, round, opened.roundId);
+  return { nextRoundId: opened.roundId, held: 0, autoPaid: 0 };
 }
 
 /**
@@ -372,7 +381,6 @@ async function openNextWeek(tx: Tx, round: FinalizeRound, now: Date): Promise<{ 
   const service = round.service?.name ?? round.title;
   const href = `/round/${nextRoundId}`;
   let held = 0;
-  let autoPaid = 0;
   for (const plan of plans) {
     const previous = keepers.find((b) => b.id === plan.bookingId)!;
     const slot = nextSlots.find((s) => s.id === plan.slotId)!;
@@ -391,24 +399,15 @@ async function openNextWeek(tx: Tx, round: FinalizeRound, now: Date): Promise<{ 
         createdAt: now,
       },
     });
-    const paid = previous.autoPayFromWallet ? await autoPayHoldIn(tx, hold.id, now) : null;
-    if (paid?.status === "PAID") {
-      autoPaid++;
-      await notify(
-        tx,
-        [previous.userId],
-        { type: "SLOT_AUTO_BOOKED", params: { service, startsAt: slot.startsAt.toISOString(), amountPaise: paid.paidPaise }, href },
-        { dedupeKey: notificationKeys.slotAutoBooked(hold.id), now },
-      );
-    } else {
-      held++;
-      await notify(
-        tx,
-        [previous.userId],
-        { type: "SLOT_HELD", params: { service, startsAt: slot.startsAt.toISOString(), expiresAt: hold.holdExpiresAt!.toISOString() }, href },
-        { dedupeKey: notificationKeys.slotHeld(hold.id), now },
-      );
-    }
+    // Auto-pay holds are paid right after the cutoff, one at a time (placeWeeklyOrders).
+    if (previous.autoPayFromWallet) continue;
+    held++;
+    await notify(
+      tx,
+      [previous.userId],
+      { type: "SLOT_HELD", params: { service, startsAt: slot.startsAt.toISOString(), expiresAt: hold.holdExpiresAt!.toISOString() }, href },
+      { dedupeKey: notificationKeys.slotHeld(hold.id), now },
+    );
   }
-  return { nextRoundId, held, autoPaid };
+  return { nextRoundId, held, autoPaid: 0 };
 }

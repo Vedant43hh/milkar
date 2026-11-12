@@ -198,6 +198,8 @@ The seed (`prisma/seed-scenario.ts`) prices every order through the real engine,
 
 ## Database migrations
 
+`20261110090000_weekly_orders_after_cutoff` marks which held slots and standing orders have had their weekly auto-pay tried, so it can run after the cutoff, one resident at a time (and be picked up again by the scheduled job after a crash).
+
 `20261107090000_subscriptions` adds standing weekly orders (`StandingOrder`: the resident, their flat, the week it's on, the products and quantities, auto-pay, and active, paused or cancelled) and the SUBSCRIPTION_ORDERED and SUBSCRIPTION_CONFIRM notifications.
 
 `20261105090000_admin_portal` adds the platform settings for the suggested visit fee and the impact estimates, who marked a vendor payout paid, and the PAYOUT_PAID notification.
