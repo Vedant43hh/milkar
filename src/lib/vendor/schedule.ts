@@ -3,7 +3,8 @@
 // Date → time slot → tower → flat, each in natural order ("A-2" before "A-10"), so a printout or a
 // phone screen reads like a route through the building.
 
-const natural = new Intl.Collator("en", { numeric: true, sensitivity: "base" });
+import { natural } from "../pricing/consolidate";
+
 const IST_OFFSET_MS = 330 * 60 * 1000;
 
 export type ScheduleVisit = {

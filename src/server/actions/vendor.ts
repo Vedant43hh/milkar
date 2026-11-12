@@ -6,6 +6,7 @@ import { t } from "@/i18n";
 import type { ActionResult } from "@/lib/action-result";
 import { requirePortal } from "@/lib/auth/current-user";
 import { setFlash } from "@/lib/flash";
+import { fieldValues } from "@/lib/form-values";
 import { normalizeIndianMobile } from "@/lib/phone";
 import { parseRupeesToPaise } from "@/lib/pricing/money";
 import type { OptionDraft, ProductDraft, ServiceDraft } from "@/lib/vendor/catalogue";
@@ -61,12 +62,6 @@ export async function reassignVisitAction(_prev: ActionResult, formData: FormDat
 }
 
 // ---------- catalogue ----------
-
-function fieldValues(formData: FormData): Record<string, string> {
-  const values: Record<string, string> = {};
-  for (const [key, value] of formData.entries()) if (typeof value === "string" && !key.startsWith("$")) values[key] = value;
-  return values;
-}
 
 /** A whole number from a field, or NaN (which the checks turn into a message). */
 function whole(formData: FormData, key: string): number {

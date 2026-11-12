@@ -6,6 +6,7 @@ import { t, type MessageKey } from "@/i18n";
 import type { ActionResult } from "@/lib/action-result";
 import { requirePortal } from "@/lib/auth/current-user";
 import { setFlash } from "@/lib/flash";
+import { fieldValues } from "@/lib/form-values";
 import { formatINR } from "@/lib/pricing/money";
 import { istDateToUtc, istLocalToUtc } from "@/lib/time";
 import { collectPickup, reportDeliveryIssue } from "@/server/distribution";
@@ -48,12 +49,6 @@ function istDay(value: FormDataEntryValue | null): Date | null {
   } catch {
     return null;
   }
-}
-
-function fieldValues(formData: FormData): Record<string, string> {
-  const values: Record<string, string> = {};
-  for (const [key, value] of formData.entries()) if (typeof value === "string" && !key.startsWith("$")) values[key] = value;
-  return values;
 }
 
 const unique = (items: string[]) => [...new Set(items)];

@@ -79,7 +79,8 @@ export type FlatPacking = {
   totalUnits: number;
 };
 
-const natural = new Intl.Collator("en", { numeric: true, sensitivity: "base" });
+/** Natural order for flat numbers and names: "A-2" before "A-10". */
+export const natural = new Intl.Collator("en", { numeric: true, sensitivity: "base" });
 
 /** Per-flat packing list. Family members in the same flat are combined. Sorted by tower then flat. */
 export function buildPackingList(rows: readonly PackingInput[]): FlatPacking[] {
