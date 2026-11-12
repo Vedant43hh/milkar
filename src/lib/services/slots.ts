@@ -60,16 +60,16 @@ export function isHoldExpired(expiresAt: Date, now: Date): boolean {
   return now.getTime() >= expiresAt.getTime();
 }
 
-/** The same moment one week later: next week's cutoff, delivery day and slot times. */
-export function oneWeekLater(date: Date): Date {
-  return new Date(date.getTime() + WEEK);
+/** The same moment a week (or `weeks` weeks) later: next week's cutoff, delivery day and slot times. */
+export function oneWeekLater(date: Date, weeks = 1): Date {
+  return new Date(date.getTime() + weeks * WEEK);
 }
 
-/** Next week's Service Day(s): the IST days of this week's slots, a week on. */
-export function nextWeekDays(slotStarts: readonly Date[]): Date[] {
+/** Next week's Service Day(s): the IST days of this week's slots, a week (or `weeks` weeks) on. */
+export function nextWeekDays(slotStarts: readonly Date[], weeks = 1): Date[] {
   const days = new Map<number, Date>();
   for (const start of slotStarts) {
-    const day = oneWeekLater(startOfIstDay(start));
+    const day = oneWeekLater(startOfIstDay(start), weeks);
     days.set(day.getTime(), day);
   }
   return [...days.values()].sort((a, b) => a.getTime() - b.getTime());
@@ -84,11 +84,11 @@ export type HoldPlan = { bookingId: string; slotId: string };
  * while it has room (first come, in the order given). A slot that no longer exists, or is full,
  * gets no hold; that resident books again like anyone else.
  */
-export function planHolds(keepers: readonly Keeper[], nextSlots: readonly NextSlot[]): HoldPlan[] {
+export function planHolds(keepers: readonly Keeper[], nextSlots: readonly NextSlot[], weeks = 1): HoldPlan[] {
   const left = new Map(nextSlots.map((s) => [s.startsAt.getTime(), { id: s.id, seats: seatsLeft(s) }]));
   const plans: HoldPlan[] = [];
   for (const keeper of keepers) {
-    const slot = left.get(oneWeekLater(keeper.slotStartsAt).getTime());
+    const slot = left.get(oneWeekLater(keeper.slotStartsAt, weeks).getTime());
     if (!slot || slot.seats === 0) continue;
     slot.seats--;
     plans.push({ bookingId: keeper.bookingId, slotId: slot.id });

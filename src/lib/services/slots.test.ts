@@ -88,3 +88,13 @@ describe("repeating weekly", () => {
     ]);
   });
 });
+
+describe("skipping weeks when a cutoff ran late", () => {
+  it("moves days and kept slots on by the same number of weeks", () => {
+    const start = new Date("2026-10-24T03:30:00Z"); // Sat 9:00 IST
+    const twoWeeks = new Date(start.getTime() + 14 * 24 * 3_600_000);
+    expect(nextWeekDays([start], 2).map((d) => d.toISOString())).toEqual(["2026-11-06T18:30:00.000Z"]); // Sat 7 Nov, IST midnight
+    expect(planHolds([{ bookingId: "b1", slotStartsAt: start }], [{ id: "s", startsAt: twoWeeks, capacity: 1, bookedCount: 0 }], 2)).toEqual([{ bookingId: "b1", slotId: "s" }]);
+    expect(planHolds([{ bookingId: "b1", slotStartsAt: start }], [{ id: "s", startsAt: twoWeeks, capacity: 1, bookedCount: 0 }])).toEqual([]);
+  });
+});

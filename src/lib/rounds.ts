@@ -4,6 +4,17 @@ import { computeMeter, type Meter, type MeterInput } from "./pricing/meter";
 
 /** A round must stay open for at least an hour. */
 export const MIN_OPEN_MS = 60 * 60 * 1000;
+export const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+/**
+ * How many weeks later the next round of a weekly series starts: normally one, more if the cutoff
+ * job ran so late that a week later is already past (or too soon to take orders).
+ */
+export function weeksToNextRound(cutoffAt: Date, now: Date): number {
+  let weeks = 1;
+  while (cutoffAt.getTime() + weeks * WEEK_MS - now.getTime() < MIN_OPEN_MS) weeks++;
+  return weeks;
+}
 export const MAX_SERVICE_DAYS = 3;
 export const MAX_PER_FLAT_LIMIT = 50;
 

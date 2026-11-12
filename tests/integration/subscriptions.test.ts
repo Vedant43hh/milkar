@@ -63,6 +63,20 @@ describe("weekly groceries", () => {
     expect(await prisma.orderRound.count({ where: { repeatOfRoundId: s.roundId } })).toBe(1);
   });
 
+  it("skip to the next week still to come when the cutoff job runs very late", async () => {
+    const s = await weeklyRound([0]);
+    await keepOrderWeekly(s.shoppers[0], s.roundId, { autoPayFromWallet: false });
+    // The server was down: the cutoff runs 8 days after it was due.
+    const late = await finalizeRound(s.roundId, at(48 + 8 * 24));
+    const nextId = late.status === "FINALIZED" ? late.nextRoundId : null;
+    expect(nextId).toBeTruthy();
+    const [round, next] = await Promise.all([prisma.orderRound.findUniqueOrThrow({ where: { id: s.roundId } }), prisma.orderRound.findUniqueOrThrow({ where: { id: nextId! } })]);
+    expect(next.cutoffAt.getTime() - round.cutoffAt.getTime()).toBe(2 * WEEK);
+    expect(next.status).toBe("OPEN");
+    // The subscription moved on with it.
+    expect(await prisma.standingOrder.count({ where: { roundId: nextId! } })).toBe(1);
+  });
+
   it("keeps an order every week only in a weekly round, and only with something ordered", async () => {
     const s = await weeklyRound([0, 0]);
     const [ordered] = s.shoppers;

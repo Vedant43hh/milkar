@@ -6,7 +6,7 @@ import { notificationKeys } from "@/lib/notifications";
 import { buildVendorOrders, type ConfirmedOffering } from "@/lib/pricing/consolidate";
 import { computeFinalization } from "@/lib/pricing/finalize";
 import type { Tier } from "@/lib/pricing/tiers";
-import { isDueForFinalize } from "@/lib/rounds";
+import { isDueForFinalize, weeksToNextRound } from "@/lib/rounds";
 import { assignTechnicians } from "@/lib/services/assign";
 import { holdExpiresAt, nextWeekDays, oneWeekLater, planHolds } from "@/lib/services/slots";
 import { formatCompletionCode } from "@/lib/services/visit";
@@ -303,6 +303,7 @@ async function scheduleVisits(tx: Tx, round: FinalizeRound, confirmedFlats: Map<
  */
 async function openNextGroceryWeek(tx: Tx, round: FinalizeRound, now: Date): Promise<{ nextRoundId: string | null; held: number; autoPaid: number }> {
   const none = { nextRoundId: null, held: 0, autoPaid: 0 };
+  const weeks = weeksToNextRound(round.cutoffAt, now);
   const existing = await tx.orderRound.findUnique({ where: { repeatOfRoundId: round.id }, select: { id: true } });
   if (existing) return { ...none, nextRoundId: existing.id };
   // Products the vendor has stopped offering drop out of next week.
@@ -316,8 +317,8 @@ async function openNextGroceryWeek(tx: Tx, round: FinalizeRound, now: Date): Pro
       kind: "GROCERY",
       round: {
         title: round.title,
-        cutoffAt: oneWeekLater(round.cutoffAt),
-        deliveryAt: oneWeekLater(round.deliveryAt),
+        cutoffAt: oneWeekLater(round.cutoffAt, weeks),
+        deliveryAt: oneWeekLater(round.deliveryAt, weeks),
         requirePickupCode: round.requirePickupCode,
         products: round.offerings.filter((o) => o.productId && active.has(o.productId)).map((o) => ({ productId: o.productId!, maxQtyPerFlat: o.maxQtyPerFlat })),
         repeatWeekly: true,
@@ -342,6 +343,7 @@ async function openNextGroceryWeek(tx: Tx, round: FinalizeRound, now: Date): Pro
  */
 async function openNextWeek(tx: Tx, round: FinalizeRound, now: Date): Promise<{ nextRoundId: string | null; held: number; autoPaid: number }> {
   const none = { nextRoundId: null, held: 0, autoPaid: 0 };
+  const weeks = weeksToNextRound(round.cutoffAt, now);
   if (!round.serviceId) return none;
   const existing = await tx.orderRound.findUnique({ where: { repeatOfRoundId: round.id }, select: { id: true } });
   if (existing) return { ...none, nextRoundId: existing.id };
@@ -355,8 +357,8 @@ async function openNextWeek(tx: Tx, round: FinalizeRound, now: Date): Promise<{ 
       round: {
         serviceId: round.serviceId,
         title: round.title,
-        cutoffAt: oneWeekLater(round.cutoffAt),
-        days: nextWeekDays(round.slots.map((s) => s.startsAt)),
+        cutoffAt: oneWeekLater(round.cutoffAt, weeks),
+        days: nextWeekDays(round.slots.map((s) => s.startsAt), weeks),
         repeatWeekly: true,
         repeatOfRoundId: round.id,
       },
@@ -376,6 +378,7 @@ async function openNextWeek(tx: Tx, round: FinalizeRound, now: Date): Promise<{ 
   const plans = planHolds(
     keepers.map((b) => ({ bookingId: b.id, slotStartsAt: b.slot.startsAt })),
     nextSlots,
+    weeks,
   );
 
   const service = round.service?.name ?? round.title;

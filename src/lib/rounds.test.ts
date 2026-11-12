@@ -10,11 +10,21 @@ import {
   validateExtension,
   validateGroceryTimes,
   validateServiceTimes,
+  weeksToNextRound,
   type StatOffering,
 } from "./rounds";
 
 const now = new Date("2026-10-20T06:00:00Z");
 const hours = (h: number) => new Date(now.getTime() + h * 3_600_000);
+
+describe("weekly rounds", () => {
+  it("open a week later, or as many weeks as it takes when the cutoff job ran late", () => {
+    expect(weeksToNextRound(hours(-0.1), now)).toBe(1); // on time
+    expect(weeksToNextRound(hours(-7 * 24 + 2), now)).toBe(1); // a week later is still 2 hours away
+    expect(weeksToNextRound(hours(-7 * 24 + 0.5), now)).toBe(2); // only half an hour left: too soon to order
+    expect(weeksToNextRound(hours(-15 * 24), now)).toBe(3); // the server was down for over two weeks
+  });
+});
 
 describe("opening a grocery round", () => {
   it("needs the cutoff at least an hour away and delivery after it", () => {
