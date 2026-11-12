@@ -8,6 +8,7 @@ import { VisitActions } from "@/components/tech/visit-actions";
 import { ActionForm, SubmitButton } from "@/components/ui/action-form";
 import { AutoRefresh } from "@/components/ui/auto-refresh";
 import { Badge, type Tone } from "@/components/ui/badge";
+import { VisitStatusBadge } from "@/components/visits/visit-status-badge";
 import { Card, CardHeader } from "@/components/ui/card";
 import { PageSkeleton } from "@/components/ui/skeleton";
 import { t } from "@/i18n";
@@ -19,7 +20,6 @@ import { technicianVisit } from "@/server/technician";
 
 export const metadata: Metadata = { title: t("techVisit.title") };
 
-const STATUS_TONE: Record<string, Tone> = { SCHEDULED: "neutral", ON_THE_WAY: "brand", IN_PROGRESS: "accent", COMPLETED: "success", NO_ACCESS: "danger", CANCELLED: "neutral" };
 const PARTS_TONE: Record<string, Tone> = { PENDING: "accent", APPROVED: "success", DECLINED: "neutral", REFUNDED: "neutral" };
 
 export default function TechnicianVisitPage({ params }: PageProps<"/tech/visits/[visitId]">) {
@@ -51,7 +51,7 @@ async function VisitView({ params }: { params: PageProps<"/tech/visits/[visitId]
           <h1 className="text-2xl font-semibold tracking-tight text-fg">
             {t("techVisit.flat", { unit: visit.flat.community.unitLabel, flat: `${visit.flat.tower}-${visit.flat.number}` })}
           </h1>
-          <Badge tone={STATUS_TONE[visit.status]}>{t(`visitStatus.${visit.status}`)}</Badge>
+          <VisitStatusBadge status={visit.status} />
         </div>
         <p className="flex items-center gap-2 text-base text-fg tabular-nums">
           <Clock aria-hidden className="size-5 text-brand" />

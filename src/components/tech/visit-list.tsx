@@ -4,16 +4,8 @@ import type { ReactNode } from "react";
 import { t } from "@/i18n";
 import { formatIST } from "@/lib/time";
 import type { TechnicianVisit } from "@/server/technician";
-import { Badge, type Tone } from "../ui/badge";
-
-const STATUS_TONE: Record<TechnicianVisit["status"], Tone> = {
-  SCHEDULED: "neutral",
-  ON_THE_WAY: "brand",
-  IN_PROGRESS: "accent",
-  COMPLETED: "success",
-  NO_ACCESS: "danger",
-  CANCELLED: "neutral",
-};
+import { Badge } from "../ui/badge";
+import { VisitStatusBadge } from "../visits/visit-status-badge";
 
 /** A technician's visits as big, easy-to-tap cards: time, flat, job and what's wrong. Each opens the visit. */
 export function VisitList({ visits, empty, showDay = false }: { visits: TechnicianVisit[]; empty: ReactNode; showDay?: boolean }) {
@@ -30,7 +22,7 @@ export function VisitList({ visits, empty, showDay = false }: { visits: Technici
                   <Clock aria-hidden className="size-5 text-brand" />
                   {showDay ? formatIST(v.startsAt) : `${formatIST(v.startsAt, "time")} – ${formatIST(v.endsAt, "time")}`}
                 </p>
-                <Badge tone={STATUS_TONE[v.status]}>{t(`visitStatus.${v.status}`)}</Badge>
+                <VisitStatusBadge status={v.status} />
               </div>
               <p className="mt-2 flex items-center gap-2 text-base text-fg">
                 <House aria-hidden className="size-5 shrink-0 text-muted" />

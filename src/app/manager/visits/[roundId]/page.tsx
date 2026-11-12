@@ -5,7 +5,8 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { ConfirmAction } from "@/components/ui/confirm-action";
 import { AutoRefresh } from "@/components/ui/auto-refresh";
-import { Badge, type Tone } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
+import { VisitStatusBadge } from "@/components/visits/visit-status-badge";
 import { PageHeader, SectionTitle } from "@/components/ui/card";
 import { Field, Textarea } from "@/components/ui/form";
 import { PageSkeleton } from "@/components/ui/skeleton";
@@ -18,7 +19,6 @@ import { getVisitBoard, type VisitBoard } from "@/server/visit-board";
 
 export const metadata: Metadata = { title: t("visitBoard.title") };
 
-const TONE: Record<string, Tone> = { SCHEDULED: "neutral", ON_THE_WAY: "brand", IN_PROGRESS: "accent", COMPLETED: "success", NO_ACCESS: "danger", CANCELLED: "neutral" };
 
 export default function VisitBoardPage({ params }: PageProps<"/manager/visits/[roundId]">) {
   return (
@@ -37,7 +37,7 @@ function VisitRow({ visit, unitLabel }: { visit: Visit; unitLabel: string }) {
     <li className="space-y-2 px-4 py-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="font-semibold text-fg">{flat}</span>
-        <Badge tone={TONE[visit.status]}>{t(`visitStatus.${visit.status}`)}</Badge>
+        <VisitStatusBadge status={visit.status} />
       </div>
       <p className="flex items-center gap-1.5 text-sm text-muted">
         <UserRound aria-hidden className="size-4" />

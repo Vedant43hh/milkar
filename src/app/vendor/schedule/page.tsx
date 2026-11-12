@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/ui/card";
 import { ConfirmAction } from "@/components/ui/confirm-action";
+import { VisitStatusBadge } from "@/components/visits/visit-status-badge";
 import { EmptyState } from "@/components/ui/display";
 import { Field, Select } from "@/components/ui/form";
 import { PageSkeleton } from "@/components/ui/skeleton";
@@ -22,8 +23,6 @@ export default function SchedulePage() {
     </Suspense>
   );
 }
-
-const STATUS_TONE = { SCHEDULED: "neutral", ON_THE_WAY: "brand", IN_PROGRESS: "brand", COMPLETED: "success", NO_ACCESS: "warning", CANCELLED: "neutral" } as const;
 
 async function Schedule() {
   const user = await requirePortal("vendor");
@@ -71,7 +70,7 @@ function VisitRow({ visit, technicians }: { visit: ScheduleRow; technicians: { i
       <span className="min-w-0 flex-1">
         <span className="flex flex-wrap items-center gap-2">
           <span className="font-medium text-fg">{flat}</span>
-          <Badge tone={STATUS_TONE[visit.status]}>{t(`visitStatus.${visit.status}`)}</Badge>
+          <VisitStatusBadge status={visit.status} />
           {visit.kind === "REVISIT" && <Badge tone="accent">{t("vendorSchedule.revisit")}</Badge>}
         </span>
         <span className="block text-muted">{visit.round.service?.name ?? visit.round.title}</span>
