@@ -48,4 +48,3 @@ export async function getResidentHome(user: { id: string; flatId: string; commun
   };
 }
 
-export type ResidentHome = Awaited<ReturnType<typeof getResidentHome>>;

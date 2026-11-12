@@ -30,8 +30,6 @@ export type NavItem = {
   href: string;
   label: UiKey;
   icon: LucideIcon;
-  /** Not built yet: shown greyed out with a "Soon" badge. */
-  soon?: boolean;
   /** Match only the exact path (for portal roots like "/app"). */
   exact?: boolean;
 };

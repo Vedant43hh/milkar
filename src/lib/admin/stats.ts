@@ -94,7 +94,5 @@ export function platformStats(input: StatsInput, verticals: readonly BuyCategory
   };
 }
 
-export type PlatformStats = ReturnType<typeof platformStats>;
-
 /** Average stars to one decimal, or null with no ratings. */
 export const averageRating = (s: { ratingCount: number; ratingSum: number }) => (s.ratingCount ? Math.round((s.ratingSum / s.ratingCount) * 10) / 10 : null);

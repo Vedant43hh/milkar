@@ -46,15 +46,6 @@ export function TabList({ portal, pathname }: { portal: TabPortal; pathname: str
 function SideItem({ item, pathname }: { item: NavItem; pathname: string }) {
   const Icon = item.icon;
   const classes = "flex min-h-11 items-center gap-3 rounded-control px-3 text-sm";
-  if (item.soon) {
-    return (
-      <span aria-disabled className={cn(classes, "cursor-default text-subtle")}>
-        <Icon aria-hidden className="size-5" />
-        {tu(item.label)}
-        <span className="ml-auto rounded-full bg-surface-2 px-2 py-0.5 text-xs font-medium tracking-wide text-muted uppercase">{tu("ui.soon")}</span>
-      </span>
-    );
-  }
   const active = isActive(pathname, item);
   return (
     <Link

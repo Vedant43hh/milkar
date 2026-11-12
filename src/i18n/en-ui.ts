@@ -7,7 +7,6 @@ export const enUi = {
     loading: "Loading…",
     close: "Close",
     dismiss: "Dismiss",
-    soon: "Soon",
   },
   nav: {
     main: "Main",

@@ -325,10 +325,6 @@ export async function addTechnician(vendorUser: { role: string; vendorId: string
   }
 }
 
-export async function listTechnicians(vendorId: string) {
-  return prisma.user.findMany({ where: { vendorId, role: "TECHNICIAN" }, orderBy: { name: "asc" }, select: { id: true, name: true, phone: true, createdAt: true } });
-}
-
 // ---------- reading ----------
 
 const communityCard = { id: true, name: true, city: true, pincode: true, type: true, unitLabel: true, blockLabel: true } as const;
