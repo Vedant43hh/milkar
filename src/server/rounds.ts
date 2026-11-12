@@ -18,6 +18,7 @@ import { generateSlots, type SlotDraft } from "@/lib/services/slots";
 import type { SessionUser } from "@/server/session";
 import { notify } from "./notifications";
 import { lockRound } from "./round-lock";
+import { loadPlatformSettings } from "./settings";
 
 type Db = PrismaClient | Prisma.TransactionClient;
 type Tx = Prisma.TransactionClient;
@@ -31,17 +32,6 @@ export type Actor = { id: string; role: Role; communityId: string | null; staffK
 /** The community a Society Manager runs (not where anyone lives). */
 export function actorOf(user: SessionUser): Actor {
   return { id: user.id, role: user.role, communityId: user.staff?.community.id ?? null, staffKind: user.staff?.kind ?? null };
-}
-
-/** Milkar's margin and the reduction freeze, as they stand now (defaults until the admin sets them). */
-export async function platformSettings(db: Db) {
-  const s = await db.platformSetting.findUnique({ where: { id: 1 } });
-  return { marginBps: s?.marginBps ?? 300, reductionFreezeMinutes: s?.reductionFreezeMinutes ?? 720 };
-}
-
-/** Margin and freeze that a round opened now would snapshot. */
-export function currentSettings() {
-  return platformSettings(prisma);
 }
 
 /** Residents living in a community. */
@@ -124,7 +114,7 @@ async function planGroceryRound(db: Db, input: GroceryRoundInput, now: Date): Pr
 
 async function insertGroceryRound(tx: Tx, actor: Actor, communityId: string, plan: GroceryPlan, now: Date): Promise<string> {
   const { input } = plan;
-  const settings = await platformSettings(tx);
+  const { marginBps, reductionFreezeMinutes } = await loadPlatformSettings(tx);
   const caps = new Map(input.products.map((p) => [p.productId, p.maxQtyPerFlat]));
   const round = await tx.orderRound.create({
     data: {
@@ -137,7 +127,8 @@ async function insertGroceryRound(tx: Tx, actor: Actor, communityId: string, pla
       requirePickupCode: input.requirePickupCode,
       repeatWeekly: input.repeatWeekly ?? false,
       repeatOfRoundId: input.repeatOfRoundId ?? null,
-      ...settings,
+      marginBps,
+      reductionFreezeMinutes,
       createdAt: now,
     },
   });
@@ -204,7 +195,7 @@ async function planServiceRound(db: Db, input: ServiceRoundInput, now: Date): Pr
 
 async function insertServiceRound(tx: Tx, actor: Actor, communityId: string, plan: ServicePlan, now: Date): Promise<string> {
   const { input, service, slots } = plan;
-  const settings = await platformSettings(tx);
+  const { marginBps, reductionFreezeMinutes } = await loadPlatformSettings(tx);
   const round = await tx.orderRound.create({
     data: {
       communityId,
@@ -219,7 +210,8 @@ async function insertServiceRound(tx: Tx, actor: Actor, communityId: string, pla
       noAccessFeePaise: service.noAccessFeePaise,
       repeatWeekly: input.repeatWeekly,
       repeatOfRoundId: input.repeatOfRoundId ?? null,
-      ...settings,
+      marginBps,
+      reductionFreezeMinutes,
       createdAt: now,
     },
   });

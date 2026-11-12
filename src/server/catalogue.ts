@@ -14,7 +14,6 @@ import {
   type ServiceDraft,
 } from "@/lib/vendor/catalogue";
 import { checkSlot, type SlotInput, type SlotProblem } from "@/lib/vendor/slot-templates";
-import { platformSettings } from "./rounds";
 import { loadPlatformSettings } from "./settings";
 import { runsVendor, type VendorActor } from "./vendor-actor";
 
@@ -76,7 +75,7 @@ export async function getService(vendorId: string, serviceId: string) {
 export async function saveProduct(actor: VendorActor, productId: string | null, draft: ProductDraft, now: Date): Promise<Saved> {
   const vendor = await vendorOf(actor);
   if (!vendor || !sellsProducts(vendor.categories)) return { ok: false, errors: ["FORBIDDEN"] };
-  const { marginBps } = await platformSettings(prisma);
+  const { marginBps } = await loadPlatformSettings();
   const problems = checkProduct(draft, marginBps);
   if (problems.length > 0) return { ok: false, errors: problems };
   const data = {
@@ -153,7 +152,7 @@ async function ownService(actor: VendorActor, serviceId: string) {
 export async function saveOption(actor: VendorActor, serviceId: string, optionId: string | null, draft: OptionDraft): Promise<Saved> {
   const service = await ownService(actor, serviceId);
   if (!service) return { ok: false, errors: ["NOT_FOUND"] };
-  const { marginBps } = await platformSettings(prisma);
+  const { marginBps } = await loadPlatformSettings();
   const problems = checkOption(draft, marginBps, service.gstBps);
   if (problems.length > 0) return { ok: false, errors: problems };
   const data = { name: draft.name.trim().replace(/\s+/g, " "), unitLabel: draft.unitLabel.trim().toLowerCase(), mrpPaise: draft.mrpPaise, maxPerFlat: draft.maxPerFlat };

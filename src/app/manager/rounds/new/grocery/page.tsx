@@ -9,7 +9,8 @@ import { defaultRoundDates } from "@/lib/polls";
 import { formatINR } from "@/lib/pricing/money";
 import { unitPrice } from "@/lib/pricing/price";
 import { startOfIstDay, utcToIstLocal } from "@/lib/time";
-import { currentSettings, listCatalogue } from "@/server/rounds";
+import { listCatalogue } from "@/server/rounds";
+import { loadPlatformSettings } from "@/server/settings";
 
 export const metadata: Metadata = { title: t("manager.newGrocery") };
 
@@ -26,7 +27,7 @@ export default function NewGroceryRoundPage() {
 async function NewGroceryRound() {
   await requirePortal("manager");
   const now = new Date();
-  const [products, settings] = await Promise.all([listCatalogue(), currentSettings()]);
+  const [products, settings] = await Promise.all([listCatalogue(), loadPlatformSettings()]);
 
   const groups = new Map<string, ProductGroup>();
   for (const p of products) {

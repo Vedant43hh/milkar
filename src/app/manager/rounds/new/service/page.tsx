@@ -16,7 +16,8 @@ import { unitWordsFor } from "@/lib/rounds";
 import { formatINR } from "@/lib/pricing/money";
 import { unitPrice } from "@/lib/pricing/price";
 import { startOfIstDay, utcToIstDate, utcToIstLocal } from "@/lib/time";
-import { currentSettings, listServices, type CatalogueService } from "@/server/rounds";
+import { listServices, type CatalogueService } from "@/server/rounds";
+import { loadPlatformSettings } from "@/server/settings";
 
 export const metadata: Metadata = { title: t("manager.newService") };
 
@@ -74,7 +75,7 @@ const KIND_TEXT = {
 async function NewServiceRound({ searchParams }: { searchParams: PageProps<"/manager/rounds/new/service">["searchParams"] }) {
   const user = await requirePortal("manager");
   const now = new Date();
-  const [params, services, settings] = await Promise.all([searchParams, listServices(), currentSettings()]);
+  const [params, services, settings] = await Promise.all([searchParams, listServices(), loadPlatformSettings()]);
   const chosen = typeof params.service === "string" ? services.find((s) => s.id === params.service) : undefined;
   const kind: Kind = chosen ? kindOf(chosen) : params.kind === "repairs" || params.kind === "subscriptions" ? params.kind : "home-services";
   const text = KIND_TEXT[kind];

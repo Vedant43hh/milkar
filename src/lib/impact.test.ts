@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { communityImpact, countTrips, DEFAULT_IMPACT_ASSUMPTIONS } from "./impact";
+import { DEFAULT_SETTINGS, impactAssumptionsOf } from "./admin/settings";
+import { communityImpact, countTrips } from "./impact";
+
+const DEFAULTS = impactAssumptionsOf(DEFAULT_SETTINGS);
 
 describe("countTrips", () => {
   it("turns one delivery per flat and shop into one trip per shop and round", () => {
@@ -31,9 +34,9 @@ describe("countTrips", () => {
 
 describe("communityImpact", () => {
   it("estimates distance, fuel and CO₂ from the trips avoided", () => {
-    const impact = communityImpact({ savedPaise: 1_234_500, trips: { separate: 120, together: 10, avoided: 110 } });
+    const impact = communityImpact({ savedPaise: 1_234_500, trips: { separate: 120, together: 10, avoided: 110 } }, DEFAULTS);
     // 110 trips × 8 km = 880 km; × 0.04 L = 35.2 L; × 2.3 kg = 80.96 kg
-    expect(impact).toEqual({ savedPaise: 1_234_500, trips: { separate: 120, together: 10, avoided: 110 }, km: 880, litres: 35.2, kgCo2: 81, assumptions: DEFAULT_IMPACT_ASSUMPTIONS });
+    expect(impact).toEqual({ savedPaise: 1_234_500, trips: { separate: 120, together: 10, avoided: 110 }, km: 880, litres: 35.2, kgCo2: 81, assumptions: DEFAULTS });
   });
 
   it("uses the assumptions it is given", () => {
@@ -42,6 +45,6 @@ describe("communityImpact", () => {
   });
 
   it("is all zeros for a community that hasn't bought anything yet", () => {
-    expect(communityImpact({ savedPaise: 0, trips: countTrips([], []) })).toMatchObject({ savedPaise: 0, km: 0, litres: 0, kgCo2: 0 });
+    expect(communityImpact({ savedPaise: 0, trips: countTrips([], []) }, DEFAULTS)).toMatchObject({ savedPaise: 0, km: 0, litres: 0, kgCo2: 0 });
   });
 });

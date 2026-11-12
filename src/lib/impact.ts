@@ -14,9 +14,6 @@ export type ImpactAssumptions = {
   kgCo2PerLitre: number;
 };
 
-/** Milkar's starting estimates; the platform admin can change them in Settings. */
-export const DEFAULT_IMPACT_ASSUMPTIONS: ImpactAssumptions = { kmPerTrip: 8, litresPerKm: 0.04, kgCo2PerLitre: 2.3 };
-
 /** One flat's confirmed goods from one vendor in one grocery round: a delivery it would have had alone. */
 export type GroceryDelivery = { roundId: string; flatId: string; vendorId: string };
 /** A completed service visit. `day` is its IST date (e.g. "2026-10-21"): one vendor trip per round and day. */
@@ -51,7 +48,8 @@ export type Impact = {
   assumptions: ImpactAssumptions;
 };
 
-export function communityImpact(input: { savedPaise: number; trips: Trips }, assumptions: ImpactAssumptions = DEFAULT_IMPACT_ASSUMPTIONS): Impact {
+/** `assumptions` come from the platform settings (impactAssumptionsOf). */
+export function communityImpact(input: { savedPaise: number; trips: Trips }, assumptions: ImpactAssumptions): Impact {
   const km = input.trips.avoided * assumptions.kmPerTrip;
   const litres = km * assumptions.litresPerKm;
   return {

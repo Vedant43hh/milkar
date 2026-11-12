@@ -1,8 +1,9 @@
 import "server-only";
+import type { Prisma } from "@/generated/prisma/client";
 import { DEFAULT_SETTINGS, type PlatformSettings } from "@/lib/admin/settings";
 import { prisma } from "@/lib/db";
 
-type Db = Pick<typeof prisma, "platformSetting">;
+type Db = { platformSetting: Prisma.TransactionClient["platformSetting"] };
 
 /** Every platform setting, with defaults for anything not saved yet. */
 export async function loadPlatformSettings(db: Db = prisma): Promise<PlatformSettings> {
