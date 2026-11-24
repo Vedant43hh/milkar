@@ -1,8 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { demoLogin, expectNoSeriousA11yIssues } from "./helpers";
 
-// Every main page of every portal, at 360×800: tap targets of at least 44 px, and no serious
-// accessibility problem in the light or the dark theme.
+// Every main page of every portal, at 360×800: tap targets of at least 44 px, a visible focus ring
+// on everything the keyboard reaches, and no serious accessibility problem in either theme.
 const PORTALS = [
   { who: "Rahul Deshmukh", pages: ["/app", "/app/buys", "/app/groceries", "/app/services", "/app/orders", "/app/wallet", "/app/subscriptions", "/app/polls", "/app/notifications"] },
   { who: "Sunita Kulkarni", pages: ["/manager", "/manager/rounds", "/manager/distribution", "/manager/visits", "/manager/issues", "/manager/residents", "/manager/polls", "/manager/team"] },
@@ -47,10 +47,39 @@ async function smallTapTargets(page: Page): Promise<string[]> {
   });
 }
 
+/**
+ * Tabs through the page and returns the controls that show no focus ring when reached from the
+ * keyboard. A visually hidden input (behind a switch, a segment, a star or a slot) passes when its
+ * label, or something inside the label, draws the ring.
+ */
+async function focusWithoutRing(page: Page, stops = 40): Promise<string[]> {
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+  const missing = new Set<string>();
+  for (let i = 0; i < stops; i++) {
+    await page.keyboard.press("Tab");
+    const problem = await page.evaluate(() => {
+      const el = document.activeElement as HTMLElement | null;
+      if (!el || el === document.body) return null;
+      const ring = (e: Element) => {
+        const style = getComputedStyle(e);
+        return style.outlineStyle !== "none" && parseFloat(style.outlineWidth) > 0;
+      };
+      const name = `${el.tagName.toLowerCase()} "${(el.getAttribute("aria-label") ?? el.textContent ?? "").trim().replace(/\s+/g, " ").slice(0, 40)}"`;
+      const rect = el.getBoundingClientRect();
+      if (rect.width > 1 && rect.height > 1) return ring(el) ? null : name;
+      const label = el.closest("label") ?? (el instanceof HTMLInputElement ? el.labels?.[0] : null);
+      return label && (ring(label) || [...label.querySelectorAll("*")].some(ring)) ? null : name;
+    });
+    if (problem) missing.add(problem);
+  }
+  return [...missing];
+}
+
 async function checkPage(page: Page, path: string) {
   await page.goto(path);
   await expect(page.locator("h1").filter({ visible: true }).first()).toBeVisible();
   expect.soft(await smallTapTargets(page), `small tap targets on ${path}`).toEqual([]);
+  expect.soft(await focusWithoutRing(page), `controls without a focus ring on ${path}`).toEqual([]);
   await expectNoSeriousA11yIssues(page);
   await page.emulateMedia({ colorScheme: "dark" });
   await expectNoSeriousA11yIssues(page);

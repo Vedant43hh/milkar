@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { SERVICE_WORKER_SCRIPT, THEME_SCRIPT, VIEW_TRANSITION_SCRIPT } from "@/components/theme-script";
 import { FlashToasts, ToastProvider } from "@/components/ui/toast";
 import { t } from "@/i18n";
+import { PAGE_COLOR } from "@/lib/theme-colors";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -15,8 +16,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#e0e5ec" },
-    { media: "(prefers-color-scheme: dark)", color: "#2b2f36" },
+    { media: "(prefers-color-scheme: light)", color: PAGE_COLOR.light },
+    { media: "(prefers-color-scheme: dark)", color: PAGE_COLOR.dark },
   ],
 };
 

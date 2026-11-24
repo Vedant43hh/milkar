@@ -257,7 +257,7 @@ export default function DesignPage() {
             {(["app", "manager", "vendor", "tech", "admin"] as const).map((portal) => (
               <div key={portal} data-portal={portal} className="space-y-2 rounded-card border border-border bg-surface p-3">
                 <span className="block h-2 rounded-full bg-brand" />
-                <span className="inline-flex h-6 items-center rounded-full bg-brand-soft px-2.5 text-xs font-semibold text-brand-soft-fg">{t(`portals.${portal}`)}</span>
+                <span className="inline-flex h-6 items-center rounded-full px-2.5 text-xs font-semibold text-brand neu-pressed-xs">{t(`portals.${portal}`)}</span>
                 <Button type="button" size="sm" block>
                   Action
                 </Button>
