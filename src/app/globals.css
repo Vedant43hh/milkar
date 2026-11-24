@@ -13,142 +13,203 @@
    from the saved choice (system / light / dark) before first paint. */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* ---------- Semantic colour tokens (light) ----------
-   Warm and friendly: cream and clay neutrals, Milkar teal for actions, saffron for savings and
-   unlocks. Every text/background pair here is checked for WCAG AA (4.5:1) in both themes. */
+/* ---------- Neumorphic (soft UI) tokens, light ----------
+   One colour for the page and everything on it: depth comes only from two shadows, lit from the
+   top-left. The spec's hues are deepened just enough that every text pairing passes WCAG AA
+   (4.5:1, with a margin) on the page, on the deeper well (--surface-2) and on every soft tint
+   (each a 9% wash of its colour, 11% in dark), where grey hint text passes too.
+   The spec's "--accent" (the one colour for primary actions) is --brand here, because each
+   portal has its own; --accent stays the saffron used for savings and unlocks. */
 :root {
-  --bg: #faf6ef;
-  --surface: #ffffff;
-  --surface-2: #f3ece1;
-  --fg: #211b14;
-  --muted: #5c5145;
-  --subtle: #6b6053;
-  --border: #e8dfd2;
-  --border-strong: #d6cab9;
+  /* The spec's tokens. */
+  --bg: #e0e5ec;
+  --shadow-dark: #a3b1c6;
+  --shadow-light: #ffffff;
+  --text: #2d3748;
+  --text-muted: #525c6c; /* spec #5a6577, deepened to pass on the deeper well */
+  --radius: 16px;
+  --raised: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
+  --raised-sm: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
+  --pressed: inset 6px 6px 12px var(--shadow-dark), inset -6px -6px 12px var(--shadow-light);
+  --divider: rgb(0 0 0 / 0.05);
+  /* Raised surfaces use the smaller shadow on phones (see the media query below). */
+  --neu-raised: var(--raised);
 
-  --brand: #0f766e;
-  --brand-hover: #115e59;
+  /* The names the components read, pointed at the spec's tokens. */
+  --surface: var(--bg);
+  --surface-2: #d3dae4; /* a slightly deeper well: tracks, hovers, skeletons */
+  --fg: var(--text);
+  --muted: var(--text-muted);
+  --subtle: var(--text-muted);
+  --border: var(--divider);
+  --border-strong: var(--shadow-dark);
+
+  /* Primary actions (residents; other portals below). Spec #4f7cff is 2.9:1 on --bg. */
+  --brand: #334fa3;
+  --brand-hover: #2b438b;
   --brand-fg: #ffffff;
-  --brand-soft: #e3f3ef;
-  --brand-soft-fg: #115e59;
+  --brand-soft: #d0d8e5;
+  --brand-soft-fg: #2b438b;
 
-  --accent: #f59e0b;
-  --accent-fg: #1c1917;
-  --accent-soft: #fff3dc;
-  --accent-soft-fg: #8a4b06;
+  /* Saffron for savings and unlocks, deep enough to read as text. */
+  --accent: #764c05;
+  --accent-fg: #ffffff;
+  --accent-soft: #d6d7d7;
+  --accent-soft-fg: #644104;
 
-  --success: #166534;
-  --success-soft: #e9f7ee;
-  --warning: #92400e;
-  --warning-soft: #fff4e0;
-  --danger: #b91c1c;
-  --danger-soft: #fdecec;
+  /* Status colours: the spec's hues (#2f9e6e, #d9822b, #e5484d), deepened for AA. */
+  --success: #1d6043;
+  --success-soft: #ced9dd;
+  --warning: #7a4918;
+  --warning-soft: #d7d7d9;
+  --danger: #973033;
+  --danger-soft: #d9d5db;
 
-  --focus: #14b8a6;
-  --overlay: rgb(20 14 8 / 0.45);
+  --focus: var(--brand);
+  --overlay: rgb(45 55 72 / 0.35);
   color-scheme: light;
 }
 
-/* ---------- Semantic colour tokens (dark) ---------- */
-.dark {
-  --bg: #14110d;
-  --surface: #1d1914;
-  --surface-2: #28231c;
-  --fg: #f6efe6;
-  --muted: #bfb3a5;
-  --subtle: #9a8e80;
-  --border: #382f26;
-  --border-strong: #4b4136;
+@media (width < 40rem) {
+  :root {
+    --neu-raised: var(--raised-sm);
+  }
+}
 
-  --brand: #2dd4bf;
-  --brand-hover: #5eead4;
-  --brand-fg: #042f2e;
-  --brand-soft: #10302c;
-  --brand-soft-fg: #99f6e4;
+/* ---------- Neumorphic tokens, dark ---------- */
+.dark {
+  --bg: #2b2f36;
+  --shadow-dark: #1f2227;
+  --shadow-light: #373c45;
+  --text: #e2e8f0;
+  --text-muted: #a0aec0;
+  --divider: rgb(0 0 0 / 0.22);
+  --surface-2: #26292f;
+
+  --brand: #9cb6ff;
+  --brand-hover: #abc1ff;
+  --brand-fg: #1c212e;
+  --brand-soft: #373e4c;
+  --brand-soft-fg: #abc1ff;
 
   --accent: #fbbf24;
-  --accent-fg: #1c1917;
-  --accent-soft: #33260b;
-  --accent-soft-fg: #fcd34d;
+  --accent-fg: #2d2206;
+  --accent-soft: #423f34;
+  --accent-soft-fg: #fcc945;
 
-  --success: #4ade80;
-  --success-soft: #10291a;
-  --warning: #fbbf24;
-  --warning-soft: #33260b;
-  --danger: #f87171;
-  --danger-soft: #3a1414;
+  --success: #82c5a8;
+  --success-soft: #354043;
+  --warning: #e6ab71;
+  --warning-soft: #403d3c;
+  --danger: #f2a2a4;
+  --danger-soft: #413c42;
 
-  --focus: #5eead4;
-  --overlay: rgb(0 0 0 / 0.6);
+  --focus: var(--brand);
+  --overlay: rgb(0 0 0 / 0.55);
   color-scheme: dark;
 }
 
 /* ---------- Portal accents ----------
-   Each portal re-points the brand colour, so its buttons, links, active tabs and focus rings
-   carry its own accent and people always know where they are. Residents keep Milkar teal. */
+   Each portal re-points the primary colour, so its buttons, links, active tabs and focus rings
+   carry its own accent and people always know where they are. Residents use the blue above. */
 [data-portal="manager"] {
-  --brand: #4338ca;
-  --brand-hover: #3730a3;
+  --brand: #4648ab;
+  --brand-hover: #3c3d91;
   --brand-fg: #ffffff;
-  --brand-soft: #eceefe;
-  --brand-soft-fg: #3730a3;
-  --focus: #6366f1;
+  --brand-soft: #d2d7e6;
+  --brand-soft-fg: #3c3d91;
+  --focus: #4648ab;
 }
 [data-portal="vendor"] {
-  --brand: #b13a09;
-  --brand-hover: #9a3412;
+  --brand: #933708;
+  --brand-hover: #7d2f07;
   --brand-fg: #ffffff;
-  --brand-soft: #fdeee4;
-  --brand-soft-fg: #9a3412;
-  --focus: #f97316;
+  --brand-soft: #d9d5d7;
+  --brand-soft-fg: #7d2f07;
+  --focus: #933708;
 }
 [data-portal="tech"] {
-  --brand: #0369a1;
-  --brand-hover: #075985;
+  --brand: #015a87;
+  --brand-hover: #014d73;
   --brand-fg: #ffffff;
-  --brand-soft: #e2f2fb;
-  --brand-soft-fg: #075985;
-  --focus: #0ea5e9;
+  --brand-soft: #ccd8e3;
+  --brand-soft-fg: #014d73;
+  --focus: #015a87;
 }
 [data-portal="admin"] {
-  --brand: #86198f;
-  --brand-hover: #701a75;
+  --brand: #8d1898;
+  --brand-hover: #781481;
   --brand-fg: #ffffff;
-  --brand-soft: #f9ebfa;
-  --brand-soft-fg: #701a75;
-  --focus: #c026d3;
+  --brand-soft: #d9d3e4;
+  --brand-soft-fg: #781481;
+  --focus: #8d1898;
 }
 .dark [data-portal="manager"] {
-  --brand: #a5b4fc;
-  --brand-hover: #c7d2fe;
-  --brand-fg: #1e1b4b;
-  --brand-soft: #22214a;
-  --brand-soft-fg: #c7d2fe;
-  --focus: #a5b4fc;
+  --brand: #afb1f8;
+  --brand-hover: #bbbdf9;
+  --brand-fg: #20202d;
+  --brand-soft: #3a3d4b;
+  --brand-soft-fg: #bbbdf9;
+  --focus: #afb1f8;
 }
 .dark [data-portal="vendor"] {
-  --brand: #fdba74;
-  --brand-hover: #fed7aa;
-  --brand-fg: #431407;
-  --brand-soft: #3b210f;
-  --brand-soft-fg: #fed7aa;
-  --focus: #fdba74;
+  --brand: #f4a57c;
+  --brand-hover: #f6b390;
+  --brand-fg: #2c1e16;
+  --brand-soft: #413c3e;
+  --brand-soft-fg: #f6b390;
+  --focus: #f4a57c;
 }
 .dark [data-portal="tech"] {
-  --brand: #7dd3fc;
-  --brand-hover: #bae6fd;
-  --brand-fg: #082f49;
-  --brand-soft: #0d2d40;
-  --brand-soft-fg: #bae6fd;
-  --focus: #7dd3fc;
+  --brand: #7ec0e2;
+  --brand-hover: #91c9e6;
+  --brand-fg: #172329;
+  --brand-soft: #343f49;
+  --brand-soft-fg: #91c9e6;
+  --focus: #7ec0e2;
 }
 .dark [data-portal="admin"] {
-  --brand: #f0abfc;
-  --brand-hover: #f5d0fe;
-  --brand-fg: #4a044e;
-  --brand-soft: #3a1540;
-  --brand-soft-fg: #f5d0fe;
-  --focus: #f0abfc;
+  --brand: #dba6e0;
+  --brand-hover: #e0b3e5;
+  --brand-fg: #271e28;
+  --brand-soft: #3e3c49;
+  --brand-soft-fg: #e0b3e5;
+  --focus: #dba6e0;
+}
+
+/* Printing (invoices, purchase orders): plain white paper, no shadows, dark text. */
+@media print {
+  :root,
+  .dark {
+    --bg: #ffffff;
+    --surface-2: #ffffff;
+    --shadow-dark: transparent;
+    --shadow-light: transparent;
+    --text: #000000;
+    --text-muted: #333333;
+    --divider: rgb(0 0 0 / 0.15);
+    color-scheme: light;
+  }
+}
+
+/* ---------- Neumorphic utilities ----------
+   Same colour as the page; only the shadow changes. Work with variants too:
+   hover:neu-raised-sm, active:neu-pressed, disabled:neu-flat. */
+@utility neu-raised {
+  background-color: var(--bg);
+  box-shadow: var(--neu-raised);
+}
+@utility neu-raised-sm {
+  background-color: var(--bg);
+  box-shadow: var(--raised-sm);
+}
+@utility neu-pressed {
+  background-color: var(--bg);
+  box-shadow: var(--pressed);
+}
+@utility neu-flat {
+  background-color: var(--bg);
+  box-shadow: none;
 }
 
 /* On the "this area is for …" page, a portal's frame hides the controls meant for its own users. */
@@ -188,10 +249,11 @@
 /* ---------- Scale tokens ---------- */
 @theme {
   --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif;
-  --radius-control: 0.875rem;
-  --radius-card: 1.25rem;
-  --shadow-card: 0 1px 2px rgb(60 40 20 / 0.05), 0 2px 6px rgb(60 40 20 / 0.06);
-  --shadow-raised: 0 10px 28px rgb(40 24 10 / 0.16);
+  --radius-control: 0.75rem;
+  --radius-card: var(--radius);
+  /* Every card, sheet and menu is raised neumorphically (smaller on phones). */
+  --shadow-card: var(--neu-raised);
+  --shadow-raised: var(--neu-raised);
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
 
   --animate-fade-in: fade-in 160ms var(--ease-out-soft);
