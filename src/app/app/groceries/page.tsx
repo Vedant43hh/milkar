@@ -59,15 +59,15 @@ async function Groceries({ searchParams }: { searchParams: PageProps<"/app/groce
     <PullToRefresh>
       <PageHeader title={t("shop.title")} subtitle={t("shop.intro", { community: community.name })} />
       {rounds.length > 1 && (
-        <nav aria-label={t("shop.otherRounds")} className="-mx-4 mb-4 flex gap-2 overflow-x-auto px-4">
+        <nav aria-label={t("shop.otherRounds")} className="-mx-4 -mt-2 mb-2 flex gap-3 overflow-x-auto px-4 py-2">
           {rounds.map((r) => (
             <Link
               key={r.id}
               href={`/app/groceries?round=${r.id}`}
               aria-current={r.id === chosen.id ? "page" : undefined}
               className={cn(
-                "inline-flex min-h-11 shrink-0 items-center rounded-full border px-3 text-sm",
-                r.id === chosen.id ? "border-brand bg-brand-soft font-medium text-brand-soft-fg" : "border-border bg-surface text-muted",
+                "inline-flex min-h-11 shrink-0 items-center rounded-full px-4 text-sm transition-[box-shadow,color] duration-200 ease-in-out",
+                r.id === chosen.id ? "font-medium text-brand neu-pressed-sm" : "text-muted neu-raised-sm hover:text-fg hover:neu-raised-xs",
               )}
             >
               {r.title}

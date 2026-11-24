@@ -100,7 +100,7 @@ export function ServiceBooking({ day, text, shopText }: { day: ServiceDay; text:
             const price = unitPriceAt(pricing(o), day.basisCount).totalPaise;
             const max = round.canAdd ? Math.max(o.maxQtyPerFlat - o.flatOthersQty, held[o.id]) : held[o.id];
             return (
-              <li key={o.id} className={cn("rounded-card border bg-surface p-3 shadow-card", targets[o.id] !== held[o.id] ? "border-brand" : "border-border")}>
+              <li key={o.id} className={cn("rounded-card p-4 transition-[box-shadow] duration-200 ease-in-out", targets[o.id] !== held[o.id] ? "neu-pressed" : "bg-surface shadow-card")}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="font-medium text-fg">{o.name}</p>
@@ -169,7 +169,7 @@ export function ServiceBooking({ day, text, shopText }: { day: ServiceDay; text:
       )}
 
       {changed.length > 0 && (
-        <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-20 space-y-1 rounded-card border border-border bg-surface p-2 shadow-raised md:bottom-4">
+        <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-20 space-y-1 rounded-card bg-surface p-2 shadow-raised md:bottom-4">
           {needsSlot && !slotId && <p className="px-2 text-sm text-warning">{text.pickSlot}</p>}
           <Button
             block
@@ -209,7 +209,7 @@ function SlotPicker({
       {days.map(([day, slots]) => (
         <div key={day} className="space-y-2">
           <p className="text-sm font-semibold text-fg">{day}</p>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-3">
             {slots.map((slot) => {
               const full = slot.seatsLeft === 0 && slot.id !== current;
               const checked = selected === slot.id;
@@ -217,9 +217,8 @@ function SlotPicker({
                 <label
                   key={slot.id}
                   className={cn(
-                    "relative flex min-h-14 cursor-pointer flex-col justify-center rounded-control border px-3 py-2 text-sm transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-focus",
-                    checked ? "border-brand bg-brand-soft text-brand-soft-fg" : "border-border bg-surface text-fg hover:border-brand/50",
-                    full && "cursor-not-allowed bg-surface-2 text-subtle hover:border-border",
+                    "relative flex min-h-14 cursor-pointer flex-col justify-center rounded-control px-3 py-2 text-sm transition-[box-shadow,color] duration-200 ease-in-out has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-focus",
+                    full ? "cursor-not-allowed text-subtle neu-flat" : checked ? "text-brand neu-pressed-sm" : "text-fg neu-raised-sm hover:neu-raised-xs",
                   )}
                 >
                   <input type="radio" name="slot" value={slot.id} checked={checked} disabled={full} onChange={() => onPick(slot.id)} className="sr-only" />

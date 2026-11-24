@@ -22,7 +22,7 @@ import { getServiceDay, type ServiceDay } from "@/server/service-days";
 function ProblemCard({ roundId, booking }: { roundId: string; booking: NonNullable<ServiceDay["booking"]> }) {
   const text = messages().problem;
   return (
-    <Card labelledBy="problem-title" className="border-brand/40">
+    <Card labelledBy="problem-title">
       <CardHeader titleId="problem-title" title={text.title} subtitle={text.intro} />
       <ProblemForm
         roundId={roundId}

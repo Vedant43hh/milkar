@@ -36,9 +36,9 @@ async function GroupBuys() {
             <li key={category}>
               <Link
                 href={`/app/buys/${CATEGORY_SLUG[category]}`}
-                className="group flex h-full items-start gap-3 rounded-card border border-border bg-surface p-4 shadow-card transition-colors hover:border-brand/50"
+                className="group flex h-full items-start gap-3 rounded-card p-4 sm:p-5 neu-raised transition-[box-shadow] duration-200 ease-in-out hover:neu-raised-sm active:neu-pressed"
               >
-                <span className={cn("flex size-12 shrink-0 items-center justify-center rounded-2xl", tint)}>
+                <span className={cn("flex size-12 shrink-0 items-center justify-center rounded-2xl neu-pressed-sm", tint)}>
                   <Icon aria-hidden className="size-6" />
                 </span>
                 <span className="min-w-0 flex-1 space-y-1">

@@ -44,7 +44,7 @@ export function GroceryShop({ shop, text }: { shop: Shop; text: Text }) {
   return (
     <div className="space-y-4">
       {categories.length > 1 && (
-        <div role="group" aria-label={text.categories} className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
+        <div role="group" aria-label={text.categories} className="-mx-4 -my-2 flex gap-3 overflow-x-auto px-4 py-2">
           <FilterChip selected={category === null} onClick={() => setCategory(null)}>
             {text.all}
           </FilterChip>
@@ -73,7 +73,7 @@ export function GroceryShop({ shop, text }: { shop: Shop; text: Text }) {
       </ul>
 
       {changed.length > 0 && (
-        <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-20 flex items-center gap-2 rounded-card border border-border bg-surface p-2 shadow-raised md:bottom-4">
+        <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-20 flex items-center gap-3 rounded-card bg-surface p-2 shadow-raised md:bottom-4">
           <IconButton label={text.undo} onClick={() => setTargets(held)}>
             <RotateCcw aria-hidden className="size-5" />
           </IconButton>
@@ -108,8 +108,8 @@ function FilterChip({ selected, onClick, children }: { selected: boolean; onClic
       aria-pressed={selected}
       onClick={onClick}
       className={cn(
-        "inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full border px-3 text-sm whitespace-nowrap transition-colors",
-        selected ? "border-brand bg-brand-soft font-medium text-brand-soft-fg" : "border-border bg-surface text-muted hover:text-fg",
+        "inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full px-3 text-sm whitespace-nowrap transition-[box-shadow,color] duration-200 ease-in-out",
+        selected ? "font-medium text-brand neu-pressed-sm" : "text-muted neu-raised-sm hover:text-fg hover:neu-raised-xs",
       )}
     >
       {children}
@@ -144,7 +144,7 @@ function ShopRow({
   const label = item.pack ? `${item.name} ${item.pack}` : item.name;
 
   return (
-    <li className={cn("rounded-card border bg-surface p-3 shadow-card", target !== held ? "border-brand" : "border-border")}>
+    <li className={cn("rounded-card p-4 transition-[box-shadow] duration-200 ease-in-out", target !== held ? "neu-pressed" : "bg-surface shadow-card")}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="font-medium text-fg">{item.name}</p>

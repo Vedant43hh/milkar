@@ -6,7 +6,7 @@ import { useActionState, useEffect, useRef, useState, useTransition, type FormEv
 import type { ActionResult } from "@/lib/action-result";
 import { fitWithin, MAX_PHOTO_BYTES } from "@/lib/photos";
 import { saveProblemAction } from "@/server/actions/orders";
-import { Button } from "../ui/button";
+import { Button, buttonClasses } from "../ui/button";
 import { Label, Textarea } from "../ui/form";
 import { useToast } from "../ui/toast";
 
@@ -109,10 +109,17 @@ export function ProblemForm({ roundId, note, photo, text }: { roundId: string; n
       </div>
       <div className="space-y-2">
         {shown && (
-          <Image src={shown.url} alt={text.preview} width={shown.width} height={shown.height} unoptimized className="max-h-48 w-auto rounded-control border border-border object-contain" />
+          <Image src={shown.url} alt={text.preview} width={shown.width} height={shown.height} unoptimized className="max-h-48 w-auto rounded-control object-contain neu-raised-sm" />
         )}
         <div className="flex flex-wrap items-center gap-2">
-          <label htmlFor={pickId} className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-control border border-border-strong bg-surface px-3 text-sm font-medium text-fg has-focus-visible:ring-2 has-focus-visible:ring-focus">
+          <label
+            htmlFor={pickId}
+            className={buttonClasses({
+              variant: "secondary",
+              size: "sm",
+              className: "cursor-pointer has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-focus",
+            })}
+          >
             <Camera aria-hidden className="size-4" />
             {busy ? text.shrinking : shown ? text.change : text.photo}
             <input ref={input} id={pickId} name="pick" type="file" accept="image/*" className="sr-only" onChange={(e) => choose(e.target.files?.[0])} />
