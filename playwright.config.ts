@@ -22,6 +22,12 @@ export default defineConfig({
     isMobile: false,
     trace: "retain-on-failure",
   },
+  projects: [
+    { name: "features", testIgnore: /golden-path\.spec\.ts/ },
+    // The golden path closes this week's grocery round and the Plumber Day, which the feature
+    // tests expect open, so it runs after them. Alone: npx playwright test --project=golden-path --no-deps
+    { name: "golden-path", testMatch: /golden-path\.spec\.ts/, dependencies: ["features"] },
+  ],
   webServer: {
     command: "npm run start",
     url: `${baseURL}/api/health`,

@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+/* Only the app's own code holds class names. Skipping the rest (agent skills, tests, migrations)
+   keeps the class scan small, so the dev server's CSS worker doesn't run out of memory. */
+@source not "../../.claude";
+@source not "../../tests";
+@source not "../../e2e";
+@source not "../../prisma";
+@source not "../../test-results";
+@source not "../../playwright-report";
+
 /* Dark mode is class-based: an inline script in the root layout sets .dark on <html>
    from the saved choice (system / light / dark) before first paint. */
 @custom-variant dark (&:where(.dark, .dark *));

@@ -1,5 +1,5 @@
 // Node.js-only startup checks, imported from instrumentation.ts.
-import { tickIntervalMs } from "./lib/cron";
+import { isConnectionError, tickIntervalMs } from "./lib/cron";
 import { assertSafeBoot, getEnv } from "./lib/env";
 
 try {
@@ -24,7 +24,7 @@ function startJobTicker() {
   state.milkarJobTicker = true;
 
   let running = false;
-  const tick = async () => {
+  const tick = async (retry = true) => {
     if (running) return;
     running = true;
     try {
@@ -34,11 +34,15 @@ function startJobTicker() {
         console.info(`[milkar] jobs: ${report.finalized.length} round(s) finalized, ${report.reminders} reminder(s), ${report.expiredHolds} hold(s) expired`);
       }
     } catch (error) {
-      console.error("[milkar] scheduled jobs failed:", error);
+      // A connection dropped or not ready yet (common on the very first query after start-up):
+      // try once more shortly instead of waiting a whole interval.
+      if (retry && isConnectionError(error)) setTimeout(() => void tick(false), 3_000).unref();
+      else console.error("[milkar] scheduled jobs failed:", error);
     } finally {
       running = false;
     }
   };
-  setTimeout(tick, 5_000).unref();
-  setInterval(tick, every).unref();
+  setTimeout(() => void tick(), 5_000).unref();
+  setInterval(() => void tick(), every).unref();
 }
+

@@ -13,9 +13,9 @@ const variants = {
 } as const;
 
 const sizes = {
-  md: "min-h-11 px-4 text-[0.95rem]",
-  sm: "min-h-11 px-3 text-sm",
-  lg: "min-h-12 px-5 text-base",
+  md: "min-h-11 min-w-11 px-4 text-[0.95rem]",
+  sm: "min-h-11 min-w-11 px-3 text-sm",
+  lg: "min-h-12 min-w-12 px-5 text-base",
 } as const;
 
 export type ButtonVariant = keyof typeof variants;

@@ -2,7 +2,7 @@
 
 Group buying for Indian residential communities: apartment societies, gated communities, PGs and co-living, hostels and office campuses. Neighbours pool grocery orders and book home services (AC servicing, deep cleaning, pest control, car wash…) together, so everyone pays the group price.
 
-> Work in progress. This README covers local setup; the full guide (architecture, pricing rules, deployment, screenshots) comes in a later phase.
+> Deployment (Vercel + Neon) and screenshots come in the last phase; everything below runs locally.
 
 ## Requirements
 
@@ -27,11 +27,14 @@ npm test                    # unit tests (pricing engine, rules, formatting)
 npm run test:int            # integration tests against the milkar_test database
 npm run test:e2e            # browser tests incl. accessibility (axe) and a reload-loop guard; needs a seeded DB
 E2E_DEV=1 npm run test:e2e  # the same against a running `npm run dev` (longer timeouts for on-demand compiles)
+npx playwright test --project=golden-path --no-deps   # only the end-to-end story (reseed first)
 npm run measure:js          # compressed JavaScript per key page, against `npm run start`
 npm run typecheck && npm run lint
 ```
 
 `test:e2e` starts `npm run start` if nothing is listening; point it elsewhere with `E2E_BASE_URL`.
+
+The browser suite runs in two projects. **features** covers each flow on its own, plus `e2e/polish.spec.ts`, which opens every main page of every portal at 360×800 and fails on any control smaller than 44×44 px or any serious axe finding in the light or the dark theme. **golden-path** runs after it: a visitor tries the price simulator, registers as a resident, is approved by the Society Manager, unlocks a better grocery price, books a Plumber Day with a note; the manager closes both, the assigned technician sets out, starts and asks for a part, the resident approves and pays (wallet first), and the resident's code finishes the visit. It then checks that the wallet, both orders, both GST invoices and the home page's savings agree to the rupee. The resident, the staff and the technician each use their own browser session, as they would on their own phones.
 
 ## Portals and roles
 
@@ -70,7 +73,9 @@ Opening another role's portal shows a friendly page ("This area is for Society M
 
 ## Design system
 
-Tokens (a warm palette for light and dark, radius, shadows, motion) live in `src/app/globals.css`, with every text colour checked for WCAG AA contrast. Each portal's shell sets `data-portal`, which re-points the brand colour to that portal's accent, so buttons, links, active tabs and focus rings show where you are. Components are in `src/components/ui/` (including a step-by-step `Wizard`, `NeighbourFlats`, a swipeable `ChipScroller` and `PullToRefresh`); the shells are in `src/components/shell/`. Page transitions use React's `<ViewTransition>` and plain CSS (no motion library), and switch off with reduced motion. Open **`/design`** (development or `DEMO_MODE=true`) for a living style guide in both themes. Dark mode follows the system setting by default; anyone can override it in the account menu.
+Tokens (a warm palette for light and dark, radius, shadows, motion) live in `src/app/globals.css`, with every text colour checked for WCAG AA contrast. Each portal's shell sets `data-portal`, which re-points the brand colour to that portal's accent, so buttons, links, active tabs and focus rings show where you are. Components are in `src/components/ui/` (including a step-by-step `Wizard`, `NeighbourFlats`, a swipeable `ChipScroller` and `PullToRefresh`); the shells are in `src/components/shell/`. Page transitions use React's `<ViewTransition>` and plain CSS (no motion library), and switch off with reduced motion. Open **`/design`** (development or `DEMO_MODE=true`) for a living style guide in both themes. Dark mode follows the system setting by default; anyone can override it in the account menu. Buttons, chips and choice controls are at least 44 px in both directions, focus rings are always visible, and reduced motion turns off animation.
+
+**Install on a phone:** Milkar is a Progressive Web App. `src/app/manifest.ts` describes it (it opens at `/login`, which sends a signed-in person to their own portal), the icons are in `public/icons/`, and in production `public/sw.js` shows `public/offline.html` when a page can't load without a connection. The service worker caches nothing else: prices, wallets and orders are always live.
 
 Integration tests refuse to run unless `TEST_DATABASE_URL` points at a database whose name contains `test`.
 Browser tests need Chromium once: `npx playwright install chromium`. They change the dev database (new users, rounds, a converted poll), so run `npm run db:seed` before each run of the suite.
@@ -157,7 +162,7 @@ When a round's cutoff passes, the cutoff job finalizes it in one transaction und
 
 Alongside it, residents get a "closes soon" reminder 6 hours before cutoff (once per round; not for rounds opened inside that window), and weekly holds that ran out are released.
 
-**How the jobs run:** with `CRON_TICK_SECONDS` set (60 in `.env.example`), the server runs them itself every that many seconds, which suits one long-running server and local development. On serverless hosting, set it to 0 and have a scheduler call `GET /api/cron` with `Authorization: Bearer $CRON_SECRET` (Vercel Cron sends this header automatically). Every step is idempotent and takes the same locks as checkout, so overlapping runs are safe.
+**How the jobs run:** with `CRON_TICK_SECONDS` set (60 in `.env.example`), the server runs them itself every that many seconds, which suits one long-running server and local development. If the database drops the connection (common on the first query after start-up), the run is retried once a few seconds later. On serverless hosting, set it to 0 and have a scheduler call `GET /api/cron` with `Authorization: Bearer $CRON_SECRET` (Vercel Cron sends this header automatically). Every step is idempotent and takes the same locks as checkout, so overlapping runs are safe.
 
 ## Login
 

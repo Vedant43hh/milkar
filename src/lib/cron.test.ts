@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isCronAuthorized, tickIntervalMs } from "./cron";
+import { isConnectionError, isCronAuthorized, tickIntervalMs } from "./cron";
 
 describe("cron access", () => {
   it("accepts only the exact bearer secret", () => {
@@ -19,5 +19,16 @@ describe("cron access", () => {
     expect(tickIntervalMs(0)).toBeNull();
     expect(tickIntervalMs(60)).toBe(60_000);
     expect(tickIntervalMs(1)).toBe(10_000);
+  });
+});
+
+describe("isConnectionError", () => {
+  it("retries a dropped or unreachable database, not other failures", () => {
+    expect(isConnectionError(Object.assign(new Error("Server has closed the connection."), { code: "P1017" }))).toBe(true);
+    expect(isConnectionError({ code: "P1001" })).toBe(true);
+    expect(isConnectionError({ code: "ECONNRESET" })).toBe(true);
+    expect(isConnectionError({ code: "P2002" })).toBe(false); // a unique-constraint failure is a real problem
+    expect(isConnectionError(new Error("boom"))).toBe(false);
+    expect(isConnectionError(null)).toBe(false);
   });
 });

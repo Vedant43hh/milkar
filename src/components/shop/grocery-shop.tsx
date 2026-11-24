@@ -108,7 +108,7 @@ function FilterChip({ selected, onClick, children }: { selected: boolean; onClic
       aria-pressed={selected}
       onClick={onClick}
       className={cn(
-        "inline-flex min-h-11 shrink-0 items-center rounded-full border px-3 text-sm whitespace-nowrap transition-colors",
+        "inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full border px-3 text-sm whitespace-nowrap transition-colors",
         selected ? "border-brand bg-brand-soft font-medium text-brand-soft-fg" : "border-border bg-surface text-muted hover:text-fg",
       )}
     >

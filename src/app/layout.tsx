@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
-import { THEME_SCRIPT, VIEW_TRANSITION_SCRIPT } from "@/components/theme-script";
+import { SERVICE_WORKER_SCRIPT, THEME_SCRIPT, VIEW_TRANSITION_SCRIPT } from "@/components/theme-script";
 import { FlashToasts, ToastProvider } from "@/components/ui/toast";
 import { t } from "@/i18n";
 import "./globals.css";
@@ -27,6 +27,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: VIEW_TRANSITION_SCRIPT }} />
+        {process.env.NODE_ENV === "production" && <script dangerouslySetInnerHTML={{ __html: SERVICE_WORKER_SCRIPT }} />}
       </head>
       <body className="min-h-dvh antialiased">
         <ToastProvider>

@@ -18,7 +18,7 @@ export function CategoryChips({ counts, current }: { counts: Record<BuyCategory,
             href={`/app/buys/${CATEGORY_SLUG[category]}`}
             aria-current={selected ? "page" : undefined}
             className={cn(
-              "inline-flex min-h-11 items-center gap-1.5 rounded-full border px-3.5 text-sm font-medium transition-colors",
+              "inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full border px-3.5 text-sm font-medium transition-colors",
               selected ? "border-brand bg-brand-soft text-brand-soft-fg" : "border-border bg-surface text-fg hover:border-brand/50",
             )}
           >

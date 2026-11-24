@@ -105,7 +105,7 @@ export function SegmentedControl<T extends string>({
               onChange={onChange ? () => onChange(option.value) : undefined}
               className="peer sr-only"
             />
-            <span className="flex min-h-10 cursor-pointer items-center justify-center gap-1.5 rounded-[calc(var(--radius-control)-4px)] px-2 text-sm text-muted transition-colors peer-checked:bg-surface peer-checked:font-medium peer-checked:text-fg peer-checked:shadow-card peer-focus-visible:outline-2 peer-focus-visible:outline-focus">
+            <span className="flex min-h-11 cursor-pointer items-center justify-center gap-1.5 rounded-[calc(var(--radius-control)-4px)] px-2 text-sm text-muted transition-colors peer-checked:bg-surface peer-checked:font-medium peer-checked:text-fg peer-checked:shadow-card peer-focus-visible:outline-2 peer-focus-visible:outline-focus">
               {option.label}
             </span>
           </label>
