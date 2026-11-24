@@ -17,7 +17,7 @@ const CATEGORY_ICONS: Record<BuyCategory, { icon: LucideIcon; tint: string }> = 
   GROCERIES: { icon: ShoppingBasket, tint: "text-success" },
   HOME_SERVICES: { icon: Sparkles, tint: "text-brand" },
   REPAIRS: { icon: Wrench, tint: "text-warning" },
-  SUBSCRIPTIONS: { icon: Repeat, tint: "text-accent-soft-fg" },
+  SUBSCRIPTIONS: { icon: Repeat, tint: "text-accent" },
 };
 const ROLES: { role: "RESIDENT" | "MANAGER" | "VENDOR"; slug: string; icon: LucideIcon; portal: string }[] = [
   { role: "RESIDENT", slug: "resident", icon: UserRound, portal: "app" },
@@ -52,10 +52,10 @@ export default function LandingPage() {
             {text.steps.map((step, i) => {
               const Art = STEP_ART[i];
               return (
-                <li key={step.title} className="space-y-3 rounded-card border border-border bg-surface p-5 shadow-card">
+                <li key={step.title} className="space-y-3 rounded-card bg-surface p-5 shadow-card">
                   <Art />
                   <p className="flex items-center gap-2 font-semibold text-fg">
-                    <span aria-hidden className="flex size-7 shrink-0 items-center justify-center rounded-full bg-brand text-sm text-brand-fg">
+                    <span aria-hidden className="flex size-7 shrink-0 items-center justify-center rounded-full text-sm text-brand neu-pressed-xs">
                       {i + 1}
                     </span>
                     {step.title}
@@ -81,7 +81,7 @@ export default function LandingPage() {
           <h2 id="why" className="text-center text-2xl font-semibold tracking-tight text-fg">
             {text.whyTitle}
           </h2>
-          <div className="grid gap-3 rounded-card border border-border bg-surface p-5 shadow-card sm:grid-cols-2">
+          <div className="grid gap-3 rounded-card bg-surface p-5 shadow-card sm:grid-cols-2">
             <div className="space-y-2">
               <p className="text-sm font-medium text-muted">{text.without}</p>
               <p aria-hidden className="flex flex-wrap gap-1 text-subtle">
@@ -101,8 +101,8 @@ export default function LandingPage() {
             {text.why.map((reason, i) => {
               const Icon = WHY_ICONS[i];
               return (
-                <li key={reason.title} className="flex gap-3 rounded-card border border-border bg-surface p-4 shadow-card">
-                  <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-accent-soft text-accent-soft-fg">
+                <li key={reason.title} className="flex gap-3 rounded-card bg-surface p-4 shadow-card sm:p-5">
+                  <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl text-accent neu-pressed-sm">
                     <Icon aria-hidden className="size-5" />
                   </span>
                   <span className="space-y-1">
@@ -123,7 +123,7 @@ export default function LandingPage() {
             {BUY_CATEGORIES.map((category) => {
               const { icon: Icon, tint } = CATEGORY_ICONS[category];
               return (
-                <li key={category} className="rounded-card border border-border bg-surface p-4 shadow-card">
+                <li key={category} className="rounded-card bg-surface p-4 shadow-card sm:p-5">
                   <span className="flex items-start gap-2 font-semibold text-fg">
                     <Icon aria-hidden className={cn("mt-0.5 size-5 shrink-0", tint)} />
                     {t(`buys.categories.${category}.name`)}
@@ -144,9 +144,9 @@ export default function LandingPage() {
               <li key={role} data-portal={portal}>
                 <Link
                   href={`/register?role=${slug}`}
-                  className="group flex h-full flex-col gap-3 rounded-card border border-border bg-surface p-5 shadow-card transition-colors hover:border-brand"
+                  className="group flex h-full flex-col gap-3 rounded-card p-5 neu-raised transition-[box-shadow] duration-200 ease-in-out hover:neu-raised-sm active:neu-pressed"
                 >
-                  <span className="flex size-12 items-center justify-center rounded-2xl bg-brand-soft text-brand-soft-fg">
+                  <span className="flex size-12 items-center justify-center rounded-2xl text-brand neu-pressed-sm">
                     <Icon aria-hidden className="size-6" />
                   </span>
                   <span className="text-lg font-semibold text-fg">{t(`register.roles.${role}.title`)}</span>

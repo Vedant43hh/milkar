@@ -31,7 +31,7 @@ export function PriceSimulator({ text, initialFlats = 12 }: { text: Text; initia
   const nextLabel = result.next ? interpolate(text.next, { n: result.next.needed, price: formatINR(result.next.pricePaise) }) : text.best;
 
   return (
-    <div className="space-y-5 rounded-card border border-border bg-surface p-4 shadow-card sm:p-6">
+    <div className="space-y-5 rounded-card bg-surface p-4 shadow-card sm:p-6">
       <div className="space-y-2">
         <div className="flex items-baseline justify-between gap-3">
           <label htmlFor={sliderId} className="text-sm font-medium text-fg">
@@ -51,15 +51,15 @@ export function PriceSimulator({ text, initialFlats = 12 }: { text: Text; initia
           value={result.flats}
           aria-valuetext={flatsLabel}
           onChange={(e) => setFlats(Number(e.target.value))}
-          className="h-11 w-full cursor-pointer accent-[var(--brand)]"
+          className="h-11 w-full cursor-pointer"
         />
         <ol className="flex justify-between gap-1" aria-label={text.price}>
           {EXAMPLE_BASKET.tiers.map((tier, i) => (
             <li
               key={tier.minFlats}
               className={cn(
-                "rounded-full px-2 py-0.5 text-[0.7rem] font-medium tabular-nums transition-colors",
-                i === result.tierIndex ? "bg-brand text-brand-fg" : i < result.tierIndex ? "bg-brand-soft text-brand-soft-fg line-through" : "bg-surface-2 text-muted",
+                "rounded-full px-2 py-0.5 text-[0.7rem] font-medium tabular-nums transition-[box-shadow,color] duration-200",
+                i === result.tierIndex ? "font-semibold text-brand neu-pressed-xs" : i < result.tierIndex ? "text-subtle line-through" : "text-muted",
               )}
             >
               {tier.minFlats}+ · {formatINR(tier.pricePaise)}
@@ -77,7 +77,7 @@ export function PriceSimulator({ text, initialFlats = 12 }: { text: Text; initia
           <p className="text-xs text-subtle">
             <s>{interpolate(text.mrp, { price: formatINR(EXAMPLE_BASKET.mrpPaise) })}</s>
           </p>
-          <p className={cn("flex items-center gap-1 text-sm font-medium", result.next ? "text-accent-soft-fg" : "text-success")}>
+          <p className={cn("flex items-center gap-1 text-sm font-medium", result.next ? "text-accent" : "text-success")}>
             {result.next ? <TrendingDown aria-hidden className="size-4" /> : <PartyPopper aria-hidden className="size-4" />}
             {nextLabel}
           </p>

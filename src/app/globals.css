@@ -351,6 +351,42 @@
     background: var(--brand-soft);
     color: var(--brand-soft-fg);
   }
+  /* Range sliders: a pressed track and a raised knob in the primary colour. */
+  input[type="range"] {
+    appearance: none;
+    background: transparent;
+  }
+  input[type="range"]::-webkit-slider-runnable-track {
+    height: 0.75rem;
+    border-radius: 9999px;
+    background: var(--bg);
+    box-shadow: var(--pressed-xs);
+  }
+  input[type="range"]::-moz-range-track {
+    height: 0.75rem;
+    border-radius: 9999px;
+    background: var(--bg);
+    box-shadow: var(--pressed-xs);
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    appearance: none;
+    width: 1.75rem;
+    height: 1.75rem;
+    margin-top: -0.5rem;
+    border: 0;
+    border-radius: 9999px;
+    background: var(--brand);
+    box-shadow: var(--raised-sm);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 1.75rem;
+    height: 1.75rem;
+    border: 0;
+    border-radius: 9999px;
+    background: var(--brand);
+    box-shadow: var(--raised-sm);
+  }
+
   /* Checkboxes and radios: a pressed box that fills with the primary colour when checked. */
   input:is([type="checkbox"], [type="radio"]):not(.sr-only) {
     appearance: none;

@@ -3,10 +3,10 @@
 export function OpenIllustration() {
   return (
     <svg aria-hidden viewBox="0 0 120 80" className="h-20 w-auto">
-      <rect x="18" y="18" width="44" height="56" rx="4" className="fill-surface-2 stroke-border-strong" strokeWidth="2" />
+      <rect x="18" y="18" width="44" height="56" rx="4" className="fill-bg stroke-border-strong" strokeWidth="2" />
       {[28, 40, 52].map((y) => [26, 38, 50].map((x) => <rect key={`${x}-${y}`} x={x} y={y} width="6" height="6" rx="1" className="fill-brand/40" />))}
       <rect x="34" y="62" width="12" height="12" rx="2" className="fill-brand/60" />
-      <path d="M70 26h36a6 6 0 0 1 6 6v16a6 6 0 0 1-6 6H86l-8 8v-8h-8a6 6 0 0 1-6-6V32a6 6 0 0 1 6-6z" className="fill-accent-soft stroke-accent" strokeWidth="2" />
+      <path d="M70 26h36a6 6 0 0 1 6 6v16a6 6 0 0 1-6 6H86l-8 8v-8h-8a6 6 0 0 1-6-6V32a6 6 0 0 1 6-6z" className="fill-bg stroke-accent-bright" strokeWidth="2" />
       <path d="M78 38h22M78 44h14" className="stroke-accent-soft-fg" strokeWidth="2.5" strokeLinecap="round" />
     </svg>
   );
@@ -21,8 +21,8 @@ export function JoinIllustration() {
           <path d={`M${cx - 12} 50a12 12 0 0 1 24 0`} className="fill-brand/30" />
         </g>
       ))}
-      <rect x="12" y="60" width="96" height="8" rx="4" className="fill-surface-2" />
-      <rect x="12" y="60" width="70" height="8" rx="4" className="fill-accent" />
+      <rect x="12" y="60" width="96" height="8" rx="4" className="fill-border-strong" />
+      <rect x="12" y="60" width="70" height="8" rx="4" className="fill-accent-bright" />
     </svg>
   );
 }
