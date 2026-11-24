@@ -14,7 +14,7 @@ export function Card({
   labelledBy?: string;
 }) {
   return (
-    <Tag aria-labelledby={labelledBy} className={cn("rounded-card border border-border bg-surface p-4 shadow-card", className)}>
+    <Tag aria-labelledby={labelledBy} className={cn("rounded-card bg-surface p-4 shadow-card sm:p-5", className)}>
       {children}
     </Tag>
   );
@@ -49,7 +49,7 @@ export function PageHeader({ title, subtitle, action }: { title: ReactNode; subt
 
 export function SectionTitle({ children, action }: { children: ReactNode; action?: ReactNode }) {
   return (
-    <div className="mt-6 mb-2 flex items-center justify-between">
+    <div className="mt-8 mb-3 flex items-center justify-between">
       <h2 className="text-sm font-semibold tracking-wide text-muted uppercase">{children}</h2>
       {action}
     </div>

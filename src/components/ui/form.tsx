@@ -1,8 +1,11 @@
 import type { ComponentProps, ReactNode } from "react";
 import { cn } from "./cn";
 
+// Fields are pressed into the surface, with no border. Focus draws a 2 px ring in the portal's
+// colour; a field with an error gets a danger ring as well as its written message. A disabled
+// field fades but stays pressed in, so an empty one doesn't disappear.
 const control =
-  "min-h-11 w-full rounded-control border border-border-strong bg-surface px-3 text-base text-fg placeholder:text-subtle transition-colors focus:border-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-focus/40 disabled:opacity-60 aria-[invalid=true]:border-danger";
+  "min-h-11 w-full rounded-control neu-pressed px-3 text-base text-fg placeholder:text-subtle outline-offset-2 transition-[box-shadow,outline-color] duration-200 focus:outline-2 focus:outline-focus aria-[invalid=true]:outline-2 aria-[invalid=true]:outline-danger disabled:opacity-50";
 
 export function Label({ className, ...props }: ComponentProps<"label">) {
   return <label className={cn("mb-1.5 block text-sm font-medium text-fg", className)} {...props} />;
@@ -60,7 +63,7 @@ export function Field({
   );
 }
 
-/** A native checkbox styled as a switch. Works without JavaScript inside forms. */
+/** A native checkbox styled as a switch: a pressed track and a raised knob, filled with the portal's colour when on. Works without JavaScript inside forms. */
 export function Switch({ label, className, ...props }: Omit<ComponentProps<"input">, "type"> & { label: ReactNode }) {
   return (
     <label className={cn("flex min-h-11 cursor-pointer items-center justify-between gap-3", className)}>
@@ -68,13 +71,13 @@ export function Switch({ label, className, ...props }: Omit<ComponentProps<"inpu
       <input type="checkbox" role="switch" className="peer sr-only" {...props} />
       <span
         aria-hidden
-        className="relative h-6 w-11 shrink-0 rounded-full bg-border-strong transition-colors after:absolute after:top-0.5 after:left-0.5 after:size-5 after:rounded-full after:bg-white after:shadow after:transition-transform peer-checked:bg-brand peer-checked:after:translate-x-5 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-focus"
+        className="relative h-7 w-12 shrink-0 rounded-full neu-pressed-xs transition-colors duration-200 after:absolute after:top-1 after:left-1 after:size-5 after:rounded-full after:bg-bg after:shadow-[var(--raised-xs)] after:transition-transform after:duration-200 peer-checked:bg-brand peer-checked:after:translate-x-5 peer-disabled:opacity-50 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-focus"
       />
     </label>
   );
 }
 
-/** Radio-button group that looks like a segmented control. */
+/** Radio-button group that looks like a segmented control: the chosen option is pressed in. */
 export function SegmentedControl<T extends string>({
   name,
   label,
@@ -93,7 +96,7 @@ export function SegmentedControl<T extends string>({
   return (
     <fieldset>
       <legend className="sr-only">{label}</legend>
-      <div className="grid auto-cols-fr grid-flow-col gap-1 rounded-control bg-surface-2 p-1">
+      <div className="grid auto-cols-fr grid-flow-col gap-2 p-1">
         {options.map((option) => (
           <label key={option.value} className="relative">
             <input
@@ -105,7 +108,7 @@ export function SegmentedControl<T extends string>({
               onChange={onChange ? () => onChange(option.value) : undefined}
               className="peer sr-only"
             />
-            <span className="flex min-h-11 cursor-pointer items-center justify-center gap-1.5 rounded-[calc(var(--radius-control)-4px)] px-2 text-sm text-muted transition-colors peer-checked:bg-surface peer-checked:font-medium peer-checked:text-fg peer-checked:shadow-card peer-focus-visible:outline-2 peer-focus-visible:outline-focus">
+            <span className="flex min-h-11 cursor-pointer items-center justify-center gap-1.5 rounded-control px-2 text-sm text-muted neu-raised-sm transition-[box-shadow,color] duration-200 ease-in-out hover:text-fg peer-checked:neu-pressed-sm peer-checked:font-medium peer-checked:text-brand peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-focus">
               {option.label}
             </span>
           </label>

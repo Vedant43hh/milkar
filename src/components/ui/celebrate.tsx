@@ -3,7 +3,7 @@
 import { PartyPopper } from "lucide-react";
 import { useEffect } from "react";
 
-const COLORS = ["var(--accent)", "var(--brand)", "var(--success)", "#f472b6", "#60a5fa"];
+const COLORS = ["var(--accent-bright)", "var(--brand)", "var(--success)", "var(--warning)", "var(--danger)"];
 const PIECES = Array.from({ length: 22 }, (_, i) => ({
   left: (i * 37) % 100,
   delay: (i % 7) * 60,
@@ -37,8 +37,8 @@ export function Celebration({ message, onDone }: { message: string; onDone: () =
           }}
         />
       ))}
-      <div className="absolute inset-x-4 top-1/3 mx-auto flex max-w-sm animate-pop items-center gap-3 rounded-2xl border border-accent bg-surface p-4 shadow-raised">
-        <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent-soft-fg">
+      <div className="absolute inset-x-4 top-1/3 mx-auto flex max-w-sm animate-pop items-center gap-3 rounded-2xl bg-surface p-5 shadow-raised">
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-full text-accent neu-pressed-xs">
           <PartyPopper aria-hidden className="size-6" />
         </span>
         <p className="font-semibold text-fg">{message}</p>

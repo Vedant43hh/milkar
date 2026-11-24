@@ -15,7 +15,7 @@ export async function WrongPortal({ portal }: { portal: Portal }) {
     <section aria-labelledby="wrong-portal" className="mx-auto max-w-md space-y-5 py-10 text-center">
       {/* Tells the portal's frame to hide its owner-only controls (the staff menu), see globals.css. */}
       <span data-wrong-portal hidden />
-      <span className="mx-auto flex size-16 items-center justify-center rounded-full bg-brand-soft text-brand-soft-fg">
+      <span className="mx-auto flex size-16 items-center justify-center rounded-full text-brand neu-pressed-sm">
         <LockKeyhole aria-hidden className="size-7" />
       </span>
       <div className="space-y-2">

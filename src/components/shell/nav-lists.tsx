@@ -14,9 +14,9 @@ export function TabList({ portal, pathname }: { portal: TabPortal; pathname: str
   return (
     <nav
       aria-label={tu("nav.main")}
-      className={cn("fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur", portal === "app" && "md:hidden")}
+      className={cn("fixed inset-x-0 bottom-0 z-40 bg-surface/95 px-2 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] shadow-card backdrop-blur", portal === "app" && "md:hidden")}
     >
-      <ul className={cn("mx-auto grid max-w-md", COLUMNS[items.length])}>
+      <ul className={cn("mx-auto grid max-w-md gap-1", COLUMNS[items.length])}>
         {items.map((item) => {
           const active = isActive(pathname, item);
           const Icon = item.icon;
@@ -26,12 +26,11 @@ export function TabList({ portal, pathname }: { portal: TabPortal; pathname: str
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "relative flex flex-col items-center justify-center gap-0.5 transition-colors",
+                  "relative flex flex-col items-center justify-center gap-0.5 rounded-control transition-[box-shadow,color] duration-200 ease-in-out",
                   tall ? "min-h-16 text-xs" : "min-h-14 text-[0.7rem]",
-                  active ? "font-semibold text-brand" : "text-muted hover:text-fg",
+                  active ? "font-semibold text-brand neu-pressed-sm" : "text-muted hover:text-fg",
                 )}
               >
-                {active && <span aria-hidden className="absolute top-0 h-0.5 w-8 rounded-full bg-brand" />}
                 <Icon aria-hidden className={cn(tall ? "size-6" : "size-5", active && "stroke-[2.5]")} />
                 {tu(item.label)}
               </Link>
@@ -51,7 +50,7 @@ function SideItem({ item, pathname }: { item: NavItem; pathname: string }) {
     <Link
       href={item.href}
       aria-current={active ? "page" : undefined}
-      className={cn(classes, "transition-colors", active ? "bg-brand-soft font-semibold text-brand-soft-fg" : "text-muted hover:bg-surface-2 hover:text-fg")}
+      className={cn(classes, "transition-[box-shadow,color] duration-200 ease-in-out", active ? "font-semibold text-brand neu-pressed-sm" : "text-muted hover:text-fg hover:neu-raised-xs")}
     >
       <Icon aria-hidden className="size-5" />
       {tu(item.label)}

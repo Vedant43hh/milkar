@@ -40,7 +40,7 @@ export function OnboardingTour({ userId, cards, text }: { userId: string; cards:
     <SheetDialog open={open} onClose={finish} title={text.title}>
       <div className="space-y-5">
         <div className="space-y-2" aria-live="polite">
-          <span aria-hidden className="flex size-12 items-center justify-center rounded-2xl bg-brand-soft text-xl font-bold text-brand-soft-fg">
+          <span aria-hidden className="flex size-12 items-center justify-center rounded-2xl text-xl font-bold text-brand neu-pressed-sm">
             {index + 1}
           </span>
           <p className="text-xs font-medium text-muted">{interpolate(text.step, { n: index + 1, total: cards.length })}</p>

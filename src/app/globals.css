@@ -31,9 +31,15 @@
   --raised: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
   --raised-sm: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
   --pressed: inset 6px 6px 12px var(--shadow-dark), inset -6px -6px 12px var(--shadow-light);
+  /* Smaller steps for small controls: a hovered button sinks to -xs, a selected chip or tab is
+     pressed -sm, and labels and badges are pressed -xs (engraved, so they don't look tappable). */
+  --raised-xs: 2px 2px 4px var(--shadow-dark), -2px -2px 4px var(--shadow-light);
+  --pressed-sm: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
+  --pressed-xs: inset 2px 2px 4px var(--shadow-dark), inset -2px -2px 4px var(--shadow-light);
   --divider: rgb(0 0 0 / 0.05);
-  /* Raised surfaces use the smaller shadow on phones (see the media query below). */
+  /* Raised surfaces and pressed fields use the smaller shadows on phones (media query below). */
   --neu-raised: var(--raised);
+  --neu-pressed: var(--pressed);
 
   /* The names the components read, pointed at the spec's tokens. */
   --surface: var(--bg);
@@ -56,6 +62,8 @@
   --accent-fg: #ffffff;
   --accent-soft: #d6d7d7;
   --accent-soft-fg: #644104;
+  /* Bright saffron for decoration only (the logo, confetti, illustrations), never for text. */
+  --accent-bright: #f59e0b;
 
   /* Status colours: the spec's hues (#2f9e6e, #d9822b, #e5484d), deepened for AA. */
   --success: #1d6043;
@@ -73,6 +81,7 @@
 @media (width < 40rem) {
   :root {
     --neu-raised: var(--raised-sm);
+    --neu-pressed: var(--pressed-sm);
   }
 }
 
@@ -96,6 +105,7 @@
   --accent-fg: #2d2206;
   --accent-soft: #423f34;
   --accent-soft-fg: #fcc945;
+  --accent-bright: #fbbf24;
 
   --success: #82c5a8;
   --success-soft: #354043;
@@ -203,9 +213,34 @@
   background-color: var(--bg);
   box-shadow: var(--raised-sm);
 }
+@utility neu-raised-xs {
+  background-color: var(--bg);
+  box-shadow: var(--raised-xs);
+}
 @utility neu-pressed {
   background-color: var(--bg);
-  box-shadow: var(--pressed);
+  box-shadow: var(--neu-pressed);
+}
+@utility neu-pressed-sm {
+  background-color: var(--bg);
+  box-shadow: var(--pressed-sm);
+}
+@utility neu-pressed-xs {
+  background-color: var(--bg);
+  box-shadow: var(--pressed-xs);
+}
+
+/* The /design preview shows a control held in one state. They mirror the real states: hover
+   sinks a raised control to --raised-xs, pressing presses it, focus draws the focus ring. */
+@utility preview-hover {
+  box-shadow: var(--raised-xs) !important;
+}
+@utility preview-active {
+  box-shadow: var(--pressed-sm) !important;
+}
+@utility preview-focus {
+  outline: 2px solid var(--focus) !important;
+  outline-offset: 2px !important;
 }
 @utility neu-flat {
   background-color: var(--bg);
@@ -236,6 +271,7 @@
   --color-accent-fg: var(--accent-fg);
   --color-accent-soft: var(--accent-soft);
   --color-accent-soft-fg: var(--accent-soft-fg);
+  --color-accent-bright: var(--accent-bright);
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);
@@ -314,6 +350,52 @@
   ::selection {
     background: var(--brand-soft);
     color: var(--brand-soft-fg);
+  }
+  /* Checkboxes and radios: a pressed box that fills with the primary colour when checked. */
+  input:is([type="checkbox"], [type="radio"]):not(.sr-only) {
+    appearance: none;
+    display: inline-grid;
+    place-content: center;
+    flex-shrink: 0;
+    margin: 0;
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 0.375rem;
+    background-color: var(--bg);
+    box-shadow: var(--pressed-xs);
+    cursor: pointer;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  input[type="radio"]:not(.sr-only) {
+    border-radius: 9999px;
+  }
+  input:is([type="checkbox"], [type="radio"]):not(.sr-only)::before {
+    content: "";
+    width: 0.75rem;
+    height: 0.75rem;
+    background-color: var(--brand-fg);
+    transform: scale(0);
+    transition: transform 0.12s ease;
+  }
+  input[type="checkbox"]:not(.sr-only)::before {
+    clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+  }
+  input[type="radio"]:not(.sr-only)::before {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 9999px;
+  }
+  input:is([type="checkbox"], [type="radio"]):not(.sr-only):checked {
+    background-color: var(--brand);
+    box-shadow: var(--raised-xs);
+  }
+  input:is([type="checkbox"], [type="radio"]):not(.sr-only):checked::before {
+    transform: scale(1);
+  }
+  /* Disabled: faded, but the box keeps its outline, or it would vanish into the page. */
+  input:is([type="checkbox"], [type="radio"]):not(.sr-only):disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
   /* Even lines in headings, no lone last word in running text. */
   h1,

@@ -43,7 +43,7 @@ export async function AccountMenu({ portal }: { portal: Portal | null }) {
       title={t("account.title")}
       triggerLabel={t("account.open")}
       trigger={
-        <span className="flex size-9 items-center justify-center rounded-full bg-brand-soft text-sm font-semibold text-brand-soft-fg">
+        <span className="flex size-9 items-center justify-center rounded-full text-sm font-semibold text-brand neu-pressed-xs">
           {initials(user.name, user.phone)}
         </span>
       }
@@ -66,7 +66,7 @@ export async function AccountMenu({ portal }: { portal: Portal | null }) {
         </div>
 
         {away && (
-          <Link href={home} className="flex min-h-11 items-center gap-3 rounded-control border border-border px-3 text-sm font-medium hover:bg-surface-2">
+          <Link href={home} className="flex min-h-11 items-center gap-3 rounded-control px-3 text-sm font-medium neu-raised-sm transition-[box-shadow] duration-200 ease-in-out hover:neu-raised-xs active:neu-pressed-sm">
             <ArrowRight aria-hidden className="size-5 text-brand" />
             {t("portals.goToMine")}
           </Link>

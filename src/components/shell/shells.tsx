@@ -30,7 +30,7 @@ export const PORTAL_NAME: Record<Portal, MessageKey> = {
 /** The portal's name as a coloured pill, so people always know which area they're in. */
 function PortalBadge({ portal }: { portal: Portal }) {
   return (
-    <span className="inline-flex h-6 items-center rounded-full bg-brand-soft px-2.5 text-xs font-semibold text-brand-soft-fg">{t(PORTAL_NAME[portal])}</span>
+    <span className="inline-flex h-6 items-center rounded-full px-2.5 text-xs font-semibold text-brand neu-pressed-xs">{t(PORTAL_NAME[portal])}</span>
   );
 }
 
@@ -57,7 +57,7 @@ function BellLink({ href, count }: { href: string; count: number }) {
     <Link
       href={href}
       aria-label={count > 0 ? t("notifications.bellUnread", { n: shown }) : t("notifications.bell")}
-      className="relative inline-flex size-11 items-center justify-center rounded-full text-muted transition-colors hover:bg-surface-2 hover:text-fg"
+      className="relative inline-flex size-11 items-center justify-center rounded-full text-muted neu-raised-sm transition-[box-shadow,color] duration-200 ease-in-out hover:text-fg hover:neu-raised-xs active:neu-pressed-sm"
     >
       <Bell aria-hidden className="size-5" />
       {count > 0 && (
@@ -151,7 +151,7 @@ export function TabShell({ portal, children }: { portal: TabPortal; children: Re
   return (
     <div data-portal={portal} className="min-h-dvh bg-bg md:flex">
       {wideSidebar && (
-        <aside className="hidden md:sticky md:top-0 md:flex md:h-dvh md:w-60 md:shrink-0 md:flex-col md:gap-4 md:border-r md:border-border md:bg-surface md:px-3 md:py-3 print:hidden">
+        <aside className="hidden md:sticky md:top-0 md:z-20 md:flex md:h-dvh md:w-60 md:shrink-0 md:flex-col md:gap-4 md:bg-surface md:px-3 md:py-3 md:shadow-card print:hidden">
           <div className="flex items-center gap-2 px-2">
             <Logo href={PORTAL_PATH[portal]} />
           </div>
@@ -161,7 +161,7 @@ export function TabShell({ portal, children }: { portal: TabPortal; children: Re
         </aside>
       )}
       <div className="min-w-0 flex-1">
-        <header className="sticky top-0 z-30 border-t-[3px] border-b border-t-brand border-b-border bg-surface/90 backdrop-blur print:hidden">
+        <header className="sticky top-0 z-30 bg-surface/90 shadow-card backdrop-blur print:hidden">
           <div className={cn("mx-auto flex h-14 items-center gap-2 px-3 md:px-6", width)}>
             <span className={cn(wideSidebar && "md:hidden")}>
               <Logo href={PORTAL_PATH[portal]} compact />
@@ -206,7 +206,7 @@ export function StaffShell({ portal, children }: { portal: StaffPortal; children
   );
   return (
     <div data-portal={portal} className="min-h-dvh bg-bg md:flex">
-      <aside className="hidden md:sticky md:top-0 md:flex md:h-dvh md:w-64 md:shrink-0 md:flex-col md:gap-4 md:border-r md:border-border md:bg-surface md:px-3 md:py-3">
+      <aside className="hidden md:sticky md:top-0 md:z-20 md:flex md:h-dvh md:w-64 md:shrink-0 md:flex-col md:gap-4 md:bg-surface md:px-3 md:py-3 md:shadow-card">
         <div className="space-y-2 px-2">
           <Logo href={PORTAL_PATH[portal]} />
           <PortalBadge portal={portal} />
@@ -214,7 +214,7 @@ export function StaffShell({ portal, children }: { portal: StaffPortal; children
         {nav}
       </aside>
       <div className="min-w-0 flex-1">
-        <header className="sticky top-0 z-30 border-t-[3px] border-b border-t-brand border-b-border bg-surface/90 backdrop-blur">
+        <header className="sticky top-0 z-30 bg-surface/90 shadow-card backdrop-blur">
           <div className="mx-auto flex h-14 max-w-5xl items-center gap-2 px-3 md:px-6">
             {/* Static, so a tap never lands on a copy that is about to be replaced; hidden by CSS on the
                 wrong-portal page (see [data-owner-only] in globals.css). */}

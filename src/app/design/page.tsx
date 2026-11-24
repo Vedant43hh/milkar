@@ -18,6 +18,7 @@ import { t } from "@/i18n";
 import { getEnv } from "@/lib/env";
 import { computeMeter } from "@/lib/pricing/meter";
 import { CountdownDemo, FeedbackDemo, StepperDemo, TabsDemo, WizardDemo } from "./demos";
+import { SoftUiStates } from "./soft-ui-states";
 
 export const metadata: Metadata = { title: t("design.title") };
 
@@ -72,11 +73,15 @@ export default function DesignPage() {
           </div>
         </Section>
 
+        <Section title="Soft UI: every state">
+          <SoftUiStates />
+        </Section>
+
         <Section title="Colour tokens">
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 md:grid-cols-7">
             {SWATCHES.map((name) => (
               <div key={name} className="text-xs">
-                <div className="h-12 rounded-control border border-border" style={{ background: `var(--${name})` }} />
+                <div className="h-12 rounded-control shadow-[var(--raised-xs)]" style={{ background: `var(--${name})` }} />
                 <p className="mt-1 text-muted">{name}</p>
               </div>
             ))}

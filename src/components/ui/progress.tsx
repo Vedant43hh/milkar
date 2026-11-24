@@ -31,7 +31,7 @@ export function ProgressBar({
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={pct}
-      className={cn("h-2.5 w-full overflow-hidden rounded-full bg-surface-2", className)}
+      className={cn("h-3 w-full overflow-hidden rounded-full neu-pressed-xs", className)}
     >
       <div className={cn("h-full origin-left animate-grow-x rounded-full transition-[width] duration-500 ease-out", barTones[tone])} style={{ width: `${pct}%` }} />
     </div>
@@ -66,7 +66,7 @@ export function TierMeter({ meter, basisWords, compact = false }: { meter: Meter
         }
       : { tone: "success" as const, icon: <PartyPopper aria-hidden className="size-4" />, text: tu("meter.best") };
 
-  const statusColor = { warning: "text-warning", accent: "text-accent-soft-fg", success: "text-success" }[status.tone];
+  const statusColor = { warning: "text-warning", accent: "text-accent", success: "text-success" }[status.tone];
 
   return (
     <div className="space-y-2">
@@ -86,8 +86,8 @@ export function TierMeter({ meter, basisWords, compact = false }: { meter: Meter
               <li
                 key={step.minQty}
                 className={cn(
-                  "rounded-full border px-2 py-0.5 text-xs tabular-nums",
-                  current ? "border-brand bg-brand-soft font-semibold text-brand-soft-fg" : step.reached ? "border-border text-subtle line-through" : "border-border text-muted",
+                  "rounded-full px-2.5 py-0.5 text-xs tabular-nums",
+                  current ? "font-semibold text-brand neu-pressed-xs" : step.reached ? "text-subtle line-through" : "text-muted",
                 )}
               >
                 {tu("meter.step", { qty: `${step.minQty}+`, price: formatINR(step.unitPaise) })}

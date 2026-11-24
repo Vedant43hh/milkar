@@ -3,13 +3,15 @@ import { LoaderCircle } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
 import { cn } from "./cn";
 
+// Soft UI: every button is the page colour and raised; it sinks a little on hover and is pressed
+// in while held. What a button does shows in its text colour (primary is the portal's colour).
 const variants = {
-  primary: "bg-brand text-brand-fg hover:bg-brand-hover shadow-card",
-  secondary: "border border-border-strong bg-surface text-fg hover:bg-surface-2",
-  ghost: "text-brand hover:bg-brand-soft",
-  dangerGhost: "text-danger hover:bg-danger-soft",
-  danger: "bg-danger text-white hover:opacity-90 dark:text-surface",
-  accent: "bg-accent text-accent-fg hover:brightness-95 shadow-card",
+  primary: "neu-raised-sm font-semibold text-brand hover:neu-raised-xs active:neu-pressed-sm",
+  secondary: "neu-raised-sm text-fg hover:neu-raised-xs active:neu-pressed-sm",
+  ghost: "text-brand hover:neu-raised-xs active:neu-pressed-sm",
+  dangerGhost: "text-danger hover:neu-raised-xs active:neu-pressed-sm",
+  danger: "neu-raised-sm font-semibold text-danger hover:neu-raised-xs active:neu-pressed-sm",
+  accent: "neu-raised-sm font-semibold text-accent hover:neu-raised-xs active:neu-pressed-sm",
 } as const;
 
 const sizes = {
@@ -27,7 +29,7 @@ export function buttonClasses({
   className,
 }: { variant?: ButtonVariant; size?: keyof typeof sizes; block?: boolean; className?: string } = {}) {
   return cn(
-    "inline-flex select-none items-center justify-center gap-2 rounded-control font-medium transition-[background-color,opacity,transform] duration-150 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50",
+    "inline-flex select-none items-center justify-center gap-2 rounded-control font-medium transition-[box-shadow,color,opacity] duration-200 ease-in-out disabled:pointer-events-none disabled:opacity-50 disabled:neu-flat",
     variants[variant],
     sizes[size],
     block && "w-full",
@@ -75,7 +77,7 @@ export function ButtonLink({
   );
 }
 
-/** Square icon-only button. `label` is required for screen readers. */
+/** Round, raised icon-only button (44 px). `label` is required for screen readers. */
 export function IconButton({
   label,
   className,
@@ -89,7 +91,7 @@ export function IconButton({
       aria-label={label}
       title={label}
       className={cn(
-        "inline-flex size-11 items-center justify-center rounded-full text-muted transition-colors hover:bg-surface-2 hover:text-fg",
+        "inline-flex size-11 items-center justify-center rounded-full text-muted neu-raised-sm transition-[box-shadow,color] duration-200 ease-in-out hover:text-fg hover:neu-raised-xs active:neu-pressed-sm disabled:pointer-events-none disabled:opacity-50 disabled:neu-flat",
         className,
       )}
       {...props}

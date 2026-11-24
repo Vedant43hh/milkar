@@ -10,7 +10,7 @@ export function PublicShell({ children, wide = false }: { children: ReactNode; w
   const width = wide ? "max-w-5xl" : "max-w-md";
   return (
     <div className="min-h-dvh bg-bg">
-      <header className="border-b border-border bg-surface">
+      <header className="relative z-10 bg-surface shadow-card">
         <div className={`mx-auto flex h-14 ${width} items-center justify-between px-3`}>
           <Logo />
           <Suspense fallback={<ThemeMenu />}>

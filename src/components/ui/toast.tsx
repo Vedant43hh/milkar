@@ -22,7 +22,7 @@ const icons = {
   success: <CircleCheck aria-hidden className="size-5 text-success" />,
   error: <CircleAlert aria-hidden className="size-5 text-danger" />,
   info: <Info aria-hidden className="size-5 text-brand" />,
-  celebrate: <PartyPopper aria-hidden className="size-5 text-accent-soft-fg" />,
+  celebrate: <PartyPopper aria-hidden className="size-5 text-accent" />,
 };
 
 /** Toast stack shown above the bottom tab bar. */
@@ -60,8 +60,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           <div
             key={toast.id}
             className={cn(
-              "pointer-events-auto flex w-full max-w-sm animate-slide-up items-start gap-3 rounded-control border bg-surface p-3 shadow-raised",
-              toast.tone === "celebrate" ? "border-accent" : "border-border",
+              "pointer-events-auto flex w-full max-w-sm animate-slide-up items-start gap-3 rounded-control bg-surface p-4 shadow-raised",
             )}
           >
             {icons[toast.tone]}
