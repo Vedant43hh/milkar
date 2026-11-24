@@ -23,10 +23,10 @@ export function RatingForm({ visitId, text }: { visitId: string; text: RatingTex
           {[1, 2, 3, 4, 5].map((n) => (
             <label
               key={n}
-              className="flex size-11 cursor-pointer items-center justify-center rounded-full text-accent transition-transform has-focus-visible:ring-2 has-focus-visible:ring-focus active:scale-90"
+              className="flex size-11 cursor-pointer items-center justify-center rounded-full text-accent transition-[box-shadow] duration-200 ease-in-out hover:neu-raised-xs active:neu-pressed-sm has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-focus"
             >
               <input type="radio" name="rating" value={n} required checked={rating === n} onChange={() => setRating(n)} className="sr-only" />
-              <Star aria-hidden className={cn("size-7", n <= rating ? "fill-current" : "text-border-strong")} />
+              <Star aria-hidden className={cn("size-7", n <= rating ? "fill-current" : "text-subtle")} />
               <span className="sr-only">{interpolate(text.star, { n, word: text.words[n - 1] })}</span>
             </label>
           ))}

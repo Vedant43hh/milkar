@@ -68,11 +68,11 @@ async function Orders() {
               <SectionTitle>
                 <span id="coming-up">{t("orders.comingUp")}</span>
               </SectionTitle>
-              <ul className="space-y-2">
+              <ul className="space-y-3">
                 {comingUp.map((h) => (
                   <li key={h.id}>
-                    <Link href={`/app/orders/${h.id}`} className="flex items-center gap-3 rounded-card border border-border bg-surface p-3 shadow-card hover:border-brand/50">
-                      <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand-soft-fg">
+                    <Link href={`/app/orders/${h.id}`} className="flex items-center gap-3 rounded-card p-4 neu-raised transition-[box-shadow] duration-200 ease-in-out hover:neu-raised-sm active:neu-pressed">
+                      <span className="flex size-10 shrink-0 items-center justify-center rounded-full text-brand neu-pressed-xs">
                         <CalendarClock aria-hidden className="size-5" />
                       </span>
                       <span className="min-w-0 flex-1">
@@ -108,7 +108,7 @@ function HistoryCard({ entry }: { entry: OrderHistoryEntry }) {
   const Icon = entry.kind === "SERVICE" ? Sparkles : ShoppingBasket;
   const { money } = entry;
   return (
-    <Link href={`/app/orders/${entry.id}`} className="group block space-y-2 rounded-card border border-border bg-surface p-4 shadow-card transition-colors hover:border-brand/50">
+    <Link href={`/app/orders/${entry.id}`} className="group block space-y-2 rounded-card p-4 sm:p-5 neu-raised transition-[box-shadow] duration-200 ease-in-out hover:neu-raised-sm active:neu-pressed">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 space-y-1">
           <div className="flex flex-wrap items-center gap-1.5">

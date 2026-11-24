@@ -120,7 +120,7 @@ async function Order({ params }: { params: PageProps<"/app/orders/[roundId]">["p
           {pickup && (
             <>
               {round.requirePickupCode && pickup.status === "PENDING" && (
-                <div className="flex flex-wrap items-center gap-2 rounded-control bg-accent-soft px-3 py-2">
+                <div className="flex flex-wrap items-center gap-2 rounded-control px-4 py-3 neu-pressed-sm">
                   <KeyRound aria-hidden className="size-4 text-accent-soft-fg" />
                   <span className="font-semibold text-accent-soft-fg tabular-nums">{t("orders.detail.pickupCode", { code: pickup.pickupCode })}</span>
                   <span className="text-xs text-accent-soft-fg">{t("orders.detail.pickupHint")}</span>
@@ -142,7 +142,7 @@ async function Order({ params }: { params: PageProps<"/app/orders/[roundId]">["p
         {items.length === 0 ? (
           <p className="text-sm text-muted">{t("orders.detail.noItems")}</p>
         ) : (
-          <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
+          <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
             {items.map((item) => (
               <ItemRow key={item.id} item={item} finalized={round.finalizedAt !== null} />
             ))}

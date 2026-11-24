@@ -78,7 +78,7 @@ async function Pay({ params }: { params: PageProps<"/app/pay/[paymentId]">["para
         {t("pay.testMode")}
       </Banner>
       <Card className="space-y-4 text-center">
-        <span className="mx-auto flex size-14 items-center justify-center rounded-full bg-brand-soft text-brand-soft-fg">
+        <span className="mx-auto flex size-14 items-center justify-center rounded-full text-brand neu-pressed-sm">
           <IndianRupee aria-hidden className="size-7" />
         </span>
         <div>

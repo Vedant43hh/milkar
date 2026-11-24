@@ -56,7 +56,7 @@ async function InvoiceView({ params }: { params: PageProps<"/app/orders/[roundId
         </div>
       )}
 
-      <article className="space-y-5 rounded-card border border-border bg-surface p-4 text-sm shadow-card sm:p-6 print:border-0 print:p-0 print:shadow-none">
+      <article className="space-y-5 rounded-card bg-surface p-4 text-sm shadow-card sm:p-6 print:p-0 print:shadow-none">
         <header className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight text-fg">{invoice.supplier.gstin ? t("invoice.taxTitle") : t("invoice.title")}</h1>
@@ -93,7 +93,7 @@ async function InvoiceView({ params }: { params: PageProps<"/app/orders/[roundId
 
         <table className="w-full border-collapse text-left">
           <thead>
-            <tr className="border-b border-border-strong text-xs text-muted">
+            <tr className="border-b border-border text-xs text-muted">
               <th scope="col" className="py-2 pr-2 font-medium">
                 {t("invoice.columns.item")}
               </th>

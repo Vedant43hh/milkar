@@ -31,12 +31,12 @@ function Timeline({ visit }: { visit: Visit }) {
         const Icon = step.problem ? Ban : step.state === "done" ? Check : CircleDot;
         return (
           <li key={step.key} className="relative flex gap-3 pb-3 last:pb-0">
-            {!last && <span aria-hidden className={cn("absolute top-7 bottom-0 left-3.5 w-0.5", step.state === "done" ? "bg-brand" : "bg-border")} />}
+            {!last && <span aria-hidden className={cn("absolute top-7 bottom-0 left-3.5 w-0.5", step.state === "done" ? "bg-brand" : "bg-border-strong")} />}
             <span
               aria-hidden
               className={cn(
                 "relative flex size-7 shrink-0 items-center justify-center rounded-full",
-                step.problem ? "bg-danger-soft text-danger" : step.state === "done" ? "bg-brand text-brand-fg" : step.state === "current" ? "bg-brand-soft text-brand-soft-fg" : "bg-surface-2 text-subtle",
+                step.problem ? "text-danger neu-pressed-xs" : step.state === "done" ? "bg-brand text-brand-fg shadow-[var(--raised-xs)]" : step.state === "current" ? "text-brand neu-pressed-xs" : "text-subtle neu-pressed-xs",
               )}
             >
               <Icon className="size-4" />
@@ -59,7 +59,7 @@ function Rating({ visit }: { visit: Visit }) {
         <p className="flex items-center gap-1 text-sm font-medium text-fg">
           <span aria-hidden className="flex text-accent">
             {[1, 2, 3, 4, 5].map((n) => (
-              <Star key={n} className={cn("size-4", n <= visit.rating!.rating ? "fill-current" : "text-border-strong")} />
+              <Star key={n} className={cn("size-4", n <= visit.rating!.rating ? "fill-current" : "text-subtle")} />
             ))}
           </span>
           {t(visit.ratedByYou ? "orders.rating.yours" : "orders.rating.household", { n: visit.rating.rating })}
@@ -71,7 +71,7 @@ function Rating({ visit }: { visit: Visit }) {
   if (!visit.canRate) return null;
   const text = messages().orders.rating;
   return (
-    <div className="space-y-2 rounded-control bg-surface-2 p-3">
+    <div className="space-y-2 rounded-control p-4 neu-pressed-sm">
       <h3 className="font-semibold text-fg">{text.title}</h3>
       <RatingForm visitId={visit.id} text={{ title: text.title, label: text.label, star: text.star, words: text.words, comment: text.comment, commentPlaceholder: text.commentPlaceholder, submit: text.submit }} />
     </div>
@@ -81,7 +81,7 @@ function Rating({ visit }: { visit: Visit }) {
 function Complaint({ visit }: { visit: Visit }) {
   if (visit.issue) {
     return (
-      <div className="space-y-1 rounded-control border border-border p-3 text-sm">
+      <div className="space-y-1 rounded-control p-4 text-sm neu-pressed-sm">
         <p className="flex flex-wrap items-center gap-2 font-semibold text-fg">
           <MessageSquareWarning aria-hidden className="size-4 text-warning" />
           {t("orders.issue.title")}
@@ -130,7 +130,7 @@ function Problem({ visit, roundId }: { visit: Visit; roundId: string }) {
   if (visit.problemEditable) {
     const text = messages().problem;
     return (
-      <div className="space-y-2 rounded-control bg-surface-2 p-3">
+      <div className="space-y-2 rounded-control p-4 neu-pressed-sm">
         <h4 className="font-semibold text-fg">{text.title}</h4>
         <p className="text-sm text-muted">{text.intro}</p>
         <ProblemForm
@@ -150,7 +150,7 @@ function Problem({ visit, roundId }: { visit: Visit; roundId: string }) {
         {visit.booking.problemNote}
       </p>
       {photo && (
-        <Image src={`/api/photos/${photo.id}`} alt={t("problem.preview")} width={photo.width} height={photo.height} unoptimized className="max-h-40 w-auto rounded-control border border-border object-contain" />
+        <Image src={`/api/photos/${photo.id}`} alt={t("problem.preview")} width={photo.width} height={photo.height} unoptimized className="max-h-40 w-auto rounded-control object-contain neu-raised-sm" />
       )}
     </div>
   );
@@ -165,7 +165,7 @@ function Parts({ visit }: { visit: Visit }) {
   return (
     <div className="space-y-3">
       {visit.partsRequests.map((request) => (
-        <div key={request.id} className={cn("space-y-2 rounded-control border p-3 text-sm", request.status === "PENDING" ? "border-accent bg-accent-soft/40" : "border-border")}>
+        <div key={request.id} className={cn("space-y-2 rounded-control p-4 text-sm", request.status === "PENDING" ? "neu-raised-sm" : "neu-pressed-sm")}>
           <p className="flex flex-wrap items-center justify-between gap-2">
             <span className="flex items-center gap-1.5 font-semibold text-fg">
               <Package aria-hidden className="size-4 text-muted" />
@@ -206,7 +206,7 @@ function Parts({ visit }: { visit: Visit }) {
           )}
         </div>
       ))}
-      <div className="space-y-1 rounded-control bg-surface-2 p-3 text-sm">
+      <div className="space-y-1 rounded-control p-4 text-sm neu-pressed-sm">
         <h4 className="font-semibold text-fg">{t("parts.bill")}</h4>
         <dl className="space-y-1">
           <div className="flex justify-between gap-3">
@@ -259,7 +259,7 @@ export function VisitCard({ visit, title, roundId }: { visit: Visit; title: stri
       </header>
 
       {visit.completionCode && (
-        <div className="flex flex-wrap items-center gap-2 rounded-control bg-accent-soft px-3 py-2">
+        <div className="flex flex-wrap items-center gap-2 rounded-control px-4 py-3 neu-pressed-sm">
           <KeyRound aria-hidden className="size-4 text-accent-soft-fg" />
           <span className="font-semibold text-accent-soft-fg tabular-nums">{t("orders.visits.code", { code: visit.completionCode })}</span>
           <span className="text-xs text-accent-soft-fg">{t("orders.visits.codeHint")}</span>
