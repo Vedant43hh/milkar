@@ -64,7 +64,7 @@ async function Register({ searchParams }: { searchParams: PageProps<"/register">
         {t("register.otherRole")}
       </Link>
       <div className="flex items-center gap-3">
-        <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-brand-soft text-brand-soft-fg">
+        <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl text-brand neu-pressed-sm">
           <chosen.icon aria-hidden className="size-6" />
         </span>
         <h1 className="text-2xl font-semibold tracking-tight">{t(`register.roles.${chosen.role}.title`)}</h1>
@@ -106,9 +106,9 @@ function RoleChoice() {
           <li key={role} data-portal={portal}>
             <Link
               href={`/register?role=${slug}`}
-              className="group flex items-center gap-4 rounded-card border border-border bg-surface p-4 shadow-card transition-colors hover:border-brand"
+              className="group flex items-center gap-4 rounded-card p-4 sm:p-5 neu-raised transition-[box-shadow] duration-200 ease-in-out hover:neu-raised-sm active:neu-pressed"
             >
-              <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-brand-soft text-brand-soft-fg">
+              <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl text-brand neu-pressed-sm">
                 <Icon aria-hidden className="size-6" />
               </span>
               <span className="min-w-0 flex-1">

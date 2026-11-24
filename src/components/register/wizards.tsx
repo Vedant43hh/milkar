@@ -96,7 +96,7 @@ function LayoutPreview({ text, blocks, floors, unitsPerFloor }: { text: Text; bl
   const first = flats[0];
   const last = flats.at(-1)!;
   return (
-    <p role="status" className="flex items-center gap-2 rounded-control bg-brand-soft px-3 py-2 text-sm font-medium text-brand-soft-fg">
+    <p role="status" className="flex items-center gap-2 rounded-control px-4 py-3 text-sm font-medium text-brand neu-pressed-sm">
       <Home aria-hidden className="size-4 shrink-0" />
       {interpolate(text.community.preview, { count: flatCount(layout), first: `${first.tower}-${first.number}`, last: `${last.tower}-${last.number}` })}
     </p>
@@ -202,8 +202,8 @@ function CategoryChoice({ text, selected, onToggle }: { text: Text; selected: Se
     <fieldset className="space-y-2">
       <legend className="mb-1.5 text-sm font-medium text-fg">{text.business.categories}</legend>
       {CATEGORIES.map((category) => (
-        <label key={category} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-control border border-border px-3 has-[:checked]:border-brand has-[:checked]:bg-brand-soft">
-          <input type="checkbox" name="categories" value={category} checked={selected.has(category)} onChange={() => onToggle(category)} className="size-5 accent-[var(--brand)]" />
+        <label key={category} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-control px-3 neu-raised-sm transition-[box-shadow] duration-200 ease-in-out has-[:checked]:neu-pressed-sm">
+          <input type="checkbox" name="categories" value={category} checked={selected.has(category)} onChange={() => onToggle(category)} />
           <span className="text-sm font-medium text-fg">{text.business.categoryNames[category]}</span>
         </label>
       ))}

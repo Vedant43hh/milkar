@@ -18,13 +18,13 @@ export function CategoryChips({ counts, current }: { counts: Record<BuyCategory,
             href={`/app/buys/${CATEGORY_SLUG[category]}`}
             aria-current={selected ? "page" : undefined}
             className={cn(
-              "inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full border px-3.5 text-sm font-medium transition-colors",
-              selected ? "border-brand bg-brand-soft text-brand-soft-fg" : "border-border bg-surface text-fg hover:border-brand/50",
+              "inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full px-3.5 text-sm font-medium transition-[box-shadow,color] duration-200 ease-in-out",
+              selected ? "text-brand neu-pressed-sm" : "text-fg neu-raised-sm hover:neu-raised-xs",
             )}
           >
             <Icon aria-hidden className="size-4" />
             {t(`buys.categories.${category}.name`)}
-            <span className={cn("rounded-full px-1.5 text-xs tabular-nums", counts[category] > 0 ? "bg-brand text-brand-fg" : "bg-surface-2 text-muted")}>{counts[category]}</span>
+            <span className={cn("rounded-full px-1.5 text-xs tabular-nums neu-pressed-xs", counts[category] > 0 ? "font-semibold text-brand" : "text-muted")}>{counts[category]}</span>
           </Link>
         );
       })}

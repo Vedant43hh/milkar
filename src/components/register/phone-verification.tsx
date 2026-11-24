@@ -67,7 +67,7 @@ export function PhoneVerification({ text, mockOtp, onSent }: { text: Messages["r
         <div>
           <Label htmlFor="register-phone">{text.label}</Label>
           <div className="flex items-stretch gap-2">
-            <span className="flex min-h-11 items-center rounded-control border border-border-strong bg-surface-2 px-3 text-muted">+91</span>
+            <span className="flex min-h-11 items-center rounded-control px-3 text-muted neu-pressed">+91</span>
             <Input
               id="register-phone"
               type="tel"

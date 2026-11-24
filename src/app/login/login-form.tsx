@@ -41,7 +41,7 @@ export function LoginForm({ next, mockOtp, text }: { next: string | null; mockOt
           <div>
             <Label htmlFor="phone">{text.phoneLabel}</Label>
             <div className="flex items-stretch gap-2">
-              <span className="flex min-h-11 items-center rounded-control border border-border-strong bg-surface-2 px-3 text-muted">+91</span>
+              <span className="flex min-h-11 items-center rounded-control px-3 text-muted neu-pressed">+91</span>
               <Input
                 id="phone"
                 name="phone"

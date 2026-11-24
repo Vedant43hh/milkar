@@ -12,7 +12,7 @@ function Figure({ icon, label, value, hint }: { icon: ReactNode; label: string; 
   return (
     <div className="relative min-w-0 pl-11">
       <dt className="text-xs text-muted">
-        <span className="absolute top-0.5 left-0 flex size-9 items-center justify-center rounded-full bg-success-soft text-success">{icon}</span>
+        <span className="absolute top-0.5 left-0 flex size-9 items-center justify-center rounded-full text-success neu-pressed-xs">{icon}</span>
         {label}
       </dt>
       <dd className="text-lg font-semibold text-fg tabular-nums">{value}</dd>
@@ -51,7 +51,7 @@ export function ImpactCard({ impact, community }: { impact: Impact; community: s
             />
             <Figure icon={<Leaf aria-hidden className="size-4.5" />} label={t("impact.co2")} value={t("impact.approx", { value: t("impact.kg", { n: number.format(impact.kgCo2) }) })} />
           </dl>
-          <details className="mt-4 rounded-control bg-surface-2 px-3 py-2 text-sm">
+          <details className="mt-4 rounded-control px-4 py-2 text-sm neu-pressed-sm">
             <summary className="flex min-h-11 cursor-pointer items-center gap-1.5 font-medium text-fg">
               <Info aria-hidden className="size-4 text-muted" />
               {t("impact.estimate")} {t("impact.howTitle")}

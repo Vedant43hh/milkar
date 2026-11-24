@@ -96,11 +96,11 @@ async function ResidentHomePage() {
         {home.visits.length === 0 ? (
           <EmptyState icon={<CalendarClock aria-hidden className="size-6" />} title={t("home.upcomingVisitsEmpty")} />
         ) : (
-          <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
+          <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
             {home.visits.map((visit) => (
               <li key={visit.id}>
-                <Link href={`/app/orders/${visit.roundId}`} className="flex items-center gap-3 px-4 py-3 hover:bg-surface-2">
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand-soft-fg">
+                <Link href={`/app/orders/${visit.roundId}`} className="flex items-center gap-3 px-4 py-3 transition-[box-shadow] duration-200 ease-in-out hover:neu-pressed-xs">
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-full text-brand neu-pressed-xs">
                     <Sparkles aria-hidden className="size-5" />
                   </span>
                   <span className="min-w-0 flex-1">

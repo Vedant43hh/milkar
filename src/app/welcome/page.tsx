@@ -32,17 +32,13 @@ export default function WelcomePage() {
             <li key={href}>
               <Link
                 href={href}
-                className={
-                  primary
-                    ? "group flex items-center gap-4 rounded-card border-2 border-brand bg-brand-soft p-5 transition-colors hover:bg-brand-soft/70"
-                    : "group flex items-center gap-4 rounded-card border border-border bg-surface p-5 shadow-card transition-colors hover:border-brand/60"
-                }
+                className="group flex items-center gap-4 rounded-card p-5 neu-raised transition-[box-shadow] duration-200 ease-in-out hover:neu-raised-sm active:neu-pressed"
               >
-                <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-surface text-brand shadow-card">
+                <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl text-brand neu-pressed-sm">
                   <Icon aria-hidden className="size-6" />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-lg font-semibold text-fg">{t(title)}</span>
+                  <span className={primary ? "block text-lg font-semibold text-brand" : "block text-lg font-semibold text-fg"}>{t(title)}</span>
                   <span className="block text-sm text-muted">{t(body)}</span>
                   <span className="mt-1 inline-flex items-center gap-1 text-sm font-semibold text-brand">
                     {t(cta)}

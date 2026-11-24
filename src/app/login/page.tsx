@@ -74,7 +74,7 @@ function DemoLogins({ next }: { next: string | null }) {
         {t("auth.demoHeading")}
       </h2>
       <p className="mb-3 text-sm text-muted">{t("auth.demoIntro")}</p>
-      <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
+      <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
         {DEMO_USER_KEYS.map((key) => {
           const demo = DEMO_USERS[key];
           const Icon = DEMO_ICONS[demo.role];
@@ -83,8 +83,8 @@ function DemoLogins({ next }: { next: string | null }) {
               <form action={demoLoginAction}>
                 <input type="hidden" name="key" value={key} />
                 <input type="hidden" name="next" value={next ?? ""} />
-                <button type="submit" className="flex min-h-14 w-full items-center gap-3 px-4 py-2 text-left transition-colors hover:bg-surface-2">
-                  <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand-soft-fg">
+                <button type="submit" className="flex min-h-14 w-full items-center gap-3 px-4 py-2 text-left transition-[box-shadow] duration-200 ease-in-out hover:neu-pressed-xs">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-full text-brand neu-pressed-xs">
                     <Icon aria-hidden className="size-4" />
                   </span>
                   <span className="min-w-0 flex-1">

@@ -2,7 +2,6 @@ import { ArrowRight, Repeat, ShoppingBasket, Sparkles, Wrench, type LucideIcon }
 import Link from "next/link";
 import { meterWords } from "@/components/meter-words";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/components/ui/cn";
 import { Countdown } from "@/components/ui/countdown";
 import { Price } from "@/components/ui/display";
 import { NeighbourFlats } from "@/components/ui/neighbours";
@@ -14,10 +13,10 @@ import { formatIST } from "@/lib/time";
 import type { GroupBuy } from "@/server/group-buys";
 
 export const CATEGORY_LOOK: Record<BuyCategory, { icon: LucideIcon; tint: string }> = {
-  GROCERIES: { icon: ShoppingBasket, tint: "bg-success-soft text-success" },
-  HOME_SERVICES: { icon: Sparkles, tint: "bg-brand-soft text-brand-soft-fg" },
-  REPAIRS: { icon: Wrench, tint: "bg-warning-soft text-warning" },
-  SUBSCRIPTIONS: { icon: Repeat, tint: "bg-accent-soft text-accent-soft-fg" },
+  GROCERIES: { icon: ShoppingBasket, tint: "text-success" },
+  HOME_SERVICES: { icon: Sparkles, tint: "text-brand" },
+  REPAIRS: { icon: Wrench, tint: "text-warning" },
+  SUBSCRIPTIONS: { icon: Repeat, tint: "text-accent" },
 };
 
 /**
@@ -41,10 +40,10 @@ export function GroupBuyCard({ buy, unitLabel }: { buy: GroupBuy; unitLabel: str
   const per = lead ? (isService ? (lead.unitLabel ?? "unit") : meterWords("UNITS", lead.productUnit, unitLabel).one) : null;
 
   return (
-    <Link href={buy.href} className="group block space-y-3 rounded-card border border-border bg-surface p-4 shadow-card transition-colors hover:border-brand/50">
+    <Link href={buy.href} className="group block space-y-3 rounded-card p-4 sm:p-5 neu-raised transition-[box-shadow] duration-200 ease-in-out hover:neu-raised-sm active:neu-pressed">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 space-y-1">
-          <Badge icon={<Icon aria-hidden className="size-3.5" />} className={cn("border-transparent", tint)}>
+          <Badge icon={<Icon aria-hidden className="size-3.5" />} className={tint}>
             {t(`buys.categories.${buy.category}.name`)}
           </Badge>
           <h3 className="font-semibold text-fg">{buy.title}</h3>

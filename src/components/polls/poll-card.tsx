@@ -16,7 +16,7 @@ export function ResidentPollCard({ poll }: { poll: ResidentPoll }) {
   return (
     <Card as="article" className="space-y-3">
       <div className="flex items-start gap-3">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent-soft-fg">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-full text-accent neu-pressed-xs">
           <Megaphone aria-hidden className="size-5" />
         </span>
         <div className="min-w-0">
