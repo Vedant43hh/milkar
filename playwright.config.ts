@@ -25,8 +25,10 @@ export default defineConfig({
   projects: [
     { name: "features", testIgnore: /golden-path\.spec\.ts/ },
     // The golden path closes this week's grocery round and the Plumber Day, which the feature
-    // tests expect open, so it runs after them. Alone: npx playwright test --project=golden-path --no-deps
-    { name: "golden-path", testMatch: /golden-path\.spec\.ts/, dependencies: ["features"] },
+    // tests expect open, so it runs after them, on demo data seeded again in between.
+    // Alone (after npm run db:seed): npx playwright test --project=golden-path --no-deps
+    { name: "reseed", testMatch: /reseed\.setup\.ts/, dependencies: ["features"] },
+    { name: "golden-path", testMatch: /golden-path\.spec\.ts/, dependencies: ["reseed"] },
   ],
   webServer: {
     command: "npm run start",

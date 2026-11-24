@@ -1209,8 +1209,10 @@ export function buildWorld(now: Date) {
         status: "ACTIVE",
         createdAt: plus(now, -4 * HOUR),
       });
-      // A credit from Milkar, so next week's auto-pay has enough in the wallet.
-      rec.walletTxns.push({ id: id(), userId: rahul.userId, amountPaise: 100_000, type: "ADJUSTMENT", idempotencyKey: `SEED:welcome:${rahul.userId}`, createdAt: plus(now, -HOUR) });
+      // A credit from Milkar, so next week's auto-pay has enough in the wallet. Generous on purpose:
+      // in a full browser-test run Rahul also pays for groceries, a Plumber Day and a car wash from
+      // the wallet before the milk week closes (₹1,000 left him ₹35, short of a ₹54 pouch).
+      rec.walletTxns.push({ id: id(), userId: rahul.userId, amountPaise: 200_000, type: "ADJUSTMENT", idempotencyKey: `SEED:welcome:${rahul.userId}`, createdAt: plus(now, -HOUR) });
     }
   }
   for (const p of problemNotes) {
