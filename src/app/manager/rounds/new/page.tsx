@@ -32,8 +32,8 @@ async function Chooser() {
       <PageHeader title={t("manager.chooseKind")} />
       <div className="grid gap-3 md:grid-cols-2">
         {KINDS.map(({ href, icon: Icon, kind }) => (
-          <Link key={href} href={href} className="group flex items-start gap-3 rounded-card border border-border bg-surface p-4 shadow-card transition-colors hover:border-brand/50">
-            <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand-soft-fg">
+          <Link key={href} href={href} className="group flex items-start gap-3 rounded-card p-4 sm:p-5 neu-raised transition-[box-shadow] duration-200 ease-in-out hover:neu-raised-sm active:neu-pressed">
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-full text-brand neu-pressed-xs">
               <Icon aria-hidden className="size-5" />
             </span>
             <span className="min-w-0 flex-1">

@@ -81,7 +81,7 @@ async function Polls() {
           <SectionTitle>
             <span id="done">{t("manager.polls.done")}</span>
           </SectionTitle>
-          <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
+          <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
             {done.map((poll) => (
               <DonePollRow key={poll.id} poll={poll} />
             ))}

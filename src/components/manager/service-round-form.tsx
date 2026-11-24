@@ -67,7 +67,7 @@ export function ServiceRoundForm({ serviceId, defaults, text }: { serviceId: str
             id: "check",
             title: f.stepCheck,
             content: (
-              <div className="space-y-3 rounded-card border border-border bg-surface p-4 text-sm">
+              <div className="space-y-3 rounded-card p-4 text-sm neu-pressed-sm">
                 <p className="text-muted">{f.checkIntro}</p>
                 <ul className="space-y-1.5 text-fg">
                   <li className="flex items-center gap-2">

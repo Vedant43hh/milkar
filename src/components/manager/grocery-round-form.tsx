@@ -68,7 +68,7 @@ export function GroceryRoundForm({
     <div className="space-y-3">
       <p className="text-sm text-muted">{text.form.productsHint}</p>
       {groups.map((group) => (
-        <fieldset key={group.label} className="rounded-card border border-border bg-surface">
+        <fieldset key={group.label} className="rounded-card bg-surface shadow-card">
           <legend className="sr-only">{group.label}</legend>
           <p aria-hidden className="border-b border-border px-4 py-2 text-xs font-semibold tracking-wide text-muted uppercase">
             {group.label}
@@ -113,7 +113,7 @@ export function GroceryRoundForm({
   );
 
   const check = (
-    <div className="space-y-3 rounded-card border border-border bg-surface p-4 text-sm">
+    <div className="space-y-3 rounded-card p-4 text-sm neu-pressed-sm">
       <p className="text-muted">{f.checkIntro}</p>
       <ul className="space-y-1.5 text-fg">
         <li className="flex items-center gap-2">

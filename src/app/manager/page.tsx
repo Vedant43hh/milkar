@@ -129,7 +129,7 @@ async function ManagerHome() {
         {home.distributions.length === 0 && home.visitDays.length === 0 ? (
           <p className="text-sm text-muted">{t("managerHome.nothingToday")}</p>
         ) : (
-          <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
+          <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
             {home.distributions.map((d) => (
               <li key={d.id}>
                 <ListRow
@@ -184,7 +184,7 @@ async function ManagerHome() {
           >
             <span id="recent-rounds">{t("manager.recent")}</span>
           </SectionTitle>
-          <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
+          <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
             {recent.map((round) => (
               <li key={round.id}>
                 <ListRow

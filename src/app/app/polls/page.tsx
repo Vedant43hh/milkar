@@ -51,7 +51,7 @@ async function Polls() {
           <SectionTitle>
             <span id="mine">{t("polls.mine")}</span>
           </SectionTitle>
-          <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
+          <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
             {mine.map((s) => (
               <li key={s.id} className="flex min-h-14 items-center justify-between gap-3 px-4 py-3">
                 <span className="min-w-0 truncate font-medium text-fg">{s.title}</span>

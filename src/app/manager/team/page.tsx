@@ -46,10 +46,10 @@ async function Team() {
         </Banner>
       )}
 
-      <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
+      <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
         {team.map((member) => (
           <li key={member.id} className="flex items-center gap-3 px-4 py-3">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand-soft-fg">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full text-brand neu-pressed-xs">
               <UserRound aria-hidden className="size-5" />
             </span>
             <span className="min-w-0 flex-1">

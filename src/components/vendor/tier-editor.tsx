@@ -41,7 +41,7 @@ export function TierEditor({ rows, marginBps, gstBps, text }: { rows: TierRowInp
           const label = interpolate(text.rowLabel, { n: i + 1 });
           const pay = residentPrice(prices[i] ?? "", marginBps, gstBps);
           return (
-            <li key={i} className="rounded-control border border-border bg-surface-2/40 p-3">
+            <li key={i} className="rounded-control p-4 neu-pressed-sm">
               <p className="sr-only">{label}</p>
               <div className="grid grid-cols-2 gap-3">
                 <label className="block text-sm">

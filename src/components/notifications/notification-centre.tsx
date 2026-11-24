@@ -35,33 +35,33 @@ import { listNotifications } from "@/server/notifications";
 import { MarkAllReadButton } from "./mark-all-read";
 
 const ICONS: Record<NotificationType, { icon: LucideIcon; tone: string }> = {
-  ROUND_OPENED: { icon: ClipboardList, tone: "bg-brand-soft text-brand-soft-fg" },
-  TIER_UNLOCKED: { icon: BadgePercent, tone: "bg-accent-soft text-accent-soft-fg" },
-  CUTOFF_REMINDER: { icon: Timer, tone: "bg-warning-soft text-warning" },
-  ROUND_FINALIZED: { icon: CircleCheck, tone: "bg-success-soft text-success" },
-  REFUND_CREDITED: { icon: Wallet, tone: "bg-success-soft text-success" },
-  VISIT_SCHEDULED: { icon: CalendarCheck, tone: "bg-brand-soft text-brand-soft-fg" },
-  TECHNICIAN_ON_THE_WAY: { icon: Truck, tone: "bg-brand-soft text-brand-soft-fg" },
-  VISIT_COMPLETED: { icon: CircleCheck, tone: "bg-success-soft text-success" },
-  VISIT_NO_ACCESS: { icon: DoorClosed, tone: "bg-warning-soft text-warning" },
-  POLL_THRESHOLD: { icon: Megaphone, tone: "bg-accent-soft text-accent-soft-fg" },
-  POLL_SUGGESTION: { icon: Lightbulb, tone: "bg-accent-soft text-accent-soft-fg" },
-  SLOT_HELD: { icon: CalendarClock, tone: "bg-brand-soft text-brand-soft-fg" },
-  SLOT_AUTO_BOOKED: { icon: CalendarCheck, tone: "bg-success-soft text-success" },
-  ISSUE_UPDATE: { icon: MessageSquareWarning, tone: "bg-surface-2 text-muted" },
-  ISSUE_REPORTED: { icon: MessageSquareWarning, tone: "bg-warning-soft text-warning" },
-  PARTS_APPROVAL: { icon: Wrench, tone: "bg-accent-soft text-accent-soft-fg" },
-  MEMBER_REMOVED: { icon: Users, tone: "bg-surface-2 text-muted" },
-  PAYOUT_PAID: { icon: IndianRupee, tone: "bg-success-soft text-success" },
-  SUBSCRIPTION_ORDERED: { icon: Repeat, tone: "bg-success-soft text-success" },
-  SUBSCRIPTION_CONFIRM: { icon: Repeat, tone: "bg-accent-soft text-accent-soft-fg" },
-  VENDOR_ORDER: { icon: Package, tone: "bg-brand-soft text-brand-soft-fg" },
-  JOIN_REQUEST: { icon: UserPlus, tone: "bg-accent-soft text-accent-soft-fg" },
-  JOIN_DECIDED: { icon: Users, tone: "bg-success-soft text-success" },
-  COMMUNITY_DECIDED: { icon: Building2, tone: "bg-success-soft text-success" },
-  VENDOR_DECIDED: { icon: BadgeCheck, tone: "bg-success-soft text-success" },
-  COMMUNITY_REGISTERED: { icon: Building2, tone: "bg-accent-soft text-accent-soft-fg" },
-  VENDOR_REGISTERED: { icon: Store, tone: "bg-accent-soft text-accent-soft-fg" },
+  ROUND_OPENED: { icon: ClipboardList, tone: "text-brand neu-pressed-xs" },
+  TIER_UNLOCKED: { icon: BadgePercent, tone: "text-accent neu-pressed-xs" },
+  CUTOFF_REMINDER: { icon: Timer, tone: "text-warning neu-pressed-xs" },
+  ROUND_FINALIZED: { icon: CircleCheck, tone: "text-success neu-pressed-xs" },
+  REFUND_CREDITED: { icon: Wallet, tone: "text-success neu-pressed-xs" },
+  VISIT_SCHEDULED: { icon: CalendarCheck, tone: "text-brand neu-pressed-xs" },
+  TECHNICIAN_ON_THE_WAY: { icon: Truck, tone: "text-brand neu-pressed-xs" },
+  VISIT_COMPLETED: { icon: CircleCheck, tone: "text-success neu-pressed-xs" },
+  VISIT_NO_ACCESS: { icon: DoorClosed, tone: "text-warning neu-pressed-xs" },
+  POLL_THRESHOLD: { icon: Megaphone, tone: "text-accent neu-pressed-xs" },
+  POLL_SUGGESTION: { icon: Lightbulb, tone: "text-accent neu-pressed-xs" },
+  SLOT_HELD: { icon: CalendarClock, tone: "text-brand neu-pressed-xs" },
+  SLOT_AUTO_BOOKED: { icon: CalendarCheck, tone: "text-success neu-pressed-xs" },
+  ISSUE_UPDATE: { icon: MessageSquareWarning, tone: "text-muted neu-pressed-xs" },
+  ISSUE_REPORTED: { icon: MessageSquareWarning, tone: "text-warning neu-pressed-xs" },
+  PARTS_APPROVAL: { icon: Wrench, tone: "text-accent neu-pressed-xs" },
+  MEMBER_REMOVED: { icon: Users, tone: "text-muted neu-pressed-xs" },
+  PAYOUT_PAID: { icon: IndianRupee, tone: "text-success neu-pressed-xs" },
+  SUBSCRIPTION_ORDERED: { icon: Repeat, tone: "text-success neu-pressed-xs" },
+  SUBSCRIPTION_CONFIRM: { icon: Repeat, tone: "text-accent neu-pressed-xs" },
+  VENDOR_ORDER: { icon: Package, tone: "text-brand neu-pressed-xs" },
+  JOIN_REQUEST: { icon: UserPlus, tone: "text-accent neu-pressed-xs" },
+  JOIN_DECIDED: { icon: Users, tone: "text-success neu-pressed-xs" },
+  COMMUNITY_DECIDED: { icon: Building2, tone: "text-success neu-pressed-xs" },
+  VENDOR_DECIDED: { icon: BadgeCheck, tone: "text-success neu-pressed-xs" },
+  COMMUNITY_REGISTERED: { icon: Building2, tone: "text-accent neu-pressed-xs" },
+  VENDOR_REGISTERED: { icon: Store, tone: "text-accent neu-pressed-xs" },
 };
 
 /** The notification list for the signed-in user. Reads the session: render inside <Suspense>. */
@@ -81,10 +81,10 @@ export async function NotificationCentre({ portal }: { portal: Portal }) {
       {items.length === 0 ? (
         <EmptyState icon={<Bell aria-hidden className="size-6" />} title={t("notifications.empty")} body={t("notifications.emptyBody")} />
       ) : (
-        <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface shadow-card">
+        <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
           {items.map((n) => {
             const { title, body } = renderNotification(n.type, n.params);
-            const { icon: Icon, tone } = ICONS[n.type] ?? { icon: Bell, tone: "bg-surface-2 text-muted" };
+            const { icon: Icon, tone } = ICONS[n.type] ?? { icon: Bell, tone: "text-muted neu-pressed-xs" };
             const isUnread = !n.readAt;
             return (
               <li key={n.id}>
@@ -93,8 +93,7 @@ export async function NotificationCentre({ portal }: { portal: Portal }) {
                   <button
                     type="submit"
                     className={cn(
-                      "flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-surface-2",
-                      isUnread && "bg-brand-soft/40",
+                      "flex w-full items-start gap-3 px-4 py-3 text-left transition-[box-shadow] duration-200 ease-in-out hover:neu-pressed-xs",
                     )}
                   >
                     <span className={cn("mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-full", tone)}>

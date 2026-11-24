@@ -73,7 +73,7 @@ async function VisitView({ params }: { params: PageProps<"/tech/visits/[visitId]
         <p className="text-base text-fg">{visit.booking.problemNote ?? <span className="text-muted">{t("techVisit.noProblem")}</span>}</p>
         {photo && (
           <a href={`/api/photos/${photo.id}`} target="_blank" rel="noreferrer" className="mt-3 block" aria-label={t("techVisit.openPhoto")}>
-            <Image src={`/api/photos/${photo.id}`} alt={t("techVisit.photo")} width={photo.width} height={photo.height} unoptimized className="max-h-64 w-auto rounded-control border border-border object-contain" />
+            <Image src={`/api/photos/${photo.id}`} alt={t("techVisit.photo")} width={photo.width} height={photo.height} unoptimized className="max-h-64 w-auto rounded-control object-contain neu-raised-sm" />
           </a>
         )}
       </Card>
@@ -85,7 +85,7 @@ async function VisitView({ params }: { params: PageProps<"/tech/visits/[visitId]
         ) : (
           <ul className="space-y-3">
             {visit.partsRequests.map((request) => (
-              <li key={request.id} className="space-y-1.5 rounded-control border border-border p-3 text-sm">
+              <li key={request.id} className="space-y-1.5 rounded-control p-4 text-sm neu-pressed-sm">
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-semibold text-fg tabular-nums">{formatINR(request.totalPaise)}</span>
                   <Badge tone={PARTS_TONE[request.status]}>{t(`techVisit.parts.status.${request.status}`)}</Badge>
@@ -111,7 +111,7 @@ async function VisitView({ params }: { params: PageProps<"/tech/visits/[visitId]
         )}
       </Card>
 
-      <div className="sticky bottom-[calc(5rem+env(safe-area-inset-bottom))] z-20 rounded-card border border-border bg-surface/95 p-3 shadow-raised backdrop-blur">
+      <div className="sticky bottom-[calc(5rem+env(safe-area-inset-bottom))] z-20 rounded-card bg-surface/95 p-3 shadow-raised backdrop-blur">
         <VisitActions visit={visit} />
       </div>
     </div>

@@ -26,7 +26,7 @@ export function PartsForm({ visitId, text }: { visitId: string; text: PartsFormT
       <input type="hidden" name="visitId" value={visitId} />
       <ol className="space-y-3">
         {rows.map((row, i) => (
-          <li key={row.key} className="space-y-2 rounded-control border border-border p-3">
+          <li key={row.key} className="space-y-2 rounded-control p-4 neu-pressed-sm">
             <div>
               <Label htmlFor={`part-name-${row.key}`}>{text.name}</Label>
               <Input id={`part-name-${row.key}`} name="name" required minLength={2} maxLength={60} placeholder={text.namePlaceholder} autoComplete="off" />

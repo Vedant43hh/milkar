@@ -26,7 +26,7 @@ async function Distribution() {
   const toDo = rounds.filter((r) => r.status === "FINALIZED");
   const done = rounds.filter((r) => r.status === "COMPLETED");
   const list = (items: typeof rounds, icon: ReactNode) => (
-    <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
+    <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
       {items.map((r) => (
         <li key={r.id}>
           <ListRow

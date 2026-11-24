@@ -44,7 +44,7 @@ async function AdminHome() {
                     <span className="block font-medium text-fg">{label}</span>
                     {"detail" in q && q.detail && <span className="block text-muted">{q.detail}</span>}
                   </span>
-                  <span className="rounded-full bg-accent-soft px-2.5 py-0.5 text-sm font-semibold text-accent-soft-fg tabular-nums">{n}</span>
+                  <span className="rounded-full px-2.5 py-0.5 text-sm font-semibold text-accent tabular-nums neu-pressed-xs">{n}</span>
                   <ArrowRight aria-hidden className="size-4 text-muted" />
                 </Link>
               </li>

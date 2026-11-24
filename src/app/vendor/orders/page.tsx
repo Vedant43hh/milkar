@@ -44,10 +44,10 @@ async function Orders() {
             <SectionTitle>
               <span id={`orders-${status}`}>{t(title)}</span>
             </SectionTitle>
-            <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
+            <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
               {inSection.map((o) => (
                 <li key={o.id}>
-                  <Link href={`/vendor/orders/${o.id}`} className="flex min-h-11 items-center justify-between gap-3 px-4 py-3 text-sm hover:bg-surface-2">
+                  <Link href={`/vendor/orders/${o.id}`} className="flex min-h-11 items-center justify-between gap-3 px-4 py-3 text-sm transition-[box-shadow] duration-200 ease-in-out hover:neu-pressed-xs">
                     <span className="min-w-0">
                       <span className="block font-medium text-fg">
                         {t("vendorOrders.number", { n: o.number })} · {o.round.title}

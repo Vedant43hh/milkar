@@ -60,7 +60,7 @@ async function Rounds() {
                 ))}
               </div>
             ) : (
-              <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
+              <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
                 {g.rounds.map((round) => {
                   const stats = statsOf(round);
                   return (

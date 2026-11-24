@@ -60,7 +60,7 @@ async function Order({ params }: { params: PageProps<"/vendor/orders/[orderId]">
         </ActionForm>
       )}
 
-      <article aria-labelledby="po-title" className="space-y-5 rounded-card border border-border bg-surface p-4 text-sm shadow-card sm:p-6 print:border-0 print:p-0 print:shadow-none">
+      <article aria-labelledby="po-title" className="space-y-5 rounded-card bg-surface p-4 text-sm shadow-card sm:p-6 print:p-0 print:shadow-none">
         <header className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h1 id="po-title" className="text-xl font-semibold tracking-tight text-fg">
@@ -129,7 +129,7 @@ async function Order({ params }: { params: PageProps<"/vendor/orders/[orderId]">
           {order.visits.total > 0 && <p className="mt-2 text-muted">{t("vendorOrders.visitsDone", { done: order.visits.done, total: order.visits.total })}</p>}
         </section>
 
-        <section aria-labelledby="po-payout" className="space-y-2 rounded-control bg-surface-2/60 p-3 print:bg-transparent print:p-0">
+        <section aria-labelledby="po-payout" className="space-y-2 rounded-control p-4 neu-pressed-sm print:p-0 print:shadow-none">
           <h2 id="po-payout" className="font-semibold text-fg">
             {t("vendorOrders.payoutTitle")}
           </h2>

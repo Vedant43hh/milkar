@@ -16,7 +16,7 @@ export function VisitList({ visits, empty, showDay = false }: { visits: Technici
         const waiting = v.partsRequests.some((r) => r.status === "PENDING");
         return (
           <li key={v.id}>
-            <Link href={`/tech/visits/${v.id}`} className="block rounded-card border border-border bg-surface p-4 shadow-card transition-colors hover:border-brand/50">
+            <Link href={`/tech/visits/${v.id}`} className="block rounded-card p-4 sm:p-5 neu-raised transition-[box-shadow] duration-200 ease-in-out hover:neu-raised-sm active:neu-pressed">
               <div className="flex items-start justify-between gap-3">
                 <p className="flex items-center gap-2 text-lg font-semibold text-fg tabular-nums">
                   <Clock aria-hidden className="size-5 text-brand" />

@@ -35,7 +35,7 @@ async function Communities() {
       ) : (
         <ul className="space-y-3">
           {communities.map((c) => (
-            <li key={c.id} className="space-y-3 rounded-card border border-border bg-surface p-4 shadow-card">
+            <li key={c.id} className="space-y-3 rounded-card bg-surface p-4 shadow-card sm:p-5">
               <div className="space-y-1">
                 <p className="font-semibold text-fg">{c.name}</p>
                 <p className="text-sm text-muted">

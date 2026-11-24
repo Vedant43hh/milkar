@@ -92,7 +92,7 @@ async function NewServiceRound({ searchParams }: { searchParams: PageProps<"/man
             <li key={service.id}>
               <Link
                 href={`/manager/rounds/new/service?kind=${kind}&service=${service.id}`}
-                className="group flex h-full items-start gap-3 rounded-card border border-border bg-surface p-4 shadow-card transition-colors hover:border-brand/50"
+                className="group flex h-full items-start gap-3 rounded-card p-4 sm:p-5 neu-raised transition-[box-shadow] duration-200 ease-in-out hover:neu-raised-sm active:neu-pressed"
               >
                 <span className="min-w-0 flex-1 space-y-1">
                   <span className="block font-semibold text-fg">{service.name}</span>

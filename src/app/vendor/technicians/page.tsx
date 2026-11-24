@@ -50,7 +50,7 @@ async function Technicians() {
         {team.length === 0 ? (
           <EmptyState icon={<Wrench aria-hidden className="size-6" />} title={t("technicians.none")} body={t("technicians.noneBody")} />
         ) : (
-          <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
+          <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
             {team.map((tech) => {
               const off = tech.deactivatedAt !== null;
               return (

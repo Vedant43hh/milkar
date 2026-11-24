@@ -40,7 +40,7 @@ function DaySection({ id, title, days }: { id: string; title: string; days: Visi
       <SectionTitle>
         <span id={id}>{title}</span>
       </SectionTitle>
-      <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
+      <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
         {days.map((day) => (
           <li key={day.id}>
             <DayRow day={day} />

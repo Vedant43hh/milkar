@@ -37,13 +37,13 @@ async function Schedule() {
             {formatIST(day.slots[0].startsAt, "weekdayDate")}
           </h2>
           {day.slots.map((slot) => (
-            <div key={slot.startsAt.toISOString()} className="rounded-card border border-border bg-surface">
+            <div key={slot.startsAt.toISOString()} className="rounded-card bg-surface shadow-card">
               <h3 className="border-b border-border px-4 py-2 text-sm font-semibold text-fg">
                 {formatIST(slot.startsAt, "time")} – {formatIST(slot.endsAt, "time")}
               </h3>
               {slot.towers.map((tower) => (
                 <div key={`${tower.community}-${tower.tower}`}>
-                  <p className="bg-surface-2/60 px-4 py-1.5 text-xs font-semibold tracking-wide text-muted uppercase">
+                  <p className="px-4 pt-3 pb-1 text-xs font-semibold tracking-wide text-muted uppercase">
                     {t("vendorSchedule.tower", { community: tower.community, block: tower.visits[0].flat.community.blockLabel, tower: tower.tower })}
                   </p>
                   <ul className="divide-y divide-border">

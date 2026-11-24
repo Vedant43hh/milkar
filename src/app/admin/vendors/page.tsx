@@ -36,7 +36,7 @@ async function Vendors() {
       ) : (
         <ul className="space-y-3">
           {vendors.map((v) => (
-            <li key={v.id} className="space-y-3 rounded-card border border-border bg-surface p-4 shadow-card">
+            <li key={v.id} className="space-y-3 rounded-card bg-surface p-4 shadow-card sm:p-5">
               <div className="space-y-1">
                 <p className="font-semibold text-fg">{v.name}</p>
                 <p className="flex flex-wrap gap-1.5">

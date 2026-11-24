@@ -34,7 +34,7 @@ async function WalletView() {
     <PullToRefresh>
       <PageHeader title={t("wallet.title")} subtitle={t("wallet.intro")} />
       <Card className="flex items-center gap-4">
-        <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand-soft-fg">
+        <span className="flex size-12 shrink-0 items-center justify-center rounded-full text-brand neu-pressed-xs">
           <Wallet aria-hidden className="size-6" />
         </span>
         <div>
@@ -50,13 +50,13 @@ async function WalletView() {
         {entries.length === 0 ? (
           <EmptyState icon={<Wallet aria-hidden className="size-6" />} title={t("wallet.empty")} body={t("wallet.emptyBody")} />
         ) : (
-          <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
+          <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
             {entries.map((entry) => {
               const credit = entry.amountPaise > 0;
               const Icon = credit ? ArrowDownLeft : ArrowUpRight;
               return (
                 <li key={entry.id} className="flex items-center gap-3 px-4 py-3">
-                  <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-full", credit ? "bg-success-soft text-success" : "bg-surface-2 text-muted")}>
+                  <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-full", credit ? "text-success neu-pressed-xs" : "text-muted neu-pressed-xs")}>
                     <Icon aria-hidden className="size-4" />
                   </span>
                   <span className="min-w-0 flex-1">

@@ -140,7 +140,7 @@ async function Dashboard({ params }: { params: PageProps<"/manager/rounds/[id]">
         {recent.length === 0 ? (
           <EmptyState title={t("manager.dashboard.noOrdersYet")} body={taking ? t("manager.dashboard.noOrdersYetBody") : undefined} />
         ) : (
-          <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
+          <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
             {recent.map((p) => (
               <li key={p.id} className="flex items-center gap-3 px-4 py-3 text-sm">
                 <span className="min-w-0 flex-1">
@@ -210,7 +210,7 @@ function Results({ round, offerings }: { round: RoundDashboard["round"]; offerin
         )}
       </Card>
 
-      <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
+      <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
         {offerings.map((o) => {
           const confirmed = o.status === "CONFIRMED";
           return (
@@ -249,7 +249,7 @@ function Results({ round, offerings }: { round: RoundDashboard["round"]; offerin
       {round.repeatNext && (
         <Link
           href={`/manager/rounds/${round.repeatNext.id}`}
-          className="flex items-center gap-3 rounded-card border border-border bg-surface p-4 shadow-card transition-colors hover:border-brand/50"
+          className="flex items-center gap-3 rounded-card p-4 sm:p-5 neu-raised transition-[box-shadow] duration-200 ease-in-out hover:neu-raised-sm active:neu-pressed"
         >
           <Repeat aria-hidden className="size-5 shrink-0 text-brand" />
           <span className="min-w-0 flex-1">
@@ -299,7 +299,7 @@ function GroceryMeters({
         {closest.length === 0 ? (
           <p className="text-sm text-muted">{t("manager.dashboard.noUnlock")}</p>
         ) : (
-          <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">{closest.slice(0, 5).map(meterCard)}</ul>
+          <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">{closest.slice(0, 5).map(meterCard)}</ul>
         )}
       </section>
       {waiting.length > 0 && (
@@ -307,10 +307,10 @@ function GroceryMeters({
           <SectionTitle>
             <span id="not-started">{t("manager.dashboard.notStarted")}</span>
           </SectionTitle>
-          <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">{waiting.map(meterCard)}</ul>
+          <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">{waiting.map(meterCard)}</ul>
         </section>
       )}
-      <details className="group rounded-card border border-border bg-surface">
+      <details className="group rounded-card bg-surface shadow-card">
         <summary className="flex min-h-11 cursor-pointer items-center px-4 text-sm font-semibold text-fg">
           {t("manager.dashboard.allItems")} ({offerings.length})
         </summary>

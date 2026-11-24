@@ -47,9 +47,9 @@ function ClosePollForm({ poll, suggestion = false }: { poll: ManagerPoll; sugges
 /** A poll past its threshold: one tap opens a pre-filled round. */
 export function ReadyPollCard({ poll }: { poll: ManagerPoll }) {
   return (
-    <Card as="article" className="space-y-3 border-accent/40">
+    <Card as="article" className="space-y-3">
       <div className="flex items-start gap-3">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent-soft-fg">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-full text-accent neu-pressed-xs">
           <Rocket aria-hidden className="size-5" />
         </span>
         <div className="min-w-0">
@@ -85,7 +85,7 @@ export function SuggestionCard({ poll }: { poll: ManagerPoll }) {
   return (
     <Card as="article" className="space-y-3">
       <div className="flex items-start gap-3">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-surface-2 text-muted">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted neu-pressed-xs">
           <Lightbulb aria-hidden className="size-5" />
         </span>
         <div className="min-w-0">

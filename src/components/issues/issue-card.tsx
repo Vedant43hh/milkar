@@ -19,7 +19,7 @@ export function IssueCard({ issue, now, action, showCommunity = false }: { issue
   // Tomorrow, 10 am IST: a sensible first suggestion for a revisit.
   const suggested = utcToIstLocal(new Date(startOfIstDay(now, 1).getTime() + 10 * 3_600_000));
   return (
-    <li className="space-y-2 rounded-card border border-border bg-surface p-4 shadow-card">
+    <li className="space-y-2 rounded-card bg-surface p-4 shadow-card sm:p-5">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <h2 className="font-semibold text-fg">

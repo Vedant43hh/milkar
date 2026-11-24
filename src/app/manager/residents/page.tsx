@@ -50,7 +50,7 @@ async function Residents() {
             {pending.map((request) => {
               const name = request.user.name ?? formatPhone(request.user.phone);
               return (
-                <li key={request.id} className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-border bg-surface p-4 shadow-card">
+                <li key={request.id} className="flex flex-wrap items-center justify-between gap-3 rounded-card bg-surface p-4 shadow-card sm:p-5">
                   <span className="min-w-0">
                     <span className="block font-semibold text-fg">{name}</span>
                     <span className="block text-sm text-muted">
@@ -93,7 +93,7 @@ async function Residents() {
         {members.length === 0 ? (
           <EmptyState icon={<Users aria-hidden className="size-6" />} title={t("approvals.noMembers")} />
         ) : (
-          <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
+          <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
             {members.map((m) => (
               <li key={m.id} className="flex items-center gap-3 px-4 py-2 text-sm">
                 <House aria-hidden className="size-4 shrink-0 text-muted" />

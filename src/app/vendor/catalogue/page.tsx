@@ -49,10 +49,10 @@ async function Catalogue() {
           {catalogue.products.length === 0 ? (
             <EmptyState icon={<Package aria-hidden className="size-6" />} title={t("catalogue.noProducts")} body={t("catalogue.noProductsBody")} />
           ) : (
-            <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
+            <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
               {catalogue.products.map((p) => (
                 <li key={p.id}>
-                  <Link href={`/vendor/catalogue/products/${p.id}`} className="flex min-h-11 items-center justify-between gap-3 px-4 py-3 text-sm hover:bg-surface-2">
+                  <Link href={`/vendor/catalogue/products/${p.id}`} className="flex min-h-11 items-center justify-between gap-3 px-4 py-3 text-sm transition-[box-shadow] duration-200 ease-in-out hover:neu-pressed-xs">
                     <span className="min-w-0">
                       <span className="flex flex-wrap items-center gap-2 font-medium text-fg">
                         {p.name}
@@ -84,10 +84,10 @@ async function Catalogue() {
           {catalogue.services.length === 0 ? (
             <EmptyState icon={<Wrench aria-hidden className="size-6" />} title={t("catalogue.noServices")} body={t("catalogue.noServicesBody")} />
           ) : (
-            <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
+            <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
               {catalogue.services.map((s) => (
                 <li key={s.id}>
-                  <Link href={`/vendor/catalogue/services/${s.id}`} className="flex min-h-11 items-center justify-between gap-3 px-4 py-3 text-sm hover:bg-surface-2">
+                  <Link href={`/vendor/catalogue/services/${s.id}`} className="flex min-h-11 items-center justify-between gap-3 px-4 py-3 text-sm transition-[box-shadow] duration-200 ease-in-out hover:neu-pressed-xs">
                     <span className="min-w-0">
                       <span className="flex flex-wrap items-center gap-2 font-medium text-fg">
                         {s.name}

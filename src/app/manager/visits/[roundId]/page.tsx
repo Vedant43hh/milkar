@@ -139,7 +139,7 @@ async function Board({ params }: { params: PageProps<"/manager/visits/[roundId]"
                 {formatIST(slot.startsAt)} – {formatIST(slot.endsAt, "time")}
               </span>
             </SectionTitle>
-            <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
+            <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
               {slot.visits.map((visit) => (
                 <VisitRow key={visit.id} visit={visit} unitLabel={round.unitLabel} />
               ))}
@@ -152,7 +152,7 @@ async function Board({ params }: { params: PageProps<"/manager/visits/[roundId]"
           <SectionTitle>
             <span id="revisits">{t("visitBoard.revisits")}</span>
           </SectionTitle>
-          <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
+          <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
             {revisits.map((visit) => (
               <VisitRow key={visit.id} visit={visit} unitLabel={round.unitLabel} />
             ))}

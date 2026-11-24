@@ -45,7 +45,7 @@ async function Admins() {
         <SectionTitle>
           <span id="admins-list">{t("adminAdmins.list", { n: admins.length })}</span>
         </SectionTitle>
-        <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
+        <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
           {admins.map((a) => (
             <li key={a.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-sm">
               <span className="font-medium text-fg">{a.name}</span>

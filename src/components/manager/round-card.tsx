@@ -40,7 +40,7 @@ export function RoundCard({ round, unitLabel, now }: { round: ManagerRound; unit
   return (
     <Link
       href={`/manager/rounds/${round.id}`}
-      className="group block rounded-card border border-border bg-surface p-4 shadow-card transition-colors hover:border-brand/50"
+      className="group block rounded-card p-4 sm:p-5 neu-raised transition-[box-shadow] duration-200 ease-in-out hover:neu-raised-sm active:neu-pressed"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 space-y-1.5">

@@ -73,7 +73,7 @@ function FlatBag({ flat, round }: { flat: Flat; round: Data["round"] }) {
   const label = t("distribution.flat", { unit: round.unitLabel, flat: `${flat.tower}-${flat.flatNumber}` });
   const done = flat.pickup?.status === "COLLECTED";
   return (
-    <li className="space-y-3 rounded-card border border-border bg-surface p-4 shadow-card">
+    <li className="space-y-3 rounded-card bg-surface p-4 shadow-card sm:p-5">
       <div className="flex items-start justify-between gap-2">
         <h2 className="flex items-center gap-2 text-lg font-semibold text-fg">
           <ShoppingBag aria-hidden className="size-5 text-brand" />
@@ -123,7 +123,7 @@ function FlatBag({ flat, round }: { flat: Flat; round: Data["round"] }) {
           <div className="space-y-4">
             <p className="text-sm text-muted">{t("distribution.reportBody")}</p>
             {flat.orderItems.map((item) => (
-              <ActionForm key={item.id} action={reportDeliveryIssueAction} className="space-y-2 rounded-control border border-border p-3">
+              <ActionForm key={item.id} action={reportDeliveryIssueAction} className="space-y-2 rounded-control p-4 neu-pressed-sm">
                 <input type="hidden" name="orderItemId" value={item.id} />
                 <p className="text-sm font-medium text-fg">
                   {item.name} × {item.quantity}
