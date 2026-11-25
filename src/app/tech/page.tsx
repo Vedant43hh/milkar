@@ -1,4 +1,3 @@
-import { Wrench } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { VisitList } from "@/components/tech/visit-list";
@@ -25,7 +24,7 @@ async function Today() {
   return (
     <>
       <PageHeader title={t("tech.todayTitle")} subtitle={t("tech.todayIntro")} />
-      <VisitList visits={visits} empty={<EmptyState icon={<Wrench aria-hidden className="size-6" />} title={t("tech.noVisitsToday")} body={t("tech.noVisitsTodayBody")} />} />
+      <VisitList visits={visits} empty={<EmptyState title={t("tech.noVisitsToday")} body={t("tech.noVisitsTodayBody")} />} />
     </>
   );
 }

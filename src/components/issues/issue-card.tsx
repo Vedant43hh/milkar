@@ -8,7 +8,7 @@ import { relativeTime } from "@/lib/notifications";
 import { formatIST, startOfIstDay, utcToIstLocal } from "@/lib/time";
 import type { CommunityIssue } from "@/server/issues";
 
-const TONE: Record<string, Tone> = { OPEN: "warning", REVISIT_SCHEDULED: "accent", REFUNDED: "success", REJECTED: "neutral", RESOLVED: "success" };
+const TONE: Record<string, Tone> = { OPEN: "warning", REVISIT_SCHEDULED: "info", REFUNDED: "success", REJECTED: "neutral", RESOLVED: "success" };
 
 /** One complaint about a visit, with what can still be done about it (one free revisit, a refund, or closing it). */
 export function IssueCard({ issue, now, action, showCommunity = false }: { issue: CommunityIssue; now: Date; action: (prev: ActionResult, formData: FormData) => Promise<ActionResult>; showCommunity?: boolean }) {
@@ -19,7 +19,7 @@ export function IssueCard({ issue, now, action, showCommunity = false }: { issue
   // Tomorrow, 10 am IST: a sensible first suggestion for a revisit.
   const suggested = utcToIstLocal(new Date(startOfIstDay(now, 1).getTime() + 10 * 3_600_000));
   return (
-    <li className="space-y-2 rounded-card bg-surface p-4 shadow-card sm:p-5">
+    <li className="space-y-2 p-4">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <h2 className="font-semibold text-fg">
@@ -33,10 +33,10 @@ export function IssueCard({ issue, now, action, showCommunity = false }: { issue
         <Badge tone={TONE[issue.status]}>{t(`issues.status.${issue.status}`)}</Badge>
       </div>
       <p className="text-sm text-fg">“{issue.note}”</p>
-      <p className="text-xs text-muted">{t("issues.reported", { name: issue.reportedBy.name ?? "", when: relativeTime(issue.createdAt, now) })}</p>
-      <p className="text-xs text-muted">{t("issues.visit", { when: formatIST(issue.visit.startsAt), technician: issue.visit.technicianName ?? "" })}</p>
+      <p className="text-sm text-muted">{t("issues.reported", { name: issue.reportedBy.name ?? "", when: relativeTime(issue.createdAt, now) })}</p>
+      <p className="text-sm text-muted">{t("issues.visit", { when: formatIST(issue.visit.startsAt), technician: issue.visit.technicianName ?? "" })}</p>
       {issue.visit.revisit && (
-        <p className="text-xs text-muted">{t("issues.revisitOn", { when: formatIST(issue.visit.revisit.startsAt), status: t(`visitStatus.${issue.visit.revisit.status}`) })}</p>
+        <p className="text-sm text-muted">{t("issues.revisitOn", { when: formatIST(issue.visit.revisit.startsAt), status: t(`visitStatus.${issue.visit.revisit.status}`) })}</p>
       )}
       {issue.resolution && <p className="text-sm text-muted">{t("issues.resolution", { text: issue.resolution })}</p>}
       {issue.options.length > 0 && (

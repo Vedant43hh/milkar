@@ -1,11 +1,10 @@
 "use client";
 
-import { CircleAlert, CircleCheck, Info, PartyPopper, X } from "lucide-react";
+import { X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { tu } from "@/i18n/ui";
 import { FLASH_COOKIE, parseFlash } from "@/lib/flash-shared";
-import { Celebration } from "./celebrate";
 import { cn } from "./cn";
 
 export type ToastTone = "success" | "error" | "info" | "celebrate";
@@ -18,28 +17,14 @@ export function useToast(): PushToast {
   return useContext(ToastContext);
 }
 
-const icons = {
-  success: <CircleCheck aria-hidden className="size-5 text-success" />,
-  error: <CircleAlert aria-hidden className="size-5 text-danger" />,
-  info: <Info aria-hidden className="size-5 text-brand" />,
-  celebrate: <PartyPopper aria-hidden className="size-5 text-accent" />,
-};
-
 /** Toast stack shown above the bottom tab bar. */
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
-  // A celebrate toast (a price unlock) gets the confetti overlay instead of a toast card.
-  const [celebration, setCelebration] = useState<string | null>(null);
-  const endCelebration = useCallback(() => setCelebration(null), []);
   const nextId = useRef(1);
 
   const dismiss = useCallback((id: number) => setToasts((list) => list.filter((item) => item.id !== id)), []);
   const push = useCallback<PushToast>(
     (toast) => {
-      if (toast.tone === "celebrate") {
-        setCelebration(toast.title);
-        return;
-      }
       const id = nextId.current++;
       setToasts((list) => [...list.slice(-2), { ...toast, id }]);
       setTimeout(() => dismiss(id), toast.tone === "error" ? 6000 : 4000);
@@ -50,7 +35,6 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext value={push}>
       {children}
-      {celebration && <Celebration message={celebration} onDone={endCelebration} />}
       <div
         role="status"
         aria-live="polite"
@@ -60,19 +44,19 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           <div
             key={toast.id}
             className={cn(
-              "pointer-events-auto flex w-full max-w-sm animate-slide-up items-start gap-3 rounded-control bg-surface p-4 shadow-raised",
+              "pointer-events-auto flex w-full max-w-sm animate-slide-up items-start gap-3 rounded-card border bg-surface py-3 pr-2 pl-4",
+              toast.tone === "error" ? "border-danger" : "border-border",
             )}
           >
-            {icons[toast.tone]}
             <div className="min-w-0 flex-1 text-sm">
-              <p className="font-medium text-fg">{toast.title}</p>
+              <p className={cn("font-medium", toast.tone === "error" ? "text-danger" : "text-fg")}>{toast.title}</p>
               {toast.body && <p className="mt-0.5 text-muted">{toast.body}</p>}
             </div>
             <button
               type="button"
               onClick={() => dismiss(toast.id)}
               aria-label={tu("ui.dismiss")}
-              className="-m-2 inline-flex size-11 shrink-0 items-center justify-center rounded-full text-subtle hover:text-fg"
+              className="-my-2 inline-flex size-11 shrink-0 items-center justify-center rounded-control text-muted transition-colors hover:bg-surface-hover hover:text-fg"
             >
               <X aria-hidden className="size-4" />
             </button>

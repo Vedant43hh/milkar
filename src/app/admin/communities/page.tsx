@@ -1,4 +1,3 @@
-import { Building2 } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { DecisionButtons } from "@/components/approvals/decision-buttons";
@@ -31,11 +30,11 @@ async function Communities() {
     <>
       <PageHeader title={t("approvals.communitiesTitle")} subtitle={t("approvals.communitiesIntro")} />
       {communities.length === 0 ? (
-        <EmptyState icon={<Building2 aria-hidden className="size-6" />} title={t("approvals.noCommunities")} />
+        <EmptyState title={t("approvals.noCommunities")} />
       ) : (
-        <ul className="space-y-3">
+        <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
           {communities.map((c) => (
-            <li key={c.id} className="space-y-3 rounded-card bg-surface p-4 shadow-card sm:p-5">
+            <li key={c.id} className="space-y-3 p-4">
               <div className="space-y-1">
                 <p className="font-semibold text-fg">{c.name}</p>
                 <p className="text-sm text-muted">
@@ -45,7 +44,7 @@ async function Communities() {
                 {c.registeredBy && (
                   <p className="text-sm text-muted">{t("approvals.registeredBy", { name: c.registeredBy.name ?? "", phone: formatPhone(c.registeredBy.phone) })}</p>
                 )}
-                <p className="text-xs text-subtle">{t("approvals.requested", { when: relativeTime(c.createdAt, now) })}</p>
+                <p className="text-sm text-muted">{t("approvals.requested", { when: relativeTime(c.createdAt, now) })}</p>
               </div>
               <DecisionButtons
                 action={decideCommunityAction}

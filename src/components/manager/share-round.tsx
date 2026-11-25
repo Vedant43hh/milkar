@@ -18,7 +18,7 @@ export function ShareRound({ whatsappHref, inviteUrl }: { whatsappHref: string; 
   }
   return (
     <div className="flex flex-wrap gap-2">
-      <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className={buttonClasses({ variant: "accent", size: "sm" })}>
+      <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className={buttonClasses({ variant: "secondary", size: "sm" })}>
         <MessageCircle aria-hidden className="size-4" />
         {tu("share.whatsapp")}
       </a>

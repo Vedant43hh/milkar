@@ -1,11 +1,9 @@
-import { PartyPopper, TrendingDown, Users } from "lucide-react";
 import { tu } from "@/i18n/ui";
 import type { Meter } from "@/lib/pricing/meter";
 import { formatINR } from "@/lib/pricing/money";
 import { cn } from "./cn";
 
 const barTones = {
-  brand: "bg-brand",
   accent: "bg-accent",
   success: "bg-success",
   warning: "bg-warning",
@@ -14,7 +12,7 @@ const barTones = {
 export function ProgressBar({
   value,
   label,
-  tone = "brand",
+  tone = "accent",
   className,
 }: {
   /** 0–100 */
@@ -31,9 +29,9 @@ export function ProgressBar({
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={pct}
-      className={cn("h-3 w-full overflow-hidden rounded-full neu-pressed-xs", className)}
+      className={cn("h-2 w-full overflow-hidden rounded-full bg-border", className)}
     >
-      <div className={cn("h-full origin-left animate-grow-x rounded-full transition-[width] duration-500 ease-out", barTones[tone])} style={{ width: `${pct}%` }} />
+      <div className={cn("h-full rounded-full", barTones[tone])} style={{ width: `${pct}%` }} />
     </div>
   );
 }
@@ -55,16 +53,14 @@ export function TierMeter({ meter, basisWords, compact = false }: { meter: Meter
   const status = !meter.qualifies
     ? {
         tone: "warning" as const,
-        icon: <Users aria-hidden className="size-4" />,
         text: tu("meter.qualify", { n: meter.toQualify, unit: unitWord(meter.toQualify, basisWords) }),
       }
     : next
       ? {
           tone: "accent" as const,
-          icon: <TrendingDown aria-hidden className="size-4" />,
           text: tu("meter.unlock", { n: next.needed, unit: unitWord(next.needed, basisWords), price: formatINR(next.unitPaise) }),
         }
-      : { tone: "success" as const, icon: <PartyPopper aria-hidden className="size-4" />, text: tu("meter.best") };
+      : { tone: "success" as const, text: tu("meter.best") };
 
   const statusColor = { warning: "text-warning", accent: "text-accent", success: "text-success" }[status.tone];
 
@@ -72,23 +68,19 @@ export function TierMeter({ meter, basisWords, compact = false }: { meter: Meter
     <div className="space-y-2">
       <div className="flex items-baseline justify-between gap-2 text-sm">
         <span className="text-muted">{tu("meter.joined", { n: meter.count, unit: unitWord(meter.count, basisWords) })}</span>
-        <span className={cn("flex items-center gap-1 font-medium", statusColor)}>
-          {status.icon}
+        <span className={cn("text-right font-medium", statusColor)}>
           {status.text}
         </span>
       </div>
       <ProgressBar value={meter.progressPct} tone={status.tone === "warning" ? "warning" : status.tone === "success" ? "success" : "accent"} label={status.text} />
       {!compact && (
-        <ol className="flex flex-wrap gap-1.5" aria-label={tu("meter.ladder")}>
+        <ol className="flex flex-wrap gap-x-3 gap-y-1 text-sm" aria-label={tu("meter.ladder")}>
           {meter.ladder.map((step) => {
             const current = step.unitPaise === meter.currentUnitPaise && step.reached;
             return (
               <li
                 key={step.minQty}
-                className={cn(
-                  "rounded-full px-2.5 py-0.5 text-xs tabular-nums",
-                  current ? "font-semibold text-brand neu-pressed-xs" : step.reached ? "text-subtle line-through" : "text-muted",
-                )}
+                className={cn("tabular-nums", current ? "font-medium text-accent" : step.reached ? "text-muted line-through" : "text-muted")}
               >
                 {tu("meter.step", { qty: `${step.minQty}+`, price: formatINR(step.unitPaise) })}
               </li>

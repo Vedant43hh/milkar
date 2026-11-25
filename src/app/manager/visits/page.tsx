@@ -1,4 +1,3 @@
-import { CalendarCheck, CircleCheck } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -25,10 +24,9 @@ function DayRow({ day }: { day: VisitDay }) {
   return (
     <ListRow
       href={`/manager/visits/${day.id}`}
-      icon={day.open > 0 ? <CalendarCheck aria-hidden className="size-5" /> : <CircleCheck aria-hidden className="size-5" />}
       title={day.title}
       subtitle={`${dates} · ${t("visitBoard.counts", { done: day.done, total: day.visits })}`}
-      trailing={day.today ? <Badge tone="brand">{t("visitBoard.today")}</Badge> : day.open > 0 ? <Badge>{t("visitBoard.open", { n: day.open })}</Badge> : undefined}
+      trailing={day.today ? <Badge tone="info">{t("visitBoard.today")}</Badge> : day.open > 0 ? <Badge>{t("visitBoard.open", { n: day.open })}</Badge> : undefined}
     />
   );
 }
@@ -40,7 +38,7 @@ function DaySection({ id, title, days }: { id: string; title: string; days: Visi
       <SectionTitle>
         <span id={id}>{title}</span>
       </SectionTitle>
-      <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
+      <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
         {days.map((day) => (
           <li key={day.id}>
             <DayRow day={day} />
@@ -61,7 +59,7 @@ async function VisitDays() {
     <div>
       <PageHeader title={t("visitBoard.title")} subtitle={t("visitBoard.intro")} />
       {days.length === 0 ? (
-        <EmptyState icon={<CalendarCheck aria-hidden className="size-6" />} title={t("visitBoard.none")} body={t("visitBoard.noneBody")} />
+        <EmptyState title={t("visitBoard.none")} body={t("visitBoard.noneBody")} />
       ) : (
         <>
           <DaySection id="coming-up" title={t("visitBoard.comingUp")} days={comingUp} />

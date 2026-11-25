@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, CircleAlert } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Fragment, useEffect, useId, useRef, useState, type MouseEvent, type ReactNode } from "react";
 import { tu } from "@/i18n/ui";
 import { Button } from "./button";
@@ -77,14 +77,13 @@ export function Wizard({ steps, submit }: { steps: WizardStep[]; submit: ReactNo
           className="min-w-0 space-y-4"
         >
           <legend className="contents">
-            <span data-step-title tabIndex={-1} className="block text-xl font-semibold tracking-tight text-fg outline-none">
+            <span data-step-title tabIndex={-1} className="block text-base font-semibold text-fg outline-none">
               {step.title}
             </span>
           </legend>
           {step.content}
           {index === current && problem && (
-            <p role="alert" className="flex items-center gap-1.5 text-sm font-medium text-danger">
-              <CircleAlert aria-hidden className="size-4 shrink-0" />
+            <p role="alert" className="text-sm font-medium text-danger">
               {problem}
             </p>
           )}

@@ -1,4 +1,4 @@
-import { Clock, Package, Plus, Wrench } from "lucide-react";
+import { Plus } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -47,12 +47,12 @@ async function Catalogue() {
             <span id="products">{t("catalogue.products")}</span>
           </SectionTitle>
           {catalogue.products.length === 0 ? (
-            <EmptyState icon={<Package aria-hidden className="size-6" />} title={t("catalogue.noProducts")} body={t("catalogue.noProductsBody")} />
+            <EmptyState title={t("catalogue.noProducts")} body={t("catalogue.noProductsBody")} />
           ) : (
-            <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
+            <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
               {catalogue.products.map((p) => (
                 <li key={p.id}>
-                  <Link href={`/vendor/catalogue/products/${p.id}`} className="flex min-h-11 items-center justify-between gap-3 px-4 py-3 text-sm transition-[box-shadow] duration-200 ease-in-out hover:neu-pressed-xs">
+                  <Link href={`/vendor/catalogue/products/${p.id}`} className="flex min-h-11 items-center justify-between gap-3 px-4 py-3 text-sm transition-colors hover:bg-surface-hover">
                     <span className="min-w-0">
                       <span className="flex flex-wrap items-center gap-2 font-medium text-fg">
                         {p.name}
@@ -61,7 +61,7 @@ async function Catalogue() {
                       </span>
                       <span className="block text-muted tabular-nums">{ladder(p.tiers.map((x) => ({ min: x.minQty, paise: x.vendorPricePaise })))}</span>
                     </span>
-                    <span className="shrink-0 text-sm font-semibold text-brand">{t("catalogue.edit")}</span>
+                    <span className="shrink-0 text-sm font-semibold text-accent">{t("catalogue.edit")}</span>
                   </Link>
                 </li>
               ))}
@@ -82,12 +82,12 @@ async function Catalogue() {
             <span id="services">{t("catalogue.services")}</span>
           </SectionTitle>
           {catalogue.services.length === 0 ? (
-            <EmptyState icon={<Wrench aria-hidden className="size-6" />} title={t("catalogue.noServices")} body={t("catalogue.noServicesBody")} />
+            <EmptyState title={t("catalogue.noServices")} body={t("catalogue.noServicesBody")} />
           ) : (
-            <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
+            <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
               {catalogue.services.map((s) => (
                 <li key={s.id}>
-                  <Link href={`/vendor/catalogue/services/${s.id}`} className="flex min-h-11 items-center justify-between gap-3 px-4 py-3 text-sm transition-[box-shadow] duration-200 ease-in-out hover:neu-pressed-xs">
+                  <Link href={`/vendor/catalogue/services/${s.id}`} className="flex min-h-11 items-center justify-between gap-3 px-4 py-3 text-sm transition-colors hover:bg-surface-hover">
                     <span className="min-w-0">
                       <span className="flex flex-wrap items-center gap-2 font-medium text-fg">
                         {s.name}
@@ -97,11 +97,10 @@ async function Catalogue() {
                         {t(`serviceCategories.${s.category}`)} · {t("catalogue.optionsCount", { n: s.options.filter((o) => o.active).length })}
                       </span>
                       <span className="flex items-center gap-1 text-muted">
-                        <Clock aria-hidden className="size-3.5" />
                         {s.slotTemplates.length > 0 ? t("catalogue.slotsSummary", { n: s.slotTemplates.length }) : t("catalogue.noSlots")}
                       </span>
                     </span>
-                    <span className="shrink-0 text-sm font-semibold text-brand">{t("catalogue.edit")}</span>
+                    <span className="shrink-0 text-sm font-semibold text-accent">{t("catalogue.edit")}</span>
                   </Link>
                 </li>
               ))}

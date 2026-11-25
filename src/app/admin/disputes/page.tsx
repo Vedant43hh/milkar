@@ -1,4 +1,3 @@
-import { MessageSquareWarning } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { IssueCard } from "@/components/issues/issue-card";
@@ -28,9 +27,9 @@ async function Disputes() {
     <div>
       <PageHeader title={t("adminDisputes.title")} subtitle={t("adminDisputes.intro")} />
       {disputes.length === 0 ? (
-        <EmptyState icon={<MessageSquareWarning aria-hidden className="size-6" />} title={t("adminDisputes.none")} body={t("adminDisputes.noneBody")} />
+        <EmptyState title={t("adminDisputes.none")} body={t("adminDisputes.noneBody")} />
       ) : (
-        <ul className="space-y-3">
+        <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
           {disputes.map((issue) => (
             <IssueCard key={issue.id} issue={issue} now={now} action={resolveDisputeAction} showCommunity />
           ))}

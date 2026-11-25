@@ -1,4 +1,3 @@
-import { ArrowDownLeft, ArrowUpRight, Wallet } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -34,12 +33,9 @@ async function WalletView() {
     <PullToRefresh>
       <PageHeader title={t("wallet.title")} subtitle={t("wallet.intro")} />
       <Card className="flex items-center gap-4">
-        <span className="flex size-12 shrink-0 items-center justify-center rounded-full text-brand neu-pressed-xs">
-          <Wallet aria-hidden className="size-6" />
-        </span>
         <div>
           <p className="text-sm text-muted">{t("wallet.balance")}</p>
-          <p className="text-3xl font-bold text-fg tabular-nums">{formatINR(balancePaise)}</p>
+          <p className="text-xl font-semibold text-fg tabular-nums">{formatINR(balancePaise)}</p>
         </div>
       </Card>
 
@@ -48,29 +44,25 @@ async function WalletView() {
           <span id="history">{t("wallet.historyTitle")}</span>
         </SectionTitle>
         {entries.length === 0 ? (
-          <EmptyState icon={<Wallet aria-hidden className="size-6" />} title={t("wallet.empty")} body={t("wallet.emptyBody")} />
+          <EmptyState title={t("wallet.empty")} body={t("wallet.emptyBody")} />
         ) : (
-          <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
+          <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
             {entries.map((entry) => {
               const credit = entry.amountPaise > 0;
-              const Icon = credit ? ArrowDownLeft : ArrowUpRight;
               return (
                 <li key={entry.id} className="flex items-center gap-3 px-4 py-3">
-                  <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-full", credit ? "text-success neu-pressed-xs" : "text-muted neu-pressed-xs")}>
-                    <Icon aria-hidden className="size-4" />
-                  </span>
                   <span className="min-w-0 flex-1">
                     <span className="block font-medium text-fg">{t(`wallet.reasons.${entry.type}`)}</span>
                     <span className="block truncate text-sm text-muted">
                       {entry.round ? (
-                        <Link href={`/app/orders/${entry.round.id}`} className="text-brand underline-offset-2 hover:underline">
+                        <Link href={`/app/orders/${entry.round.id}`} className="text-accent underline-offset-2 hover:underline">
                           {entry.round.title}
                         </Link>
                       ) : (
                         entry.note
                       )}
                     </span>
-                    <span className="block text-xs text-subtle">{formatIST(entry.createdAt)}</span>
+                    <span className="block text-sm text-muted">{formatIST(entry.createdAt)}</span>
                   </span>
                   <span className={cn("font-semibold tabular-nums", credit ? "text-success" : "text-fg")}>
                     {credit ? "+" : "−"}
@@ -81,7 +73,7 @@ async function WalletView() {
             })}
           </ul>
         )}
-        {hasMore && <p className="mt-2 text-xs text-muted">{t("wallet.more", { n: TAKE })}</p>}
+        {hasMore && <p className="mt-2 text-sm text-muted">{t("wallet.more", { n: TAKE })}</p>}
       </section>
     </PullToRefresh>
   );

@@ -1,4 +1,4 @@
-import { Megaphone, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { DonePollRow, OpenPollCard, ReadyPollCard, SuggestionCard } from "@/components/manager/poll-cards";
@@ -39,13 +39,13 @@ async function Polls() {
           </ButtonLink>
         }
       />
-      {polls.length === 0 && <EmptyState icon={<Megaphone aria-hidden className="size-6" />} title={t("manager.polls.empty")} body={t("manager.polls.emptyBody")} />}
+      {polls.length === 0 && <EmptyState title={t("manager.polls.empty")} body={t("manager.polls.emptyBody")} />}
       {ready.length > 0 && (
         <section aria-labelledby="ready">
           <SectionTitle>
             <span id="ready">{t("manager.polls.ready")}</span>
           </SectionTitle>
-          <div className="space-y-3">
+          <div className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
             {ready.map((poll) => (
               <ReadyPollCard key={poll.id} poll={poll} />
             ))}
@@ -57,7 +57,7 @@ async function Polls() {
           <SectionTitle>
             <span id="suggestions">{t("manager.polls.suggestions")}</span>
           </SectionTitle>
-          <div className="space-y-3">
+          <div className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
             {suggestions.map((poll) => (
               <SuggestionCard key={poll.id} poll={poll} />
             ))}
@@ -69,7 +69,7 @@ async function Polls() {
           <SectionTitle>
             <span id="collecting">{t("manager.polls.open")}</span>
           </SectionTitle>
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
             {open.map((poll) => (
               <OpenPollCard key={poll.id} poll={poll} />
             ))}
@@ -81,7 +81,7 @@ async function Polls() {
           <SectionTitle>
             <span id="done">{t("manager.polls.done")}</span>
           </SectionTitle>
-          <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
+          <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
             {done.map((poll) => (
               <DonePollRow key={poll.id} poll={poll} />
             ))}

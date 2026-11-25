@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight, Building2, CircleAlert, Store, UserRound, Wrench, type LucideIcon } from "lucide-react";
+import { ArrowLeft, ArrowRight, Building2, Store, UserRound, type LucideIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -43,8 +43,8 @@ async function Register({ searchParams }: { searchParams: PageProps<"/register">
     // A resident account without a flat finishes joining in its own portal.
     if (user.role === "RESIDENT" && !user.flatId) redirect(code ? `/app/join?code=${code}` : "/app/join");
     return (
-      <div className="space-y-4 text-center">
-        <h1 className="text-2xl font-semibold tracking-tight">{t("register.heading")}</h1>
+      <div className="space-y-4">
+        <h1 className="text-xl font-semibold">{t("register.heading")}</h1>
         <ButtonLink href={homePathFor(user)} block icon={<ArrowRight aria-hidden className="size-4" />}>
           {t("portals.goToMine")}
         </ButtonLink>
@@ -59,18 +59,13 @@ async function Register({ searchParams }: { searchParams: PageProps<"/register">
   const invited = chosen.role === "RESIDENT" && code ? await communityForJoining({ code }) : null;
   return (
     <div data-portal={chosen.portal} className="space-y-5">
-      <Link href="/register" className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-brand">
+      <Link href="/register" className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-accent">
         <ArrowLeft aria-hidden className="size-4" />
         {t("register.otherRole")}
       </Link>
-      <div className="flex items-center gap-3">
-        <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl text-brand neu-pressed-sm">
-          <chosen.icon aria-hidden className="size-6" />
-        </span>
-        <h1 className="text-2xl font-semibold tracking-tight">{t(`register.roles.${chosen.role}.title`)}</h1>
-      </div>
+      <h1 className="text-xl font-semibold">{t(`register.roles.${chosen.role}.title`)}</h1>
       {chosen.role === "RESIDENT" && code && !invited && (
-        <Banner tone="warning" role="alert" icon={<CircleAlert aria-hidden className="size-4" />}>
+        <Banner tone="warning" role="alert">
           {t("join.invalidLink")}
         </Banner>
       )}
@@ -83,9 +78,9 @@ async function Register({ searchParams }: { searchParams: PageProps<"/register">
           <VendorWizard text={text} mockOtp={mockOtp} />
         )}
       </Card>
-      <p className="text-center text-sm text-muted">
+      <p className="text-sm text-muted">
         {t("register.haveAccount")}{" "}
-        <Link href="/login" className="font-semibold text-brand underline-offset-2 hover:underline">
+        <Link href="/login" className="font-semibold text-accent underline-offset-2 hover:underline">
           {t("register.login")}
         </Link>
       </p>
@@ -98,35 +93,31 @@ function RoleChoice() {
   return (
     <div className="space-y-5">
       <div className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">{t("register.heading")}</h1>
+        <h1 className="text-xl font-semibold">{t("register.heading")}</h1>
         <p className="text-muted">{t("register.intro")}</p>
       </div>
-      <ul className="space-y-3">
-        {ROLES.map(({ role, slug, icon: Icon, portal }) => (
+      <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
+        {ROLES.map(({ role, slug, portal }) => (
           <li key={role} data-portal={portal}>
             <Link
               href={`/register?role=${slug}`}
-              className="group flex items-center gap-4 rounded-card p-4 sm:p-5 neu-raised transition-[box-shadow] duration-200 ease-in-out hover:neu-raised-sm active:neu-pressed"
+              className="group flex items-center gap-4 p-4 transition-colors hover:bg-surface-hover"
             >
-              <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl text-brand neu-pressed-sm">
-                <Icon aria-hidden className="size-6" />
-              </span>
               <span className="min-w-0 flex-1">
                 <span className="block font-semibold text-fg">{t(`register.roles.${role}.title`)}</span>
                 <span className="block text-sm text-muted">{t(`register.roles.${role}.body`)}</span>
               </span>
-              <ArrowRight aria-hidden className="size-5 shrink-0 text-brand transition-transform group-hover:translate-x-0.5" />
+              <ArrowRight aria-hidden className="size-5 shrink-0 text-accent" />
             </Link>
           </li>
         ))}
       </ul>
       <p className="flex items-start gap-2 text-sm text-muted">
-        <Wrench aria-hidden className="mt-0.5 size-4 shrink-0" />
         {t("register.technicianNote")}
       </p>
-      <p className="text-center text-sm text-muted">
+      <p className="text-sm text-muted">
         {t("register.haveAccount")}{" "}
-        <Link href="/login" className="font-semibold text-brand underline-offset-2 hover:underline">
+        <Link href="/login" className="font-semibold text-accent underline-offset-2 hover:underline">
           {t("register.login")}
         </Link>
       </p>

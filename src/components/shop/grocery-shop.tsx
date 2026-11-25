@@ -56,7 +56,7 @@ export function GroceryShop({ shop, text }: { shop: Shop; text: Text }) {
         </div>
       )}
 
-      <ul className="space-y-3">
+      <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
         {visible.map((item) => (
           <ShopRow
             key={item.id}
@@ -73,7 +73,7 @@ export function GroceryShop({ shop, text }: { shop: Shop; text: Text }) {
       </ul>
 
       {changed.length > 0 && (
-        <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-20 flex items-center gap-3 rounded-card bg-surface p-2 shadow-raised md:bottom-4">
+        <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-20 flex items-center gap-3 rounded-card border border-border bg-surface p-2 md:bottom-4">
           <IconButton label={text.undo} onClick={() => setTargets(held)}>
             <RotateCcw aria-hidden className="size-5" />
           </IconButton>
@@ -108,8 +108,8 @@ function FilterChip({ selected, onClick, children }: { selected: boolean; onClic
       aria-pressed={selected}
       onClick={onClick}
       className={cn(
-        "inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full px-3 text-sm whitespace-nowrap transition-[box-shadow,color] duration-200 ease-in-out",
-        selected ? "font-medium text-brand neu-pressed-sm" : "text-muted neu-raised-sm hover:text-fg hover:neu-raised-xs",
+        "inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-control px-3 text-sm whitespace-nowrap border transition-colors",
+        selected ? "border-accent bg-accent-soft font-medium text-accent" : "border-border bg-surface text-fg hover:bg-surface-hover",
       )}
     >
       {children}
@@ -144,11 +144,11 @@ function ShopRow({
   const label = item.pack ? `${item.name} ${item.pack}` : item.name;
 
   return (
-    <li className={cn("rounded-card p-4 transition-[box-shadow] duration-200 ease-in-out", target !== held ? "neu-pressed" : "bg-surface shadow-card")}>
+    <li className={cn("p-4", target !== held && "bg-accent-soft")}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="font-medium text-fg">{item.name}</p>
-          <p className="text-xs text-muted">{[item.pack, interpolate(text.limit, { n: item.maxQtyPerFlat })].filter(Boolean).join(" · ")}</p>
+          <p className="text-sm text-muted">{[item.pack, interpolate(text.limit, { n: item.maxQtyPerFlat })].filter(Boolean).join(" · ")}</p>
           <div className="mt-1">
             <Price paise={price} mrpPaise={item.mrpPaise} suffix={interpolate(text.perPack, { unit: item.words.one })} />
           </div>
@@ -159,7 +159,7 @@ function ShopRow({
         <TierMeter meter={meter} basisWords={item.words} compact />
       </div>
       {(held > 0 || item.flatOthersQty > 0) && (
-        <p className="mt-2 text-xs text-muted">
+        <p className="mt-2 text-sm text-muted">
           {held > 0 && interpolate(text.inYourOrder, { qty: held, paid: formatINR(item.myPaidPaise) })}
           {held > 0 && item.flatOthersQty > 0 && " · "}
           {item.flatOthersQty > 0 && interpolate(text.household, { qty: item.flatOthersQty })}

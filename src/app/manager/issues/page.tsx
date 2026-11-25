@@ -1,4 +1,3 @@
-import { MessageSquareWarning } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { IssueCard } from "@/components/issues/issue-card";
@@ -34,7 +33,7 @@ async function Issues() {
         <SectionTitle>
           <span id={id}>{title}</span>
         </SectionTitle>
-        <ul className="space-y-3">
+        <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
           {list.map((issue) => (
             <IssueCard key={issue.id} issue={issue} now={now} action={resolveIssueAction} />
           ))}
@@ -46,7 +45,7 @@ async function Issues() {
     <div>
       <PageHeader title={t("issues.title")} subtitle={t("issues.intro")} />
       {issues.length === 0 ? (
-        <EmptyState icon={<MessageSquareWarning aria-hidden className="size-6" />} title={t("issues.none")} body={t("issues.noneBody")} />
+        <EmptyState title={t("issues.none")} body={t("issues.noneBody")} />
       ) : (
         <>
           {section("to-sort-out", t("issues.sectionOpen"), open)}

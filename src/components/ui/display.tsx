@@ -11,9 +11,9 @@ export function Price({ paise, mrpPaise, size = "md", suffix }: { paise: number;
   return (
     <span className="inline-flex flex-wrap items-baseline gap-x-1.5">
       <span className={cn("font-semibold text-fg tabular-nums", { sm: "text-sm", md: "text-base", lg: "text-xl" }[size])}>{formatINR(paise)}</span>
-      {suffix && <span className="text-xs text-muted">{suffix}</span>}
+      {suffix && <span className="text-sm text-muted">{suffix}</span>}
       {showMrp && (
-        <span className="text-xs text-subtle tabular-nums">
+        <span className="text-sm text-muted tabular-nums">
           <span className="sr-only">{tu("price.mrp")} </span>
           <s>{formatINR(mrpPaise)}</s>
         </span>
@@ -22,24 +22,34 @@ export function Price({ paise, mrpPaise, size = "md", suffix }: { paise: number;
   );
 }
 
-export function Stat({ label, value, hint, icon, tone = "neutral" }: { label: ReactNode; value: ReactNode; hint?: ReactNode; icon?: ReactNode; tone?: "neutral" | "accent" | "brand" | "success" }) {
-  const iconTone = { neutral: "text-muted", accent: "text-accent", brand: "text-brand", success: "text-success" }[tone];
+/** One figure: a label, the value, and an optional note. Put several in a grid inside a Card. */
+export function StatCard({ label, value, hint, className }: { label: ReactNode; value: ReactNode; hint?: ReactNode; className?: string }) {
   return (
-    <div className="flex items-center gap-3">
-      {icon && <span className={cn("flex size-10 shrink-0 items-center justify-center rounded-full neu-pressed-xs", iconTone)}>{icon}</span>}
-      <div className="min-w-0">
-        <p className="text-xs text-muted">{label}</p>
-        <p className="text-lg font-semibold text-fg tabular-nums">{value}</p>
-        {hint && <p className="text-xs text-subtle">{hint}</p>}
-      </div>
+    <div className={cn("min-w-0", className)}>
+      <p className="text-sm text-muted">{label}</p>
+      <p className="text-xl font-semibold text-fg tabular-nums">{value}</p>
+      {hint && <p className="text-sm text-muted">{hint}</p>}
     </div>
   );
 }
 
-/** A tappable row for lists: icon, title, subtitle and a trailing element or chevron. */
+/** Older name for StatCard. `icon` and `tone` are accepted from older call sites and not shown. */
+export function Stat({ label, value, hint }: { label: ReactNode; value: ReactNode; hint?: ReactNode; icon?: ReactNode; tone?: string }) {
+  return <StatCard label={label} value={value} hint={hint} />;
+}
+
+/** A bordered list with thin dividers between rows. */
+export function List({ children, className, label }: { children: ReactNode; className?: string; label?: string }) {
+  return (
+    <ul aria-label={label} className={cn("divide-y divide-border overflow-hidden rounded-card border border-border bg-surface", className)}>
+      {children}
+    </ul>
+  );
+}
+
+/** A row for a List: title, subtitle and a trailing element (a chevron when it links somewhere). `icon` is accepted and not shown. */
 export function ListRow({
   href,
-  icon,
   title,
   subtitle,
   trailing,
@@ -52,17 +62,16 @@ export function ListRow({
 }) {
   const body = (
     <>
-      {icon && <span className="flex size-10 shrink-0 items-center justify-center rounded-full neu-pressed-xs text-muted">{icon}</span>}
       <span className="min-w-0 flex-1">
-        <span className="block truncate font-medium text-fg">{title}</span>
+        <span className="block truncate text-sm font-medium text-fg">{title}</span>
         {subtitle && <span className="block truncate text-sm text-muted">{subtitle}</span>}
       </span>
-      {trailing ?? (href && <ChevronRight aria-hidden className="size-5 text-subtle" />)}
+      {trailing ?? (href && <ChevronRight aria-hidden className="size-4 text-muted" />)}
     </>
   );
-  const classes = "flex min-h-14 items-center gap-3 px-4 py-3";
+  const classes = "flex min-h-12 items-center gap-3 px-4 py-2.5";
   return href ? (
-    <Link href={href} className={cn(classes, "transition-[box-shadow] duration-200 ease-in-out hover:neu-pressed-xs")}>
+    <Link href={href} className={cn(classes, "transition-colors hover:bg-surface-hover")}>
       {body}
     </Link>
   ) : (
@@ -70,18 +79,18 @@ export function ListRow({
   );
 }
 
-// Banners are a pressed-in well; the tone shows in the text and icon, and the words say what it is.
+// A tinted status box with dark text. The words carry the meaning; the colour only supports it.
 const bannerTones = {
-  info: "text-brand",
-  accent: "text-accent",
-  success: "text-success",
-  warning: "text-warning",
-  danger: "text-danger",
+  info: "bg-info-soft text-info",
+  success: "bg-success-soft text-success",
+  warning: "bg-warning-soft text-warning",
+  danger: "bg-danger-soft text-danger",
+  neutral: "bg-neutral-soft text-neutral",
 } as const;
 
+/** `icon` is accepted from older call sites and not shown. */
 export function Banner({
   tone = "info",
-  icon,
   title,
   children,
   action,
@@ -95,24 +104,23 @@ export function Banner({
   role?: "alert" | "status";
 }) {
   return (
-    <div role={role} className={cn("flex gap-3 rounded-control p-4 text-sm neu-pressed-sm", bannerTones[tone])}>
-      {icon && <span className="mt-0.5 shrink-0">{icon}</span>}
+    <div role={role} className={cn("flex flex-wrap items-center gap-3 rounded-control px-4 py-3 text-sm", bannerTones[tone])}>
       <div className="min-w-0 flex-1">
-        {title && <p className="font-semibold">{title}</p>}
+        {title && <p className="font-medium">{title}</p>}
         {children && <div className={title ? "mt-0.5" : undefined}>{children}</div>}
       </div>
-      {action && <div className="shrink-0 self-center">{action}</div>}
+      {action && <div className="shrink-0">{action}</div>}
     </div>
   );
 }
 
-export function EmptyState({ icon, title, body, action }: { icon?: ReactNode; title: ReactNode; body?: ReactNode; action?: ReactNode }) {
+/** Nothing to show yet: one short sentence, a note if needed, and a button when there is something to do. */
+export function EmptyState({ title, body, action }: { icon?: ReactNode; title: ReactNode; body?: ReactNode; action?: ReactNode }) {
   return (
-    <div className="flex flex-col items-center rounded-card px-6 py-10 text-center neu-pressed">
-      {icon && <span className="mb-3 flex size-12 items-center justify-center rounded-full text-brand neu-raised-sm">{icon}</span>}
-      <p className="font-semibold text-fg">{title}</p>
-      {body && <p className="mt-1 max-w-xs text-sm text-muted">{body}</p>}
-      {action && <div className="mt-4">{action}</div>}
+    <div className="rounded-card border border-border bg-surface px-4 py-6">
+      <p className="text-sm font-medium text-fg">{title}</p>
+      {body && <p className="mt-1 text-sm text-muted">{body}</p>}
+      {action && <div className="mt-3">{action}</div>}
     </div>
   );
 }

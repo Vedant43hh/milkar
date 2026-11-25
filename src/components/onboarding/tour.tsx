@@ -40,16 +40,13 @@ export function OnboardingTour({ userId, cards, text }: { userId: string; cards:
     <SheetDialog open={open} onClose={finish} title={text.title}>
       <div className="space-y-5">
         <div className="space-y-2" aria-live="polite">
-          <span aria-hidden className="flex size-12 items-center justify-center rounded-2xl text-xl font-bold text-brand neu-pressed-sm">
-            {index + 1}
-          </span>
-          <p className="text-xs font-medium text-muted">{interpolate(text.step, { n: index + 1, total: cards.length })}</p>
-          <h3 className="text-xl font-semibold tracking-tight text-fg">{card.title}</h3>
-          <p className="text-muted">{card.body}</p>
+          <p className="text-sm font-medium text-muted">{interpolate(text.step, { n: index + 1, total: cards.length })}</p>
+          <h3 className="text-base font-semibold text-fg">{card.title}</h3>
+          <p className="text-sm text-muted">{card.body}</p>
         </div>
-        <div aria-hidden className="flex justify-center gap-1.5">
+        <div aria-hidden className="flex gap-1.5">
           {cards.map((c, i) => (
-            <span key={c.title} className={cn("h-1.5 rounded-full transition-all", i === index ? "w-6 bg-brand" : "w-1.5 bg-border-strong")} />
+            <span key={c.title} className={cn("h-1.5 rounded-full", i === index ? "w-6 bg-accent" : "w-1.5 bg-border-field")} />
           ))}
         </div>
         <div className="flex gap-3">

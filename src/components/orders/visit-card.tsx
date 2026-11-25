@@ -1,4 +1,4 @@
-import { Ban, Check, CircleDot, KeyRound, MessageSquareText, MessageSquareWarning, Package, Star, UserRound, X } from "lucide-react";
+import { MessageSquareWarning, Star, X } from "lucide-react";
 import Image from "next/image";
 import { ActionForm, SubmitButton } from "@/components/ui/action-form";
 import { Badge } from "@/components/ui/badge";
@@ -20,7 +20,7 @@ import { RatingForm } from "./rating-form";
 
 type Visit = RoundHistory["visits"][number];
 
-const STATUS_TONE = { SCHEDULED: "brand", ON_THE_WAY: "accent", IN_PROGRESS: "accent", COMPLETED: "success", NO_ACCESS: "danger", CANCELLED: "danger" } as const;
+const STATUS_TONE = { SCHEDULED: "info", ON_THE_WAY: "info", IN_PROGRESS: "info", COMPLETED: "success", NO_ACCESS: "danger", CANCELLED: "danger" } as const;
 
 /** Booked → on the way → started → done, with times; or how it ended instead. */
 function Timeline({ visit }: { visit: Visit }) {
@@ -28,22 +28,19 @@ function Timeline({ visit }: { visit: Visit }) {
     <ol className="space-y-0">
       {visit.timeline.map((step, i) => {
         const last = i === visit.timeline.length - 1;
-        const Icon = step.problem ? Ban : step.state === "done" ? Check : CircleDot;
         return (
           <li key={step.key} className="relative flex gap-3 pb-3 last:pb-0">
-            {!last && <span aria-hidden className={cn("absolute top-7 bottom-0 left-3.5 w-0.5", step.state === "done" ? "bg-brand" : "bg-border-strong")} />}
+            {!last && <span aria-hidden className={cn("absolute top-4 bottom-0 left-[5px] w-px", step.state === "done" ? "bg-accent" : "bg-border")} />}
             <span
               aria-hidden
               className={cn(
-                "relative flex size-7 shrink-0 items-center justify-center rounded-full",
-                step.problem ? "text-danger neu-pressed-xs" : step.state === "done" ? "bg-brand text-brand-fg shadow-[var(--raised-xs)]" : step.state === "current" ? "text-brand neu-pressed-xs" : "text-subtle neu-pressed-xs",
+                "relative mt-1.5 size-3 shrink-0 rounded-full border-2",
+                step.problem ? "border-danger bg-danger" : step.state === "done" ? "border-accent bg-accent" : step.state === "current" ? "border-accent bg-surface" : "border-border-field bg-surface",
               )}
-            >
-              <Icon className="size-4" />
-            </span>
-            <span className="min-w-0 pt-0.5">
+            />
+            <span className="min-w-0">
               <span className={cn("block text-sm font-medium", step.state === "upcoming" ? "text-muted" : "text-fg")}>{t(`orders.visits.steps.${step.key}`)}</span>
-              {step.at && <span className="block text-xs text-muted tabular-nums">{formatIST(step.at)}</span>}
+              {step.at && <span className="block text-sm text-muted tabular-nums">{formatIST(step.at)}</span>}
             </span>
           </li>
         );
@@ -59,7 +56,7 @@ function Rating({ visit }: { visit: Visit }) {
         <p className="flex items-center gap-1 text-sm font-medium text-fg">
           <span aria-hidden className="flex text-accent">
             {[1, 2, 3, 4, 5].map((n) => (
-              <Star key={n} className={cn("size-4", n <= visit.rating!.rating ? "fill-current" : "text-subtle")} />
+              <Star key={n} className={cn("size-4", n <= visit.rating!.rating ? "fill-current" : "text-muted")} />
             ))}
           </span>
           {t(visit.ratedByYou ? "orders.rating.yours" : "orders.rating.household", { n: visit.rating.rating })}
@@ -71,7 +68,7 @@ function Rating({ visit }: { visit: Visit }) {
   if (!visit.canRate) return null;
   const text = messages().orders.rating;
   return (
-    <div className="space-y-2 rounded-control p-4 neu-pressed-sm">
+    <div className="space-y-2 rounded-control bg-bg p-3">
       <h3 className="font-semibold text-fg">{text.title}</h3>
       <RatingForm visitId={visit.id} text={{ title: text.title, label: text.label, star: text.star, words: text.words, comment: text.comment, commentPlaceholder: text.commentPlaceholder, submit: text.submit }} />
     </div>
@@ -81,9 +78,8 @@ function Rating({ visit }: { visit: Visit }) {
 function Complaint({ visit }: { visit: Visit }) {
   if (visit.issue) {
     return (
-      <div className="space-y-1 rounded-control p-4 text-sm neu-pressed-sm">
+      <div className="space-y-1 rounded-control bg-bg p-3 text-sm">
         <p className="flex flex-wrap items-center gap-2 font-semibold text-fg">
-          <MessageSquareWarning aria-hidden className="size-4 text-warning" />
           {t("orders.issue.title")}
           <Badge tone={visit.issue.status === "OPEN" ? "warning" : "neutral"}>{t(`orders.issue.status.${visit.issue.status}`)}</Badge>
         </p>
@@ -115,11 +111,11 @@ function Complaint({ visit }: { visit: Visit }) {
             <SubmitButton block>{t("orders.report.submit")}</SubmitButton>
           </ActionForm>
         </Sheet>
-        <p className="text-xs text-muted">{t("orders.report.until", { when: formatIST(visit.report.deadline) })}</p>
+        <p className="text-sm text-muted">{t("orders.report.until", { when: formatIST(visit.report.deadline) })}</p>
       </div>
     );
   }
-  if (visit.reportClosedAt) return <p className="text-xs text-muted">{t("orders.report.closed", { when: formatIST(visit.reportClosedAt) })}</p>;
+  if (visit.reportClosedAt) return <p className="text-sm text-muted">{t("orders.report.closed", { when: formatIST(visit.reportClosedAt) })}</p>;
   return null;
 }
 
@@ -130,7 +126,7 @@ function Problem({ visit, roundId }: { visit: Visit; roundId: string }) {
   if (visit.problemEditable) {
     const text = messages().problem;
     return (
-      <div className="space-y-2 rounded-control p-4 neu-pressed-sm">
+      <div className="space-y-2 rounded-control bg-bg p-3">
         <h4 className="font-semibold text-fg">{text.title}</h4>
         <p className="text-sm text-muted">{text.intro}</p>
         <ProblemForm
@@ -146,17 +142,16 @@ function Problem({ visit, roundId }: { visit: Visit; roundId: string }) {
   return (
     <div className="space-y-2 text-sm">
       <p className="flex items-start gap-2 text-fg">
-        <MessageSquareText aria-hidden className="mt-0.5 size-4 shrink-0 text-muted" />
         {visit.booking.problemNote}
       </p>
       {photo && (
-        <Image src={`/api/photos/${photo.id}`} alt={t("problem.preview")} width={photo.width} height={photo.height} unoptimized className="max-h-40 w-auto rounded-control object-contain neu-raised-sm" />
+        <Image src={`/api/photos/${photo.id}`} alt={t("problem.preview")} width={photo.width} height={photo.height} unoptimized className="max-h-40 w-auto rounded-control border border-border object-contain" />
       )}
     </div>
   );
 }
 
-const PARTS_TONE = { PENDING: "accent", APPROVED: "success", DECLINED: "neutral", REFUNDED: "neutral" } as const;
+const PARTS_TONE = { PENDING: "warning", APPROVED: "success", DECLINED: "neutral", REFUNDED: "neutral" } as const;
 
 /** Parts the technician asked for, the one waiting for an answer, and the repair bill. */
 function Parts({ visit }: { visit: Visit }) {
@@ -165,10 +160,9 @@ function Parts({ visit }: { visit: Visit }) {
   return (
     <div className="space-y-3">
       {visit.partsRequests.map((request) => (
-        <div key={request.id} className={cn("space-y-2 rounded-control p-4 text-sm", request.status === "PENDING" ? "neu-raised-sm" : "neu-pressed-sm")}>
+        <div key={request.id} className={cn("space-y-2 rounded-control p-3 text-sm", request.status === "PENDING" ? "border border-accent bg-surface" : "bg-bg")}>
           <p className="flex flex-wrap items-center justify-between gap-2">
             <span className="flex items-center gap-1.5 font-semibold text-fg">
-              <Package aria-hidden className="size-4 text-muted" />
               {t("parts.title")}
             </span>
             <Badge tone={PARTS_TONE[request.status]}>{t(`parts.status.${request.status}`)}</Badge>
@@ -206,7 +200,7 @@ function Parts({ visit }: { visit: Visit }) {
           )}
         </div>
       ))}
-      <div className="space-y-1 rounded-control p-4 text-sm neu-pressed-sm">
+      <div className="space-y-1 rounded-control bg-bg p-3 text-sm">
         <h4 className="font-semibold text-fg">{t("parts.bill")}</h4>
         <dl className="space-y-1">
           <div className="flex justify-between gap-3">
@@ -224,8 +218,8 @@ function Parts({ visit }: { visit: Visit }) {
             <dd className="text-fg tabular-nums">{formatINR(bill.totalPaise)}</dd>
           </div>
         </dl>
-        {bill.pendingPaise > 0 && <p className="text-xs text-accent-soft-fg">{t("parts.pending", { amount: formatINR(bill.pendingPaise) })}</p>}
-        <p className="text-xs text-muted">{t("parts.atCost")}</p>
+        {bill.pendingPaise > 0 && <p className="text-sm text-accent">{t("parts.pending", { amount: formatINR(bill.pendingPaise) })}</p>}
+        <p className="text-sm text-muted">{t("parts.atCost")}</p>
       </div>
     </div>
   );
@@ -240,7 +234,7 @@ export function VisitCard({ visit, title, roundId }: { visit: Visit; title: stri
           <h3 className="font-semibold text-fg">
             {title}
             {visit.kind === "REVISIT" && (
-              <Badge tone="accent" className="ml-2 align-middle">
+              <Badge tone="info" className="ml-2 align-middle">
                 {t("orders.visits.revisit")}
               </Badge>
             )}
@@ -250,7 +244,6 @@ export function VisitCard({ visit, title, roundId }: { visit: Visit; title: stri
           </p>
           {visit.technicianName && (
             <p className="flex items-center gap-1 text-sm text-muted">
-              <UserRound aria-hidden className="size-3.5" />
               {t("orders.visits.technician", { name: visit.technicianName })}
             </p>
           )}
@@ -259,10 +252,9 @@ export function VisitCard({ visit, title, roundId }: { visit: Visit; title: stri
       </header>
 
       {visit.completionCode && (
-        <div className="flex flex-wrap items-center gap-2 rounded-control px-4 py-3 neu-pressed-sm">
-          <KeyRound aria-hidden className="size-4 text-accent-soft-fg" />
-          <span className="font-semibold text-accent-soft-fg tabular-nums">{t("orders.visits.code", { code: visit.completionCode })}</span>
-          <span className="text-xs text-accent-soft-fg">{t("orders.visits.codeHint")}</span>
+        <div className="flex flex-wrap items-center gap-2 rounded-control bg-bg px-3 py-2">
+          <span className="font-semibold text-accent tabular-nums">{t("orders.visits.code", { code: visit.completionCode })}</span>
+          <span className="text-sm text-accent">{t("orders.visits.codeHint")}</span>
         </div>
       )}
 

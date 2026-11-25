@@ -1,4 +1,4 @@
-import { House, Link2, UserCheck, UserMinus, Users } from "lucide-react";
+import { UserMinus } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { DecisionButtons } from "@/components/approvals/decision-buttons";
@@ -44,19 +44,19 @@ async function Residents() {
           <span id="waiting">{t("approvals.pendingHeading")}</span>
         </SectionTitle>
         {pending.length === 0 ? (
-          <EmptyState icon={<UserCheck aria-hidden className="size-6" />} title={t("approvals.noPending")} body={t("approvals.noPendingBody")} />
+          <EmptyState title={t("approvals.noPending")} body={t("approvals.noPendingBody")} />
         ) : (
-          <ul className="space-y-3">
+          <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
             {pending.map((request) => {
               const name = request.user.name ?? formatPhone(request.user.phone);
               return (
-                <li key={request.id} className="flex flex-wrap items-center justify-between gap-3 rounded-card bg-surface p-4 shadow-card sm:p-5">
+                <li key={request.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
                   <span className="min-w-0">
                     <span className="block font-semibold text-fg">{name}</span>
                     <span className="block text-sm text-muted">
                       {flat(request.flat)} · {formatPhone(request.user.phone)}
                     </span>
-                    <span className="block text-xs text-subtle">{t("approvals.requested", { when: relativeTime(request.createdAt, now) })}</span>
+                    <span className="block text-sm text-muted">{t("approvals.requested", { when: relativeTime(request.createdAt, now) })}</span>
                   </span>
                   <DecisionButtons
                     action={decideJoinAction}
@@ -80,7 +80,6 @@ async function Residents() {
       <Card>
         <CardHeader title={t("approvals.inviteTitle")} subtitle={t("approvals.inviteBody")} />
         <p className="mb-3 flex items-center gap-2 text-sm font-medium text-fg">
-          <Link2 aria-hidden className="size-4 text-brand" />
           {t("approvals.inviteCode", { code: community.code })}
         </p>
         <ShareRound whatsappHref={whatsappUrl(t("approvals.inviteMessage", { community: community.name, url: inviteUrl }))} inviteUrl={inviteUrl} />
@@ -91,12 +90,11 @@ async function Residents() {
           <span id="members">{t("approvals.membersHeading", { n: members.length })}</span>
         </SectionTitle>
         {members.length === 0 ? (
-          <EmptyState icon={<Users aria-hidden className="size-6" />} title={t("approvals.noMembers")} />
+          <EmptyState title={t("approvals.noMembers")} />
         ) : (
-          <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
+          <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
             {members.map((m) => (
               <li key={m.id} className="flex items-center gap-3 px-4 py-2 text-sm">
-                <House aria-hidden className="size-4 shrink-0 text-muted" />
                 <span className="w-20 shrink-0 font-medium text-fg tabular-nums">{m.flat ? `${m.flat.tower}-${m.flat.number}` : ""}</span>
                 <span className="min-w-0 flex-1 truncate text-muted">{m.name}</span>
                 <ConfirmAction

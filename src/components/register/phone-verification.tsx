@@ -1,6 +1,6 @@
 "use client";
 
-import { CircleAlert, FlaskConical, Send } from "lucide-react";
+import { Send } from "lucide-react";
 import { useState, useTransition } from "react";
 import type { Messages } from "@/i18n";
 import { interpolate } from "@/i18n/interpolate";
@@ -54,8 +54,7 @@ export function PhoneVerification({ text, mockOtp, onSent }: { text: Messages["r
             />
           </div>
           {mockOtp && (
-            <p className="flex items-center gap-1.5 text-sm text-accent-soft-fg">
-              <FlaskConical aria-hidden className="size-4" />
+            <p className="flex items-center gap-1.5 text-sm text-accent">
               {text.mockHint}
             </p>
           )}
@@ -67,7 +66,7 @@ export function PhoneVerification({ text, mockOtp, onSent }: { text: Messages["r
         <div>
           <Label htmlFor="register-phone">{text.label}</Label>
           <div className="flex items-stretch gap-2">
-            <span className="flex min-h-11 items-center rounded-control px-3 text-muted neu-pressed">+91</span>
+            <span className="flex min-h-11 items-center rounded-control border border-border-field bg-bg px-3 text-muted">+91</span>
             <Input
               id="register-phone"
               type="tel"
@@ -91,7 +90,6 @@ export function PhoneVerification({ text, mockOtp, onSent }: { text: Messages["r
       )}
       {error && (
         <p role="alert" className="flex items-center gap-1.5 text-sm font-medium text-danger">
-          <CircleAlert aria-hidden className="size-4 shrink-0" />
           {error}
         </p>
       )}

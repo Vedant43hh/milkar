@@ -1,4 +1,4 @@
-import { CheckCircle2, DoorClosed, Hourglass, KeyRound, Navigation, PackagePlus, Play } from "lucide-react";
+import { CheckCircle2, DoorClosed, KeyRound, Navigation, PackagePlus, Play } from "lucide-react";
 import type { ReactNode } from "react";
 import { ActionForm, SubmitButton } from "@/components/ui/action-form";
 import { buttonClasses } from "@/components/ui/button";
@@ -61,11 +61,11 @@ export function VisitActions({ visit }: { visit: TechnicianVisitDetail }) {
     );
   }
 
-  if (visit.status !== "IN_PROGRESS") return <Banner tone="success" icon={<CheckCircle2 aria-hidden className="size-4" />}>{t("techVisit.finished")}</Banner>;
+  if (visit.status !== "IN_PROGRESS") return <Banner tone="success">{t("techVisit.finished")}</Banner>;
 
   if (visit.actions.waiting) {
     return (
-      <Banner tone="accent" role="status" icon={<Hourglass aria-hidden className="size-4" />}>
+      <Banner tone="warning" role="status">
         {t("techVisit.waiting")}
       </Banner>
     );
@@ -109,7 +109,7 @@ export function VisitActions({ visit }: { visit: TechnicianVisitDetail }) {
             <input type="hidden" name="to" value="COMPLETED" />
             <Field id={`code-${visit.id}`} label={t("techVisit.codeLabel")} hint={t("techVisit.codeAttempts", { n: visit.codeAttemptsLeft })}>
               {(aria) => (
-                <Input {...aria} name="code" required inputMode="numeric" pattern="[0-9]{4}" maxLength={4} autoComplete="one-time-code" className="text-center text-2xl tracking-[0.5em] tabular-nums" />
+                <Input {...aria} name="code" required inputMode="numeric" pattern="[0-9]{4}" maxLength={4} autoComplete="one-time-code" className="text-center text-xl tracking-[0.5em] tabular-nums" />
               )}
             </Field>
             <SubmitButton block size="lg" icon={<CheckCircle2 aria-hidden className="size-5" />}>

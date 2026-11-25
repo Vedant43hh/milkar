@@ -1,4 +1,3 @@
-import { Ban, Building2, Hourglass } from "lucide-react";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
@@ -30,16 +29,14 @@ async function Pending() {
     <>
       <PageHeader title={t("managerPending.title")} />
       {!community ? (
-        <EmptyState icon={<Building2 aria-hidden className="size-6" />} title={t("managerPending.noneTitle")} body={t("managerPending.noneBody")} />
+        <EmptyState title={t("managerPending.noneTitle")} body={t("managerPending.noneBody")} />
       ) : community.status === "PENDING" ? (
         <EmptyState
-          icon={<Hourglass aria-hidden className="size-6" />}
           title={t("managerPending.pendingTitle")}
           body={t("managerPending.pendingBody", { community: community.name })}
         />
       ) : (
         <EmptyState
-          icon={<Ban aria-hidden className="size-6" />}
           title={t("managerPending.rejectedTitle")}
           body={`${t("managerPending.rejectedBody", { community: community.name })}${note ? ` ${t("managerPending.rejectedNote", { note })}` : ""}`}
         />

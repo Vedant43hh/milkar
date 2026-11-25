@@ -5,7 +5,7 @@ import { NOTIFICATION_TYPES, notificationKeys, relativeTime, renderNotification,
 describe("renderNotification", () => {
   it("formats rupees and IST dates from params", () => {
     expect(renderNotification("TIER_UNLOCKED", { item: "Sona Masoori Rice", pricePaise: 44000 })).toEqual({
-      title: "🎉 Price unlocked: Sona Masoori Rice",
+      title: "Price unlocked: Sona Masoori Rice",
       body: "Everyone now pays ₹440. Anything you paid above that comes back to your wallet at cutoff.",
     });
     expect(renderNotification("ROUND_OPENED", { round: "Weekly staples", cutoffAt: "2026-10-23T14:30:00.000Z" }).body).toBe(

@@ -30,7 +30,7 @@ function Figures({ s }: { s: VerticalStats }) {
     [t("adminStats.absorbed"), formatINR(s.absorbedPaise)],
     [t("adminStats.refunds"), formatINR(s.refundsPaise)],
     [t("adminStats.visits"), count.format(s.visitsCompleted)],
-    [t("adminStats.rating"), rating === null ? t("adminStats.noRating") : `${rating} ★ (${s.ratingCount})`],
+    [t("adminStats.rating"), rating === null ? t("adminStats.noRating") : `Rated ${rating} (${s.ratingCount})`],
   ];
   return (
     <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">

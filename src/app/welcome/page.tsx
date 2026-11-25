@@ -20,29 +20,26 @@ export default function WelcomePage() {
   return (
     <PublicShell>
       <div className="space-y-6">
-        <div className="space-y-1 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight text-fg">{t("welcome.heading")}</h1>
+        <div className="space-y-1">
+          <h1 className="text-xl font-semibold text-fg">{t("welcome.heading")}</h1>
           <p className="text-muted">{t("welcome.intro")}</p>
         </div>
         <Suspense fallback={null}>
           <SignedIn />
         </Suspense>
-        <ul className="space-y-3">
-          {CHOICES.map(({ href, icon: Icon, title, body, cta, primary }) => (
+        <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
+          {CHOICES.map(({ href, title, body, cta, primary }) => (
             <li key={href}>
               <Link
                 href={href}
-                className="group flex items-center gap-4 rounded-card p-5 neu-raised transition-[box-shadow] duration-200 ease-in-out hover:neu-raised-sm active:neu-pressed"
+                className="group flex items-center gap-4 p-4 transition-colors hover:bg-surface-hover"
               >
-                <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl text-brand neu-pressed-sm">
-                  <Icon aria-hidden className="size-6" />
-                </span>
                 <span className="min-w-0 flex-1">
-                  <span className={primary ? "block text-lg font-semibold text-brand" : "block text-lg font-semibold text-fg"}>{t(title)}</span>
+                  <span className={primary ? "block text-base font-semibold text-accent" : "block text-base font-semibold text-fg"}>{t(title)}</span>
                   <span className="block text-sm text-muted">{t(body)}</span>
-                  <span className="mt-1 inline-flex items-center gap-1 text-sm font-semibold text-brand">
+                  <span className="mt-1 inline-flex items-center gap-1 text-sm font-semibold text-accent">
                     {t(cta)}
-                    <ArrowRight aria-hidden className="size-4 transition-transform group-hover:translate-x-0.5" />
+                    <ArrowRight aria-hidden className="size-4" />
                   </span>
                 </span>
               </Link>

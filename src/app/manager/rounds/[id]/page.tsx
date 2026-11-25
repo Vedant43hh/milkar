@@ -1,4 +1,4 @@
-import { ArrowRight, Ban, CalendarCheck, ChevronLeft, CircleCheck, CircleSlash, Clock, IndianRupee, KeyRound, Megaphone, Package, Repeat, ShieldCheck, Store, Truck, Users, Wallet } from "lucide-react";
+import { ArrowRight, ChevronLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -77,14 +77,14 @@ async function Dashboard({ params }: { params: PageProps<"/manager/rounds/[id]">
   return (
     <div className="space-y-5">
       {taking && <AutoRefresh seconds={30} />}
-      <Link href="/manager/rounds" className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-brand">
+      <Link href="/manager/rounds" className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-accent">
         <ChevronLeft aria-hidden className="size-4" />
         {t("manager.roundsTitle")}
       </Link>
 
       <header className="space-y-2">
         <RoundStatusBadges kind={round.kind} status={status} />
-        <h1 className="text-2xl font-semibold tracking-tight text-fg">{round.title}</h1>
+        <h1 className="text-xl font-semibold text-fg">{round.title}</h1>
         <div className="space-y-0.5 text-sm text-muted">
           <p>{taking ? <Countdown to={round.cutoffAt.toISOString()} /> : t("manager.dashboard.closes", { when: formatIST(round.cutoffAt) })}</p>
           <p>
@@ -94,13 +94,11 @@ async function Dashboard({ params }: { params: PageProps<"/manager/rounds/[id]">
           </p>
           {round.service && (
             <p className="flex items-center gap-1.5">
-              <Store aria-hidden className="size-4" />
               {t("manager.dashboard.by", { vendor: round.service.vendor.name })}
             </p>
           )}
           {round.fromPoll && (
             <p className="flex items-center gap-1.5">
-              <Megaphone aria-hidden className="size-4" />
               {t("manager.dashboard.fromPoll", { poll: round.fromPoll.title })}
             </p>
           )}
@@ -117,10 +115,10 @@ async function Dashboard({ params }: { params: PageProps<"/manager/rounds/[id]">
       )}
 
       <Card className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <Stat label={t("manager.dashboard.flats")} value={stats.flats} icon={<Users aria-hidden className="size-5" />} tone="brand" />
-        <Stat label={t("manager.dashboard.units")} value={stats.units} icon={<Package aria-hidden className="size-5" />} />
-        <Stat label={t("manager.dashboard.collected")} value={formatINR(stats.collectedPaise)} icon={<IndianRupee aria-hidden className="size-5" />} tone="success" />
-        {round.kind === "SERVICE" && <Stat label={t("manager.dashboard.held")} value={round.bookings.length} icon={<Clock aria-hidden className="size-5" />} />}
+        <Stat label={t("manager.dashboard.flats")} value={stats.flats} tone="info" />
+        <Stat label={t("manager.dashboard.units")} value={stats.units} />
+        <Stat label={t("manager.dashboard.collected")} value={formatINR(stats.collectedPaise)} tone="success" />
+        {round.kind === "SERVICE" && <Stat label={t("manager.dashboard.held")} value={round.bookings.length} />}
       </Card>
 
       {round.finalizedAt ? (
@@ -140,7 +138,7 @@ async function Dashboard({ params }: { params: PageProps<"/manager/rounds/[id]">
         {recent.length === 0 ? (
           <EmptyState title={t("manager.dashboard.noOrdersYet")} body={taking ? t("manager.dashboard.noOrdersYetBody") : undefined} />
         ) : (
-          <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
+          <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
             {recent.map((p) => (
               <li key={p.id} className="flex items-center gap-3 px-4 py-3 text-sm">
                 <span className="min-w-0 flex-1">
@@ -165,21 +163,21 @@ async function Dashboard({ params }: { params: PageProps<"/manager/rounds/[id]">
 
 function StatusBanner({ round, status }: { round: RoundDashboard["round"]; status: ReturnType<typeof displayStatus> }) {
   if (status === "CLOSED" || status === "FINALIZING") {
-    return <Banner tone="warning" icon={<Clock aria-hidden className="size-4" />}>{t("manager.dashboard.closedBanner")}</Banner>;
+    return <Banner tone="warning">{t("manager.dashboard.closedBanner")}</Banner>;
   }
   if (status === "CANCELLED") {
     return (
-      <Banner tone="danger" icon={<Ban aria-hidden className="size-4" />} title={t("manager.dashboard.cancelledBanner")}>
+      <Banner tone="danger" title={t("manager.dashboard.cancelledBanner")}>
         {round.cancelReason ? t("manager.dashboard.cancelledReason", { reason: round.cancelReason }) : undefined}
       </Banner>
     );
   }
   if (status === "DROPPED") {
-    return <Banner tone="info" icon={<CircleSlash aria-hidden className="size-4" />}>{t("manager.dashboard.droppedBanner")}</Banner>;
+    return <Banner tone="info">{t("manager.dashboard.droppedBanner")}</Banner>;
   }
   if (status === "FINALIZED" || status === "COMPLETED") {
     return (
-      <Banner tone="success" icon={<CircleCheck aria-hidden className="size-4" />}>
+      <Banner tone="success">
         {t(status === "FINALIZED" ? "manager.dashboard.finalizedBanner" : "manager.dashboard.completedBanner")}
       </Banner>
     );
@@ -200,17 +198,17 @@ function Results({ round, offerings }: { round: RoundDashboard["round"]; offerin
         <span id="results">{t("manager.results.title")}</span>
       </SectionTitle>
       <Card className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <Stat label={t("manager.results.refunded")} value={formatINR(refunded)} icon={<Wallet aria-hidden className="size-5" />} tone="success" />
-        <Stat label={t("manager.results.vendorPayout")} value={formatINR(owed)} icon={<Truck aria-hidden className="size-5" />} />
-        <Stat label={t("manager.results.absorbed")} value={formatINR(absorbed)} icon={<ShieldCheck aria-hidden className="size-5" />} />
+        <Stat label={t("manager.results.refunded")} value={formatINR(refunded)} tone="success" />
+        <Stat label={t("manager.results.vendorPayout")} value={formatINR(owed)} />
+        <Stat label={t("manager.results.absorbed")} value={formatINR(absorbed)} />
         {isService ? (
-          <Stat label={t("manager.results.visits")} value={round._count.visits} icon={<CalendarCheck aria-hidden className="size-5" />} tone="brand" />
+          <Stat label={t("manager.results.visits")} value={round._count.visits} tone="info" />
         ) : (
-          <Stat label={t("manager.results.pickups")} value={round._count.distributionRecords} icon={<KeyRound aria-hidden className="size-5" />} tone="brand" />
+          <Stat label={t("manager.results.pickups")} value={round._count.distributionRecords} tone="info" />
         )}
       </Card>
 
-      <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
+      <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
         {offerings.map((o) => {
           const confirmed = o.status === "CONFIRMED";
           return (
@@ -236,7 +234,6 @@ function Results({ round, offerings }: { round: RoundDashboard["round"]; offerin
             {round.vendorOrders.map((order) => (
               <li key={order.id} className="flex items-center justify-between gap-3">
                 <span className="flex min-w-0 items-center gap-1.5 text-fg">
-                  <Package aria-hidden className="size-4 shrink-0 text-muted" />
                   <span className="truncate">{t("manager.results.vendorOrder", { number: order.number, vendor: order.vendor.name })}</span>
                 </span>
                 <span className="shrink-0 font-medium tabular-nums">{formatINR(order.totalPaise)}</span>
@@ -249,14 +246,13 @@ function Results({ round, offerings }: { round: RoundDashboard["round"]; offerin
       {round.repeatNext && (
         <Link
           href={`/manager/rounds/${round.repeatNext.id}`}
-          className="flex items-center gap-3 rounded-card p-4 sm:p-5 neu-raised transition-[box-shadow] duration-200 ease-in-out hover:neu-raised-sm active:neu-pressed"
+          className="flex items-center gap-3 rounded-card p-4 border border-border bg-surface transition-colors hover:bg-surface-hover"
         >
-          <Repeat aria-hidden className="size-5 shrink-0 text-brand" />
           <span className="min-w-0 flex-1">
             <span className="block font-medium text-fg">{t("manager.results.nextWeek")}</span>
             <span className="block text-sm text-muted">{t("manager.results.nextWeekBody")}</span>
           </span>
-          <ArrowRight aria-hidden className="size-5 shrink-0 text-subtle" />
+          <ArrowRight aria-hidden className="size-5 shrink-0 text-muted" />
         </Link>
       )}
     </section>
@@ -284,7 +280,7 @@ function GroceryMeters({
       <li key={s.id} className="space-y-2 px-4 py-3">
         <div className="flex items-baseline justify-between gap-2">
           <span className="min-w-0 truncate font-medium text-fg">{offeringName(o)}</span>
-          <span className="shrink-0 text-xs text-muted tabular-nums">{t("manager.dashboard.itemStats", { units: s.units, flats: s.flats })}</span>
+          <span className="shrink-0 text-sm text-muted tabular-nums">{t("manager.dashboard.itemStats", { units: s.units, flats: s.flats })}</span>
         </div>
         <TierMeter meter={s.meter} basisWords={offeringWords(o, unitLabel)} compact />
       </li>
@@ -299,7 +295,7 @@ function GroceryMeters({
         {closest.length === 0 ? (
           <p className="text-sm text-muted">{t("manager.dashboard.noUnlock")}</p>
         ) : (
-          <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">{closest.slice(0, 5).map(meterCard)}</ul>
+          <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">{closest.slice(0, 5).map(meterCard)}</ul>
         )}
       </section>
       {waiting.length > 0 && (
@@ -307,10 +303,10 @@ function GroceryMeters({
           <SectionTitle>
             <span id="not-started">{t("manager.dashboard.notStarted")}</span>
           </SectionTitle>
-          <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">{waiting.map(meterCard)}</ul>
+          <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">{waiting.map(meterCard)}</ul>
         </section>
       )}
-      <details className="group rounded-card bg-surface shadow-card">
+      <details className="group rounded-card border border-border bg-surface">
         <summary className="flex min-h-11 cursor-pointer items-center px-4 text-sm font-semibold text-fg">
           {t("manager.dashboard.allItems")} ({offerings.length})
         </summary>
@@ -339,7 +335,7 @@ function ServiceMeter({ round, offerings, stats }: { round: RoundDashboard["roun
               </span>
               <span className="shrink-0 text-right tabular-nums">
                 <span className="block font-semibold text-fg">{formatINR(s.meter.currentUnitPaise)}</span>
-                {s.meter.next && <span className="block text-xs text-accent-soft-fg">{t("manager.form.tierAt", { price: formatINR(s.meter.next.unitPaise), qty: s.meter.next.minQty })}</span>}
+                {s.meter.next && <span className="block text-sm text-accent">{t("manager.form.tierAt", { price: formatINR(s.meter.next.unitPaise), qty: s.meter.next.minQty })}</span>}
               </span>
             </li>
           );
@@ -378,7 +374,7 @@ function Slots({ slots }: { slots: RoundDashboard["round"]["slots"] }) {
                         {full && <Badge tone="danger">{t("manager.dashboard.slotFull")}</Badge>}
                       </span>
                     </div>
-                    <ProgressBar value={(slot.bookedCount * 100) / slot.capacity} label={`${label}: ${load}`} tone={full ? "warning" : "brand"} />
+                    <ProgressBar value={(slot.bookedCount * 100) / slot.capacity} label={`${label}: ${load}`} tone={full ? "warning" : "accent"} />
                   </li>
                 );
               })}

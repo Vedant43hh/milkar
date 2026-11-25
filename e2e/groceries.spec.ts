@@ -25,7 +25,7 @@ test("a resident buys the bag that unlocks a better price for everyone", async (
   await expectNoSeriousA11yIssues(page);
 
   const rice = page.getByRole("listitem").filter({ hasText: "Sona Masoori Rice" }).filter({ visible: true });
-  await expect(rice.getByText("1 more pack to unlock ₹440!")).toBeVisible();
+  await expect(rice.getByText("1 more pack to unlock ₹440")).toBeVisible();
   await rice.getByRole("button", { name: "Add Sona Masoori Rice 5 kg" }).click();
   await expect(rice.getByText("Best price unlocked")).toBeVisible(); // the meter previews your change
 
@@ -35,7 +35,7 @@ test("a resident buys the bag that unlocks a better price for everyone", async (
   await page.keyboard.press("Escape");
   await reviewAndPay(page);
 
-  await expect(page.getByText("🎉 Price unlocked! Everyone now pays ₹440 for Sona Masoori Rice")).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText("Price unlocked: everyone now pays ₹440 for Sona Masoori Rice")).toBeVisible({ timeout: 30_000 });
   await expect(page.getByRole("listitem").filter({ hasText: "Sona Masoori Rice" }).filter({ visible: true }).getByText(/In your order: 1 \(₹465 paid\)/)).toBeVisible();
 });
 
@@ -92,7 +92,7 @@ test("a resident suggests a poll for the Society Manager", async ({ page }) => {
   await page.getByLabel("Is it one of these?").selectOption({ label: "Kitchen chimney cleaning" });
   await page.getByRole("button", { name: "Send to your Society Manager" }).click();
   await expect(page).toHaveURL("/app/polls", { timeout: 30_000 });
-  await expect(page.getByText("Thanks! Your Society Manager will review your suggestion.")).toBeVisible();
+  await expect(page.getByText("Sent. Your Society Manager will review your suggestion.")).toBeVisible();
   const mine = page.getByRole("region", { name: "Your suggestions" });
   await expect(mine.getByText("E2E chimney cleaning")).toBeVisible();
   await expect(mine.getByText("Waiting for your Society Manager").first()).toBeVisible();

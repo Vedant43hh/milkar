@@ -1,11 +1,10 @@
-import { CircleAlert } from "lucide-react";
 import { Banner } from "./display";
 
 /** Validation errors (already translated) for a whole form, announced to screen readers. */
 export function FormErrors({ errors }: { errors?: string[] }) {
   if (!errors?.length) return null;
   return (
-    <Banner tone="danger" role="alert" icon={<CircleAlert aria-hidden className="size-4" />}>
+    <Banner tone="danger" role="alert">
       {errors.length === 1 ? (
         errors[0]
       ) : (

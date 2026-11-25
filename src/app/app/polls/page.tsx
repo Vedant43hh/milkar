@@ -1,4 +1,4 @@
-import { Lightbulb, Megaphone } from "lucide-react";
+import { Lightbulb } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ResidentPollCard } from "@/components/polls/poll-card";
@@ -13,7 +13,7 @@ import { listMySuggestions, listResidentPolls } from "@/server/polls";
 
 export const metadata: Metadata = { title: t("polls.title") };
 
-const STATUS_TONE: Record<string, Tone> = { SUGGESTED: "warning", OPEN: "brand", CONVERTED: "success", CLOSED: "neutral" };
+const STATUS_TONE: Record<string, Tone> = { SUGGESTED: "warning", OPEN: "info", CONVERTED: "success", CLOSED: "neutral" };
 
 export default function PollsPage() {
   return (
@@ -38,9 +38,9 @@ async function Polls() {
         }
       />
       {polls.length === 0 ? (
-        <EmptyState icon={<Megaphone aria-hidden className="size-6" />} title={t("polls.empty")} body={t("polls.emptyBody")} />
+        <EmptyState title={t("polls.empty")} body={t("polls.emptyBody")} />
       ) : (
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
           {polls.map((poll) => (
             <ResidentPollCard key={poll.id} poll={poll} />
           ))}
@@ -51,7 +51,7 @@ async function Polls() {
           <SectionTitle>
             <span id="mine">{t("polls.mine")}</span>
           </SectionTitle>
-          <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
+          <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
             {mine.map((s) => (
               <li key={s.id} className="flex min-h-14 items-center justify-between gap-3 px-4 py-3">
                 <span className="min-w-0 truncate font-medium text-fg">{s.title}</span>

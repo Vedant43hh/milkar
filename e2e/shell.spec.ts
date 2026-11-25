@@ -37,25 +37,21 @@ test.describe("resident shell", () => {
   });
 });
 
-test.describe("theme", () => {
-  test("a dark choice applies at once and survives reloads", async ({ page }) => {
+test.describe("one light theme", () => {
+  test("the account menu has no theme switch", async ({ page }) => {
     await demoLogin(page, "Rahul Deshmukh");
     await page.getByRole("button", { name: "Open account menu" }).click();
-    await page.getByRole("dialog").getByText("Dark", { exact: true }).click();
-    await expect(page.locator("html")).toHaveClass(/dark/);
-    await page.reload();
-    await expect(page.locator("html")).toHaveClass(/dark/);
-
-    await page.getByRole("button", { name: "Open account menu" }).click();
-    await page.getByRole("dialog").getByText("Light", { exact: true }).click();
-    await expect(page.locator("html")).not.toHaveClass(/dark/);
+    const menu = page.getByRole("dialog");
+    await expect(menu.getByRole("button", { name: "Log out" })).toBeVisible();
+    await expect(menu.getByText("Dark", { exact: true })).toHaveCount(0);
   });
 
   test.describe("with a dark system setting", () => {
     test.use({ colorScheme: "dark" });
-    test("follows the system by default", async ({ page }) => {
+    test("the app stays light", async ({ page }) => {
       await page.goto("/login");
-      await expect(page.locator("html")).toHaveClass(/dark/);
+      await expect(page.locator("html")).not.toHaveClass(/dark/);
+      await expect(page.locator("body")).toHaveCSS("background-color", "rgb(247, 248, 250)");
     });
   });
 });
@@ -149,11 +145,10 @@ test("reload-loop guard: each page loads exactly once", async ({ page }) => {
   }
 });
 
-for (const scheme of ["light", "dark"] as const) {
-  test(`no serious accessibility problems (${scheme} theme)`, async ({ page }) => {
+test("no serious accessibility problems", async ({ page }) => {
     test.setTimeout(600_000);
-    // Reduced motion: no fade-in mid-scan (axe would measure half-transparent text).
-    await page.emulateMedia({ colorScheme: scheme, reducedMotion: "reduce" });
+    // Reduced motion: no animation mid-scan (axe would measure half-transparent text).
+    await page.emulateMedia({ reducedMotion: "reduce" });
     const problems: { page: string; rule: string; help: string; nodes: string[] }[] = [];
     for (const [path, user] of PAGES) {
       await visitAs(page, path, user);
@@ -165,6 +160,5 @@ for (const scheme of ["light", "dark"] as const) {
         problems.push({ page: path, rule: v.id, help: v.help, nodes: v.nodes.slice(0, 4).map((n) => n.target.join(" ")) });
       }
     }
-    expect(problems, `accessibility problems (${scheme})`).toEqual([]);
-  });
-}
+    expect(problems, "accessibility problems").toEqual([]);
+});

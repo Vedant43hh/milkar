@@ -1,6 +1,5 @@
 "use client";
 
-import { Clock } from "lucide-react";
 import { tu } from "@/i18n/ui";
 import { formatIST, formatRemaining } from "@/lib/time";
 import { cn } from "./cn";
@@ -24,7 +23,6 @@ export function Countdown({ to, prefix, className }: { to: string; prefix?: stri
 
   return (
     <time dateTime={to} className={cn("inline-flex items-center gap-1 tabular-nums", urgent ? "font-medium text-danger" : "text-muted", className)}>
-      <Clock aria-hidden className="size-3.5" />
       {label}
     </time>
   );

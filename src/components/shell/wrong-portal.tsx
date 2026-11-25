@@ -1,4 +1,4 @@
-import { ArrowRight, LockKeyhole } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { t } from "@/i18n";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { homePathFor, type Portal } from "@/lib/auth/rules";
@@ -12,19 +12,16 @@ import { Button, ButtonLink } from "../ui/button";
 export async function WrongPortal({ portal }: { portal: Portal }) {
   const user = await getCurrentUser();
   return (
-    <section aria-labelledby="wrong-portal" className="mx-auto max-w-md space-y-5 py-10 text-center">
+    <section aria-labelledby="wrong-portal" className="max-w-md space-y-4">
       {/* Tells the portal's frame to hide its owner-only controls (the staff menu), see globals.css. */}
       <span data-wrong-portal hidden />
-      <span className="mx-auto flex size-16 items-center justify-center rounded-full text-brand neu-pressed-sm">
-        <LockKeyhole aria-hidden className="size-7" />
-      </span>
-      <div className="space-y-2">
-        <h1 id="wrong-portal" className="text-2xl font-semibold tracking-tight text-fg">
+      <div className="space-y-1">
+        <h1 id="wrong-portal" className="text-xl font-semibold text-fg">
           {t(`portals.wrong.title.${portal}`)}
         </h1>
-        {user && <p className="text-muted">{t("portals.wrong.body", { role: t(`roles.${user.role}`) })}</p>}
+        {user && <p className="text-sm text-muted">{t("portals.wrong.body", { role: t(`roles.${user.role}`) })}</p>}
       </div>
-      <div className="flex flex-col items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <ButtonLink href={user ? homePathFor(user) : "/login"} icon={<ArrowRight aria-hidden className="size-4" />}>
           {t("portals.goToMine")}
         </ButtonLink>

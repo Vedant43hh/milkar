@@ -41,7 +41,7 @@ export function TierEditor({ rows, marginBps, gstBps, text }: { rows: TierRowInp
           const label = interpolate(text.rowLabel, { n: i + 1 });
           const pay = residentPrice(prices[i] ?? "", marginBps, gstBps);
           return (
-            <li key={i} className="rounded-control p-4 neu-pressed-sm">
+            <li key={i} className="rounded-control bg-bg p-3">
               <p className="sr-only">{label}</p>
               <div className="grid grid-cols-2 gap-3">
                 <label className="block text-sm">
@@ -63,14 +63,14 @@ export function TierEditor({ rows, marginBps, gstBps, text }: { rows: TierRowInp
                   />
                 </label>
               </div>
-              <p className="mt-1.5 text-xs text-muted" aria-live="polite">
+              <p className="mt-1.5 text-sm text-muted" aria-live="polite">
                 {pay ? interpolate(text.residentsPay, { price: pay }) : " "}
               </p>
             </li>
           );
         })}
       </ol>
-      <p className="text-xs text-subtle">{interpolate(text.residentsPayHint, { margin: formatBps(marginBps), gst: formatBps(gstBps) })}</p>
+      <p className="text-sm text-muted">{interpolate(text.residentsPayHint, { margin: formatBps(marginBps), gst: formatBps(gstBps) })}</p>
     </fieldset>
   );
 }

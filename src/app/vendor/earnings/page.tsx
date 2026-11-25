@@ -1,8 +1,7 @@
-import { IndianRupee } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { Card, CardHeader, PageHeader } from "@/components/ui/card";
+import { CardHeader, PageHeader } from "@/components/ui/card";
 import { EmptyState, Stat } from "@/components/ui/display";
 import { PageSkeleton } from "@/components/ui/skeleton";
 import { whenText } from "@/components/vendor/order-text";
@@ -30,17 +29,17 @@ async function Earnings() {
     <div className="space-y-5">
       <PageHeader title={t("vendorEarnings.title")} subtitle={t("vendorEarnings.intro")} />
       <div className="grid gap-3 sm:grid-cols-3">
-        <Stat tone="brand" label={t("vendorHome.owed")} value={formatINR(summary.owedPaise)} icon={<IndianRupee aria-hidden className="size-5" />} />
+        <Stat tone="info" label={t("vendorHome.owed")} value={formatINR(summary.owedPaise)} />
         <Stat label={t("vendorHome.paid")} value={formatINR(summary.paidPaise)} />
         <Stat label={t("vendorHome.thisMonth")} value={formatINR(thisMonthPaise)} />
       </div>
       {orders.length === 0 ? (
-        <EmptyState icon={<IndianRupee aria-hidden className="size-6" />} title={t("vendorEarnings.none")} body={t("vendorEarnings.noneBody")} />
+        <EmptyState title={t("vendorEarnings.none")} body={t("vendorEarnings.noneBody")} />
       ) : (
-        <ul className="space-y-3">
+        <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
           {orders.map((o) => (
             <li key={o.id}>
-              <Card as="article" labelledBy={`earning-${o.id}`}>
+              <article aria-labelledby={`earning-${o.id}`} className="p-4">
                 <CardHeader
                   titleId={`earning-${o.id}`}
                   title={`${t("vendorOrders.number", { n: o.number })} · ${o.round.title}`}
@@ -48,10 +47,10 @@ async function Earnings() {
                   action={<OrderStatusBadge status={o.status} />}
                 />
                 <PayoutBreakdown payout={o.payout} />
-                <Link href={`/vendor/orders/${o.id}`} className="mt-2 inline-flex min-h-11 items-center text-sm font-semibold text-brand">
+                <Link href={`/vendor/orders/${o.id}`} className="mt-2 inline-flex min-h-11 items-center text-sm font-semibold text-accent">
                   {t("vendorEarnings.viewOrder")}
                 </Link>
-              </Card>
+              </article>
             </li>
           ))}
         </ul>

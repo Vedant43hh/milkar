@@ -1,4 +1,4 @@
-import { Ban, Hourglass, Undo2 } from "lucide-react";
+import { Undo2 } from "lucide-react";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
@@ -34,7 +34,6 @@ async function JoinStatus({ searchParams }: { searchParams: PageProps<"/app/join
       <>
         <PageHeader title={t("joinRequest.title")} />
         <EmptyState
-          icon={<Hourglass aria-hidden className="size-6" />}
           title={t("joinRequest.pendingTitle")}
           body={t("joinRequest.pendingBody", { community: request.community.name, unit: request.community.unitLabel, flat: `${request.flat.tower}-${request.flat.number}` })}
           action={
@@ -57,7 +56,6 @@ async function JoinStatus({ searchParams }: { searchParams: PageProps<"/app/join
       <PageHeader title={t("joinRequest.title")} subtitle={declined ? undefined : t("joinRequest.noneBody")} />
       {declined && request && (
         <EmptyState
-          icon={<Ban aria-hidden className="size-6" />}
           title={t("joinRequest.rejectedTitle")}
           body={[
             t("joinRequest.rejectedBody", { community: request.community.name, unit: request.community.unitLabel, flat: `${request.flat.tower}-${request.flat.number}` }),

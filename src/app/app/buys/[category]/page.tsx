@@ -1,10 +1,10 @@
-import { ArrowRight, ChevronLeft, Megaphone } from "lucide-react";
+import { ArrowRight, ChevronLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { CategoryChips } from "@/components/buys/category-chips";
-import { CATEGORY_LOOK, GroupBuyCard } from "@/components/buys/group-buy-card";
+import { GroupBuyCard } from "@/components/buys/group-buy-card";
 import { ButtonLink } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/display";
@@ -39,11 +39,10 @@ async function Category({ params }: { params: PageProps<"/app/buys/[category]">[
   const counts = Object.fromEntries(BUY_CATEGORIES.map((c) => [c, buys.filter((b) => b.category === c).length])) as Record<BuyCategory, number>;
   const shown = buys.filter((b) => b.category === category);
   const name = t(`buys.categories.${category}.name`);
-  const Icon = CATEGORY_LOOK[category].icon;
 
   return (
     <PullToRefresh>
-      <Link href="/app/buys" className="mb-2 inline-flex min-h-11 items-center gap-1 text-sm font-medium text-brand">
+      <Link href="/app/buys" className="mb-2 inline-flex min-h-11 items-center gap-1 text-sm font-medium text-accent">
         <ChevronLeft aria-hidden className="size-4" />
         {t("buys.all")}
       </Link>
@@ -51,18 +50,17 @@ async function Category({ params }: { params: PageProps<"/app/buys/[category]">[
       <CategoryChips counts={counts} current={category} />
       {shown.length === 0 ? (
         <EmptyState
-          icon={<Icon aria-hidden className="size-6" />}
           title={t("buys.categoryEmpty", { category: name.toLowerCase() })}
           body={t("buys.categoryEmptyBody")}
           action={
-            <ButtonLink href="/app/polls" variant="secondary" icon={<Megaphone aria-hidden className="size-4" />}>
+            <ButtonLink href="/app/polls" variant="secondary">
               {t("buys.vote")}
               <ArrowRight aria-hidden className="size-4" />
             </ButtonLink>
           }
         />
       ) : (
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
           {shown.map((buy) => (
             <GroupBuyCard key={buy.id} buy={buy} unitLabel={community.unitLabel} />
           ))}

@@ -1,4 +1,3 @@
-import { Clock, Megaphone, ShoppingBasket, Snowflake, Truck } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -38,11 +37,10 @@ async function Groceries({ searchParams }: { searchParams: PageProps<"/app/groce
       <div>
         <PageHeader title={t("shop.title")} />
         <EmptyState
-          icon={<ShoppingBasket aria-hidden className="size-6" />}
           title={t("shop.noRound")}
           body={t("shop.noRoundBody")}
           action={
-            <ButtonLink href="/app/polls" variant="secondary" icon={<Megaphone aria-hidden className="size-4" />}>
+            <ButtonLink href="/app/polls" variant="secondary">
               {t("shop.seePolls")}
             </ButtonLink>
           }
@@ -66,8 +64,8 @@ async function Groceries({ searchParams }: { searchParams: PageProps<"/app/groce
               href={`/app/groceries?round=${r.id}`}
               aria-current={r.id === chosen.id ? "page" : undefined}
               className={cn(
-                "inline-flex min-h-11 shrink-0 items-center rounded-full px-4 text-sm transition-[box-shadow,color] duration-200 ease-in-out",
-                r.id === chosen.id ? "font-medium text-brand neu-pressed-sm" : "text-muted neu-raised-sm hover:text-fg hover:neu-raised-xs",
+                "inline-flex min-h-11 shrink-0 items-center rounded-control px-3 text-sm border transition-colors",
+                r.id === chosen.id ? "border-accent bg-accent-soft font-medium text-accent" : "border-border bg-surface text-fg hover:bg-surface-hover",
               )}
             >
               {r.title}
@@ -76,23 +74,21 @@ async function Groceries({ searchParams }: { searchParams: PageProps<"/app/groce
         </nav>
       )}
       <section aria-labelledby="round-title" className="mb-4 space-y-2">
-        <h2 id="round-title" className="text-lg font-semibold text-fg">
+        <h2 id="round-title" className="text-base font-semibold text-fg">
           {round.title}
         </h2>
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
           <Countdown to={round.cutoffAt} />
           <span className="inline-flex items-center gap-1 text-muted">
-            <Truck aria-hidden className="size-3.5" />
             {t("shop.delivery", { when: formatIST(new Date(round.deliveryAt)) })}
           </span>
         </div>
         {round.canReduce ? (
-          <p className="flex items-center gap-1.5 text-xs text-muted">
-            <Clock aria-hidden className="size-3.5" />
+          <p className="flex items-center gap-1.5 text-sm text-muted">
             {t("shop.freezeNote", { when: formatIST(new Date(round.freezeAt)) })}
           </p>
         ) : (
-          <Banner tone={round.canAdd ? "warning" : "danger"} icon={<Snowflake aria-hidden className="size-4" />}>
+          <Banner tone={round.canAdd ? "warning" : "danger"}>
             {t(round.canAdd ? "shop.frozen" : "shop.closed")}
           </Banner>
         )}

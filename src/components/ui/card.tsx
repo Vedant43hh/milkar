@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { cn } from "./cn";
 
-/** `labelledBy`: the id of the card's title, which makes the section a named region for screen readers. */
+/** A white panel with a 1px border. `labelledBy`: the id of the card's title, which makes the section a named region for screen readers. */
 export function Card({
   children,
   className,
@@ -14,7 +14,7 @@ export function Card({
   labelledBy?: string;
 }) {
   return (
-    <Tag aria-labelledby={labelledBy} className={cn("rounded-card bg-surface p-4 shadow-card sm:p-5", className)}>
+    <Tag aria-labelledby={labelledBy} className={cn("rounded-card border border-border bg-surface p-4", className)}>
       {children}
     </Tag>
   );
@@ -34,12 +34,12 @@ export function CardHeader({ title, subtitle, action, titleId }: { title: ReactN
   );
 }
 
-/** Page heading block used at the top of every screen. */
+/** Page heading block at the top of every screen. */
 export function PageHeader({ title, subtitle, action }: { title: ReactNode; subtitle?: ReactNode; action?: ReactNode }) {
   return (
-    <div className="mb-5 flex items-end justify-between gap-3">
+    <div className="mb-4 flex items-end justify-between gap-3">
       <div className="min-w-0">
-        <h1 className="text-2xl font-semibold tracking-tight text-fg">{title}</h1>
+        <h1 className="text-xl font-semibold text-fg">{title}</h1>
         {subtitle && <p className="mt-1 text-sm text-muted">{subtitle}</p>}
       </div>
       {action}
@@ -49,8 +49,8 @@ export function PageHeader({ title, subtitle, action }: { title: ReactNode; subt
 
 export function SectionTitle({ children, action }: { children: ReactNode; action?: ReactNode }) {
   return (
-    <div className="mt-8 mb-3 flex items-center justify-between">
-      <h2 className="text-sm font-semibold tracking-wide text-muted uppercase">{children}</h2>
+    <div className="mt-6 mb-2 flex items-center justify-between gap-3">
+      <h2 className="text-base font-semibold text-fg">{children}</h2>
       {action}
     </div>
   );

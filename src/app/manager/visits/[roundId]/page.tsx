@@ -1,4 +1,4 @@
-import { Ban, ChevronLeft, CircleCheck, KeyRound, MessageSquareText, MessageSquareWarning, Package, UserRound } from "lucide-react";
+import { Ban, ChevronLeft, CircleCheck } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -40,28 +40,26 @@ function VisitRow({ visit, unitLabel }: { visit: Visit; unitLabel: string }) {
         <VisitStatusBadge status={visit.status} />
       </div>
       <p className="flex items-center gap-1.5 text-sm text-muted">
-        <UserRound aria-hidden className="size-4" />
         {visit.technicianName ? t("visitBoard.technician", { name: visit.technicianName }) : t("visitBoard.unassigned")}
       </p>
       {visit.booking.problemNote && (
         <p className="flex items-start gap-1.5 text-sm text-fg">
-          <MessageSquareText aria-hidden className="mt-0.5 size-4 shrink-0 text-muted" />
           {visit.booking.problemNote}
         </p>
       )}
       <div className="flex flex-wrap gap-1.5">
         {visit.partsWaiting && (
-          <Badge tone="accent" icon={<Package aria-hidden className="size-3.5" />}>
+          <Badge tone="info">
             {t("visitBoard.partsWaiting")}
           </Badge>
         )}
         {visit.codeLocked && visit.status === "IN_PROGRESS" && (
-          <Badge tone="warning" icon={<KeyRound aria-hidden className="size-3.5" />}>
+          <Badge tone="warning">
             {t("visitBoard.codeLocked")}
           </Badge>
         )}
         {visit.issue && (
-          <Badge tone="warning" icon={<MessageSquareWarning aria-hidden className="size-3.5" />}>
+          <Badge tone="warning">
             {t("visitBoard.complaint")}: {t(`issues.status.${visit.issue.status}`)}
           </Badge>
         )}
@@ -122,7 +120,7 @@ async function Board({ params }: { params: PageProps<"/manager/visits/[roundId]"
   return (
     <div className="space-y-4">
       {live && <AutoRefresh seconds={30} />}
-      <Link href="/manager/visits" className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-brand">
+      <Link href="/manager/visits" className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-accent">
         <ChevronLeft aria-hidden className="size-4" />
         {t("visitBoard.back")}
       </Link>
@@ -139,7 +137,7 @@ async function Board({ params }: { params: PageProps<"/manager/visits/[roundId]"
                 {formatIST(slot.startsAt)} – {formatIST(slot.endsAt, "time")}
               </span>
             </SectionTitle>
-            <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
+            <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
               {slot.visits.map((visit) => (
                 <VisitRow key={visit.id} visit={visit} unitLabel={round.unitLabel} />
               ))}
@@ -152,7 +150,7 @@ async function Board({ params }: { params: PageProps<"/manager/visits/[roundId]"
           <SectionTitle>
             <span id="revisits">{t("visitBoard.revisits")}</span>
           </SectionTitle>
-          <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
+          <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
             {revisits.map((visit) => (
               <VisitRow key={visit.id} visit={visit} unitLabel={round.unitLabel} />
             ))}

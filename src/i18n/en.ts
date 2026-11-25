@@ -598,7 +598,7 @@ export const en = {
     done: {
       ON_THE_WAY: "The resident knows you're on the way.",
       IN_PROGRESS: "Job started.",
-      COMPLETED: "Visit done. Thank you!",
+      COMPLETED: "Visit done.",
       NO_ACCESS: "Marked as couldn't get in. The resident has been told.",
       CANCELLED: "Visit cancelled.",
     },
@@ -1403,7 +1403,7 @@ export const en = {
   vendor: {
     verified: "Verified vendor",
     pending: "Verification pending",
-    rating: "{rating} ★ ({count} ratings)",
+    rating: "Rated {rating} ({count} ratings)",
     noRatings: "No ratings yet",
   },
   time: {
@@ -1426,7 +1426,7 @@ export const en = {
     open: "Open",
     types: {
       ROUND_OPENED: { title: "{round} is open", body: "Order together before {cutoff} to unlock group prices." },
-      TIER_UNLOCKED: { title: "🎉 Price unlocked: {item}", body: "Everyone now pays {price}. Anything you paid above that comes back to your wallet at cutoff." },
+      TIER_UNLOCKED: { title: "Price unlocked: {item}", body: "Everyone now pays {price}. Anything you paid above that comes back to your wallet at cutoff." },
       CUTOFF_REMINDER: { title: "{round} closes soon", body: "Last chance to add to your order before {cutoff}." },
       ROUND_FINALIZED: { title: "{round} is confirmed", body: "Final prices are in. Any difference has gone to your wallet." },
       REFUND_CREDITED: { title: "{amount} added to your wallet", body: "{reason}" },
@@ -1455,7 +1455,7 @@ export const en = {
       JOIN_DECIDED: {
         title: "Your request to join {community}",
         body: "Your Society Manager has decided. Open Milkar to see.",
-        APPROVED: { title: "Welcome to {community}!", body: "Your Society Manager approved you. Group buys open here are now yours to join." },
+        APPROVED: { title: "Welcome to {community}", body: "Your Society Manager approved you. Group buys open here are now yours to join." },
         REJECTED: { title: "Your request to join {community} wasn't approved", body: "Check your flat number with your Society Manager, then ask again." },
       },
       COMMUNITY_DECIDED: {
@@ -1705,7 +1705,7 @@ export const en = {
       },
     },
     flash: {
-      roundOpened: "Round opened. Share it on your WhatsApp group!",
+      roundOpened: "Round opened. Share it on your WhatsApp group.",
       pollCreated: "Poll published",
     },
     errors: {
@@ -1767,7 +1767,7 @@ export const en = {
     priceNote: "New items are charged at today's price. If the community unlocks a better price by the cutoff, the difference comes back to your wallet.",
     wallet: "Wallet balance: {amount}",
     updated: "Your order is updated",
-    unlocked: "🎉 Price unlocked! Everyone now pays {price} for {item}",
+    unlocked: "Price unlocked: everyone now pays {price} for {item}",
     credited: "Your order didn't change because {reason}. {amount} is in your wallet.",
     flashText: "{text}",
     errors: {
@@ -1845,7 +1845,7 @@ export const en = {
       other: "Something else",
       description: "Why, or any details",
       submit: "Send to your Society Manager",
-      sent: "Thanks! Your Society Manager will review your suggestion.",
+      sent: "Sent. Your Society Manager will review your suggestion.",
       optional: "optional",
     },
     errors: {
@@ -1866,7 +1866,7 @@ export const en = {
     seePolls: "See polls",
     by: "By {vendor}",
     verified: "Verified",
-    rating: "{rating} ★ ({count})",
+    rating: "Rated {rating} ({count})",
     from: "From {price} per {unit}",
     goesAhead: "Goes ahead with {n} {units}",
     yourBooking: "Booked: {slot}",

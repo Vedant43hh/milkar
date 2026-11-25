@@ -1,4 +1,4 @@
-import { BadgeCheck, ChevronRight, Star } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -35,13 +35,12 @@ function VendorLine({ service }: { service: CatalogueService }) {
     <span className="flex flex-wrap items-center gap-1.5 text-sm text-muted">
       {vendor.name}
       {vendor.verificationStatus === "VERIFIED" && (
-        <Badge tone="success" icon={<BadgeCheck aria-hidden className="size-3.5" />}>
+        <Badge tone="success">
           {t("vendor.verified")}
         </Badge>
       )}
       {vendor.ratingCount > 0 && (
         <span className="inline-flex items-center gap-0.5 tabular-nums">
-          <Star aria-hidden className="size-3.5 fill-current text-accent" />
           {t("vendor.rating", { rating: (vendor.ratingSum / vendor.ratingCount).toFixed(1), count: vendor.ratingCount })}
         </span>
       )}
@@ -87,25 +86,25 @@ async function NewServiceRound({ searchParams }: { searchParams: PageProps<"/man
       <div>
         <PageHeader title={t(text.heading)} subtitle={t("manager.form.chooseServiceIntro")} />
         {offered.length === 0 && <EmptyState title={t("manager.form.noServices")} body={t("manager.form.noServicesBody")} />}
-        <ul className="grid gap-3 md:grid-cols-2">
+        <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
           {offered.map((service) => (
             <li key={service.id}>
               <Link
                 href={`/manager/rounds/new/service?kind=${kind}&service=${service.id}`}
-                className="group flex h-full items-start gap-3 rounded-card p-4 sm:p-5 neu-raised transition-[box-shadow] duration-200 ease-in-out hover:neu-raised-sm active:neu-pressed"
+                className="group flex h-full items-start gap-3 p-4 transition-colors hover:bg-surface-hover"
               >
                 <span className="min-w-0 flex-1 space-y-1">
                   <span className="block font-semibold text-fg">{service.name}</span>
                   <VendorLine service={service} />
                   <span className="block text-sm text-muted">{t("manager.form.minFlats", { n: service.minFlats, units })}</span>
                   {priceLines(service, settings.marginBps).map((line) => (
-                    <span key={line} className="block text-xs text-subtle tabular-nums">
+                    <span key={line} className="block text-sm text-muted tabular-nums">
                       {line}
                     </span>
                   ))}
                 </span>
                 <span className="sr-only">{t("manager.form.useService")}</span>
-                <ChevronRight aria-hidden className="mt-1 size-5 shrink-0 text-subtle transition-transform group-hover:translate-x-0.5" />
+                <ChevronRight aria-hidden className="mt-1 size-5 shrink-0 text-muted" />
               </Link>
             </li>
           ))}

@@ -46,7 +46,7 @@ async function Option({ params }: { params: PageProps<"/vendor/catalogue/service
 
   return (
     <div className="space-y-5">
-      <Link href={`/vendor/catalogue/services/${service.id}`} className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-brand">
+      <Link href={`/vendor/catalogue/services/${service.id}`} className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-accent">
         <ChevronLeft aria-hidden className="size-4" />
         {service.name}
       </Link>

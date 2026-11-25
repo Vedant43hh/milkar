@@ -1,24 +1,24 @@
-import { Bell, CalendarClock, CircleAlert, CircleCheck, Info, PiggyBank, Plus, Search, ShoppingBasket, TriangleAlert, Wallet } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
+import { LogoMark } from "@/components/shell/logo";
 import { PublicShell } from "@/components/shell/public-shell";
-import { ThemeToggle } from "@/components/theme";
 import { Badge, Chip } from "@/components/ui/badge";
-import { ChipScroller } from "@/components/ui/chip-scroller";
-import { NeighbourFlats } from "@/components/ui/neighbours";
 import { Button, buttonClasses, IconButton } from "@/components/ui/button";
 import { Card, CardHeader, PageHeader } from "@/components/ui/card";
-import { Banner, EmptyState, ListRow, Price, Stat } from "@/components/ui/display";
+import { ChipScroller } from "@/components/ui/chip-scroller";
+import { Banner, EmptyState, List, ListRow, Price, StatCard } from "@/components/ui/display";
 import { Field, Input, SegmentedControl, Select, Switch, Textarea } from "@/components/ui/form";
+import { NeighbourFlats } from "@/components/ui/neighbours";
 import { ProgressBar, TierMeter } from "@/components/ui/progress";
 import { Sheet } from "@/components/ui/sheet";
 import { ListSkeleton, Skeleton } from "@/components/ui/skeleton";
+import { Table, TBody, Td, Th, THead } from "@/components/ui/table";
 import { t } from "@/i18n";
 import { getEnv } from "@/lib/env";
 import { computeMeter } from "@/lib/pricing/meter";
 import { CountdownDemo, FeedbackDemo, StepperDemo, TabsDemo, WizardDemo } from "./demos";
-import { SoftUiStates } from "./soft-ui-states";
 
 export const metadata: Metadata = { title: t("design.title") };
 
@@ -52,13 +52,13 @@ const flats = { one: "flat", other: "flats" };
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="space-y-3">
-      <h2 className="text-sm font-semibold tracking-wide text-muted uppercase">{title}</h2>
+      <h2 className="text-base font-semibold text-fg">{title}</h2>
       {children}
     </section>
   );
 }
 
-const SWATCHES = ["bg", "surface", "surface-2", "border", "fg", "muted", "brand", "brand-soft", "accent", "accent-soft", "success", "warning", "danger"];
+const SWATCHES = ["bg", "surface", "surface-hover", "border", "border-field", "fg", "muted", "accent", "accent-soft", "success-soft", "warning-soft", "danger-soft", "info-soft"];
 
 /** Living style guide. Available in development and demo deployments only. */
 export default function DesignPage() {
@@ -66,35 +66,30 @@ export default function DesignPage() {
   return (
     <PublicShell wide>
       <PageHeader title={t("design.title")} subtitle={t("design.intro")} />
-      <div className="space-y-10">
-        <Section title="Theme">
-          <div className="max-w-sm">
-            <ThemeToggle />
+      <div className="space-y-8">
+        <Section title="Logo">
+          <div className="flex items-center gap-3">
+            <LogoMark className="h-10 w-auto" />
+            <span className="text-xl font-semibold text-fg">Milkar</span>
           </div>
         </Section>
 
-        <Section title="Soft UI: every state">
-          <SoftUiStates />
-        </Section>
-
-        <Section title="Colour tokens">
+        <Section title="Colours">
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 md:grid-cols-7">
             {SWATCHES.map((name) => (
-              <div key={name} className="text-xs">
-                <div className="h-12 rounded-control shadow-[var(--raised-xs)]" style={{ background: `var(--${name})` }} />
+              <div key={name} className="text-sm">
+                <div className="h-10 rounded-control border border-border" style={{ background: `var(--${name})` }} />
                 <p className="mt-1 text-muted">{name}</p>
               </div>
             ))}
           </div>
         </Section>
 
-        <Section title="Type scale">
+        <Section title="Type">
           <div className="space-y-1">
-            <p className="text-2xl font-semibold tracking-tight">Page title · 2xl</p>
-            <p className="text-xl font-semibold">Section heading · xl</p>
+            <p className="text-xl font-semibold">Page title · xl semibold</p>
             <p className="text-base">Body text · base. Neighbours pool orders and everyone pays less.</p>
             <p className="text-sm text-muted">Secondary text · sm muted</p>
-            <p className="text-xs text-subtle">Caption · xs subtle</p>
           </div>
         </Section>
 
@@ -106,9 +101,6 @@ export default function DesignPage() {
             </Button>
             <Button type="button" variant="ghost">
               Ghost
-            </Button>
-            <Button type="button" variant="accent">
-              Accent
             </Button>
             <Button type="button" variant="danger">
               Danger
@@ -147,7 +139,15 @@ export default function DesignPage() {
             <Field id="d-note" label="Note for the technician">
               {(aria) => <Textarea {...aria} placeholder="Two split ACs in the bedrooms" />}
             </Field>
-            <Switch label="Keep my slot every week" defaultChecked />
+            <Field id="d-disabled" label="Disabled field">
+              {(aria) => <Input {...aria} disabled defaultValue="Green Meadows CHS" />}
+            </Field>
+            <div className="space-y-2">
+              <Switch label="Keep my slot every week" defaultChecked />
+              <label className="flex min-h-11 items-center gap-2 text-sm">
+                <input type="checkbox" defaultChecked /> Groceries
+              </label>
+            </div>
             <SegmentedControl
               name="d-bhk"
               label="Home size"
@@ -163,23 +163,71 @@ export default function DesignPage() {
 
         <Section title="Badges and chips">
           <div className="flex flex-wrap gap-2">
-            <Badge>Neutral</Badge>
-            <Badge tone="brand">Open</Badge>
-            <Badge tone="accent">Tier unlocked</Badge>
-            <Badge tone="success" icon={<CircleCheck aria-hidden className="size-3.5" />}>
-              Verified
-            </Badge>
-            <Badge tone="warning">Cutoff soon</Badge>
-            <Badge tone="danger">Slot full</Badge>
+            <Badge>Draft</Badge>
+            <Badge tone="info">Open</Badge>
+            <Badge tone="success">Paid</Badge>
+            <Badge tone="warning">Waiting</Badge>
+            <Badge tone="danger">Cancelled</Badge>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Chip selected>All</Chip>
-            <Chip>Dals & pulses</Chip>
-            <Chip>Oils & ghee</Chip>
+          <ChipScroller label="Categories">
+            {["All", "Dals & pulses", "Oils & ghee", "Snacks"].map((c, i) => (
+              <button key={c} type="button" aria-pressed={i === 0} className="rounded-control">
+                <Chip selected={i === 0}>{c}</Chip>
+              </button>
+            ))}
+          </ChipScroller>
+        </Section>
+
+        <Section title="Stats">
+          <Card className="grid gap-4 sm:grid-cols-3">
+            <StatCard label="Saved this month" value="₹1,240" hint="Compared with MRP" />
+            <StatCard label="Wallet" value="₹312" />
+            <StatCard label="Next visit" value="Sat 10 am" hint="AC servicing" />
+          </Card>
+        </Section>
+
+        <Section title="Lists and tables">
+          <List>
+            <li>
+              <ListRow href="#" title="This week's group drive" subtitle="26 products · closes Fri 8 pm" />
+            </li>
+            <li>
+              <ListRow title="Refund credited" subtitle="₹70 for Sona Masoori Rice" trailing={<Badge tone="success">+₹70</Badge>} />
+            </li>
+          </List>
+          <Table caption="Example order">
+            <THead>
+              <tr>
+                <Th>Item</Th>
+                <Th className="text-right">Qty</Th>
+                <Th className="text-right">Amount</Th>
+              </tr>
+            </THead>
+            <TBody>
+              <tr>
+                <Td>Sona Masoori Rice 5 kg</Td>
+                <Td className="text-right tabular-nums">2</Td>
+                <Td className="text-right tabular-nums">₹880</Td>
+              </tr>
+              <tr>
+                <Td>Toor Dal 1 kg</Td>
+                <Td className="text-right tabular-nums">1</Td>
+                <Td className="text-right tabular-nums">₹142</Td>
+              </tr>
+            </TBody>
+          </Table>
+        </Section>
+
+        <Section title="Banners">
+          <div className="space-y-2">
+            <Banner title="Changes close Fri 8 am">You can still add items until 8 pm.</Banner>
+            <Banner tone="success">Visit completed. Rate your technician.</Banner>
+            <Banner tone="warning">Needs 2 more flats to start.</Banner>
+            <Banner tone="danger">That slot just filled up.</Banner>
           </div>
         </Section>
 
-        <Section title="Tier meters">
+        <Section title="Price meters">
           <div className="grid gap-3 md:grid-cols-2">
             <Card>
               <CardHeader title="Chakki Fresh Atta · 10 kg" subtitle="Below the vendor minimum" />
@@ -201,35 +249,6 @@ export default function DesignPage() {
           <ProgressBar value={35} label="Example progress" />
         </Section>
 
-        <Section title="Stats, rows and banners">
-          <Card className="grid gap-4 sm:grid-cols-3">
-            <Stat label="Saved this month" value="₹1,240" icon={<PiggyBank aria-hidden className="size-5" />} tone="accent" />
-            <Stat label="Wallet" value="₹312" icon={<Wallet aria-hidden className="size-5" />} tone="brand" />
-            <Stat label="Next visit" value="Sat 10 am" hint="AC servicing" icon={<CalendarClock aria-hidden className="size-5" />} />
-          </Card>
-          <div className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
-            <ListRow href="#" icon={<ShoppingBasket aria-hidden className="size-5" />} title="This week's group drive" subtitle="26 products · closes Fri 8 pm" />
-            <ListRow icon={<Bell aria-hidden className="size-5" />} title="Refund credited" subtitle="₹70 for Sona Masoori Rice" trailing={<Badge tone="success">+₹70</Badge>} />
-          </div>
-          <div className="space-y-2">
-            <Banner icon={<Info aria-hidden className="size-4" />} title="Changes close Fri 8 am">
-              You can still add items until 8 pm.
-            </Banner>
-            <Banner tone="accent" icon={<PiggyBank aria-hidden className="size-4" />}>
-              ₹25 per bag comes back to your wallet if the community stays at 50+.
-            </Banner>
-            <Banner tone="success" icon={<CircleCheck aria-hidden className="size-4" />}>
-              Visit completed. Rate your technician.
-            </Banner>
-            <Banner tone="warning" icon={<TriangleAlert aria-hidden className="size-4" />}>
-              Needs 2 more flats to start.
-            </Banner>
-            <Banner tone="danger" icon={<CircleAlert aria-hidden className="size-4" />}>
-              That slot just filled up.
-            </Banner>
-          </div>
-        </Section>
-
         <Section title="Quantity stepper">
           <StepperDemo />
         </Section>
@@ -238,47 +257,25 @@ export default function DesignPage() {
           <CountdownDemo />
         </Section>
 
-        <Section title="Toasts and celebration">
+        <Section title="Toasts">
           <FeedbackDemo />
         </Section>
 
-        <Section title="Tabs and sheet">
+        <Section title="Tabs and modal">
           <Card>
             <TabsDemo />
           </Card>
-          <Sheet title="Choose a slot" trigger="Open sheet" triggerClassName={buttonClasses({ variant: "secondary" })}>
-            <p className="text-sm text-muted">Sheets slide up from the bottom on phones and appear centred on larger screens.</p>
+          <Sheet title="Choose a slot" trigger="Open a modal" triggerClassName={buttonClasses({ variant: "secondary" })}>
+            <p className="text-sm text-muted">A white panel with a border over a plain overlay. On phones it opens from the bottom.</p>
           </Sheet>
         </Section>
 
-        <Section title="Portal accents">
-          <p className="text-sm text-muted">Each portal re-points the brand colour, so people always know where they are.</p>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-            {(["app", "manager", "vendor", "tech", "admin"] as const).map((portal) => (
-              <div key={portal} data-portal={portal} className="space-y-2 rounded-card border border-border bg-surface p-3">
-                <span className="block h-2 rounded-full bg-brand" />
-                <span className="inline-flex h-6 items-center rounded-full px-2.5 text-xs font-semibold text-brand neu-pressed-xs">{t(`portals.${portal}`)}</span>
-                <Button type="button" size="sm" block>
-                  Action
-                </Button>
-              </div>
-            ))}
-          </div>
-        </Section>
-
-        <Section title="Neighbours and category chips">
+        <Section title="Neighbours">
           <Card className="space-y-3">
             <NeighbourFlats flats={["A-101", "B-402", "C-202", "D-301", "A-502"]} total={14} />
             <NeighbourFlats flats={["A-101", "B-402"]} total={2} />
             <NeighbourFlats flats={[]} total={0} />
           </Card>
-          <ChipScroller label="Categories">
-            {["Groceries", "Home services", "Repairs", "Subscriptions", "Polls"].map((c, i) => (
-              <button key={c} type="button" aria-pressed={i === 0} className="rounded-full">
-                <Chip selected={i === 0}>{c}</Chip>
-              </button>
-            ))}
-          </ChipScroller>
         </Section>
 
         <Section title="Step-by-step form">
@@ -288,7 +285,7 @@ export default function DesignPage() {
         </Section>
 
         <Section title="Empty and loading states">
-          <EmptyState icon={<ShoppingBasket aria-hidden className="size-6" />} title="No group orders are open right now" body="When your manager opens a round, live prices show up here." action={<Button type="button" size="sm">Suggest a product</Button>} />
+          <EmptyState title="No group buys are open right now." action={<Button type="button" size="sm">Suggest a product</Button>} />
           <Skeleton className="h-6 w-1/3" />
           <ListSkeleton rows={2} />
         </Section>

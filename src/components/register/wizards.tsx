@@ -1,6 +1,5 @@
 "use client";
 
-import { CircleAlert, Home } from "lucide-react";
 import { useActionState, useState, type ReactNode } from "react";
 import type { Messages } from "@/i18n";
 import { interpolate } from "@/i18n/interpolate";
@@ -40,7 +39,7 @@ function RegisterForm({ role, text, mockOtp, steps }: { role: Role; text: Text; 
         }
       />
       {state.error && (
-        <Banner tone="danger" role="alert" icon={<CircleAlert aria-hidden className="size-4" />}>
+        <Banner tone="danger" role="alert">
           {state.error}
         </Banner>
       )}
@@ -96,8 +95,7 @@ function LayoutPreview({ text, blocks, floors, unitsPerFloor }: { text: Text; bl
   const first = flats[0];
   const last = flats.at(-1)!;
   return (
-    <p role="status" className="flex items-center gap-2 rounded-control px-4 py-3 text-sm font-medium text-brand neu-pressed-sm">
-      <Home aria-hidden className="size-4 shrink-0" />
+    <p role="status" className="flex items-center gap-2 rounded-control px-4 py-3 text-sm border-accent bg-accent-soft font-medium text-accent">
       {interpolate(text.community.preview, { count: flatCount(layout), first: `${first.tower}-${first.number}`, last: `${last.tower}-${last.number}` })}
     </p>
   );
@@ -202,7 +200,7 @@ function CategoryChoice({ text, selected, onToggle }: { text: Text; selected: Se
     <fieldset className="space-y-2">
       <legend className="mb-1.5 text-sm font-medium text-fg">{text.business.categories}</legend>
       {CATEGORIES.map((category) => (
-        <label key={category} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-control px-3 neu-raised-sm transition-[box-shadow] duration-200 ease-in-out has-[:checked]:neu-pressed-sm">
+        <label key={category} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-control px-3 border border-border bg-surface transition-colors has-[:checked]:border-accent has-[:checked]:bg-accent-soft">
           <input type="checkbox" name="categories" value={category} checked={selected.has(category)} onChange={() => onToggle(category)} />
           <span className="text-sm font-medium text-fg">{text.business.categoryNames[category]}</span>
         </label>

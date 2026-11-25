@@ -16,9 +16,9 @@ describe("sharing a round", () => {
       nextUnlock: { needed: 6, unit: "flats", pricePaise: 40000, item: "AC servicing (Split AC)" },
     });
     expect(text.split("\n")).toEqual([
-      "🧰 AC servicing Service Day is open for Green Meadows CHS on Milkar. The more flats book, the less everyone pays.",
+      "AC servicing Service Day is open for Green Meadows CHS on Milkar. The more flats book, the less everyone pays.",
       "Closes Fri, 23 Oct, 8:00 pm.",
-      "Just 6 more flats to unlock ₹400 for AC servicing (Split AC)!",
+      "Just 6 more flats to unlock ₹400 for AC servicing (Split AC).",
       "https://milkar.app/join/GREENMDW?round=r1",
     ]);
   });

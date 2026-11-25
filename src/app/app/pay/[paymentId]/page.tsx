@@ -1,4 +1,3 @@
-import { CircleCheck, CircleX, FlaskConical, IndianRupee, TimerOff } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -44,8 +43,8 @@ async function Pay({ params }: { params: PageProps<"/app/pay/[paymentId]">["para
 
   if (payment.status === "PAID" || payment.status === "CREDITED_TO_WALLET") {
     return (
-      <div className="mx-auto max-w-md space-y-4">
-        <Banner tone="success" icon={<CircleCheck aria-hidden className="size-4" />}>
+      <div className="max-w-md space-y-4">
+        <Banner tone="success">
           {t("pay.done")}
         </Banner>
         {back}
@@ -54,16 +53,16 @@ async function Pay({ params }: { params: PageProps<"/app/pay/[paymentId]">["para
   }
   if (payment.status === "FAILED") {
     return (
-      <div className="mx-auto max-w-md space-y-4">
-        <Banner icon={<CircleX aria-hidden className="size-4" />}>{t("pay.declined")}</Banner>
+      <div className="max-w-md space-y-4">
+        <Banner>{t("pay.declined")}</Banner>
         {back}
       </div>
     );
   }
   if (payment.status === "EXPIRED" || isQuoteExpired(payment.expiresAt, now)) {
     return (
-      <div className="mx-auto max-w-md space-y-4">
-        <Banner tone="warning" icon={<TimerOff aria-hidden className="size-4" />}>
+      <div className="max-w-md space-y-4">
+        <Banner tone="warning">
           {t("pay.expired")}
         </Banner>
         {back}
@@ -72,25 +71,22 @@ async function Pay({ params }: { params: PageProps<"/app/pay/[paymentId]">["para
   }
 
   return (
-    <div className="mx-auto max-w-md space-y-4">
-      <h1 className="text-2xl font-semibold tracking-tight text-fg">{t("pay.title")}</h1>
-      <Banner tone="accent" icon={<FlaskConical aria-hidden className="size-4" />}>
+    <div className="max-w-md space-y-4">
+      <h1 className="text-xl font-semibold text-fg">{t("pay.title")}</h1>
+      <Banner tone="info">
         {t("pay.testMode")}
       </Banner>
-      <Card className="space-y-4 text-center">
-        <span className="mx-auto flex size-14 items-center justify-center rounded-full text-brand neu-pressed-sm">
-          <IndianRupee aria-hidden className="size-7" />
-        </span>
+      <Card className="space-y-4">
         <div>
           <p className="text-sm text-muted">{t("pay.payee")}</p>
           <p className="text-sm text-muted">{t(payment.purpose === "PARTS" ? "pay.forParts" : "pay.for", { round: payment.round.title })}</p>
         </div>
         <div>
           <p className="text-sm text-muted">{t("pay.amount")}</p>
-          <p className="text-4xl font-semibold text-fg tabular-nums">{formatINR(payment.gatewayPaise)}</p>
+          <p className="text-xl font-semibold text-fg tabular-nums">{formatINR(payment.gatewayPaise)}</p>
           {payment.walletAppliedPaise > 0 && <p className="mt-1 text-sm text-muted">{t("pay.walletPart", { amount: formatINR(payment.walletAppliedPaise) })}</p>}
         </div>
-        <p className="text-xs text-subtle">{t("pay.expires", { time: formatIST(payment.expiresAt, "time") })}</p>
+        <p className="text-sm text-muted">{t("pay.expires", { time: formatIST(payment.expiresAt, "time") })}</p>
         <form action={payMockAction}>
           <input type="hidden" name="paymentId" value={payment.id} />
           <SubmitButton block size="lg">

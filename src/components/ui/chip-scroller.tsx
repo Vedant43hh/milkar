@@ -12,8 +12,7 @@ export function ChipScroller({ label, children, className }: { label: string; ch
       role="group"
       aria-label={label}
       className={cn(
-        // The vertical padding (taken back by the negative margin) leaves room for the chips' shadows.
-        "-mx-4 -my-2 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-4 px-4 py-2 [scrollbar-width:none] md:mx-0 md:flex-wrap md:overflow-visible md:px-0 [&::-webkit-scrollbar]:hidden [&>*]:shrink-0 [&>*]:snap-start",
+        "-mx-4 flex snap-x snap-mandatory gap-2 overflow-x-auto scroll-px-4 px-4 pb-1 [scrollbar-width:none] md:mx-0 md:flex-wrap md:overflow-visible md:px-0 [&::-webkit-scrollbar]:hidden [&>*]:shrink-0 [&>*]:snap-start",
         className,
       )}
     >

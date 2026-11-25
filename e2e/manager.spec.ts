@@ -23,7 +23,7 @@ test("a manager opens a grocery round, extends it, and cancels it", async ({ pag
   // The first server-action call compiles on demand under `next dev`, which can take a while.
   await expect(page).toHaveURL(/\/manager\/rounds\/[\w-]+$/, { timeout: 60_000 });
   await expect(page.getByRole("heading", { level: 1, name: "E2E staples drive" })).toBeVisible();
-  await expect(page.getByText("Round opened. Share it on your WhatsApp group!")).toBeVisible();
+  await expect(page.getByText("Round opened. Share it on your WhatsApp group.")).toBeVisible();
   await expect(page.getByRole("link", { name: "Share on WhatsApp" })).toHaveAttribute("href", /^https:\/\/wa\.me\/\?text=.*E2E%20staples%20drive/);
   await expect(page.getByText("No orders yet")).toBeVisible();
   const allItems = page.locator("details");
@@ -105,7 +105,7 @@ test("the AC Service Day dashboard shows flats, slots and the next unlock, and r
   await card.click();
   await expect(page.getByRole("heading", { level: 1, name: "AC servicing Service Day" })).toBeVisible();
   // Next keeps recently visited pages mounted but hidden, so match only what's on screen.
-  await expect(page.getByText("6 more flats to unlock ₹400!").filter({ visible: true })).toBeVisible();
+  await expect(page.getByText("6 more flats to unlock ₹400").filter({ visible: true })).toBeVisible();
   expect(await page.getByText("Full", { exact: true }).count()).toBeGreaterThanOrEqual(2);
   await expectNoSeriousA11yIssues(page);
 

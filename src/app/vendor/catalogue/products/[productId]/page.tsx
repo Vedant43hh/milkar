@@ -50,7 +50,7 @@ async function Product({ params }: { params: PageProps<"/vendor/catalogue/produc
 
   return (
     <div className="space-y-5">
-      <Link href="/vendor/catalogue" className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-brand">
+      <Link href="/vendor/catalogue" className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-accent">
         <ChevronLeft aria-hidden className="size-4" />
         {t("catalogue.back")}
       </Link>

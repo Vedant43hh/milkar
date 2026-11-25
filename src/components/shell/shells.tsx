@@ -1,6 +1,6 @@
-import { Bell, Building2, Menu, Store } from "lucide-react";
+import { Bell, Menu } from "lucide-react";
 import Link from "next/link";
-import { Suspense, ViewTransition, type ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { messages, t, type MessageKey } from "@/i18n";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { canEnter, PORTAL_PATH, type Portal } from "@/lib/auth/rules";
@@ -15,9 +15,10 @@ import { ActiveSideNav, ActiveTabBar } from "./nav-active";
 import { PORTAL_NAV, type StaffPortal, type TabPortal } from "./nav-config";
 import { SideNavList, TabList } from "./nav-lists";
 
-// Layout shells, one look per portal. They are static; anything that depends on the signed-in user
-// is a small <Suspense> island, so the frame renders instantly and the islands stream in. The frame
-// sets data-portal, which switches the brand colour to the portal's accent (see globals.css).
+// Layout shells: a Navbar on top, a Sidebar on wide screens (a drawer or a bottom tab bar on
+// phones). They are static; anything that depends on the signed-in user is a small <Suspense>
+// island, so the frame renders instantly and the islands stream in. data-portal marks which
+// portal a page belongs to (used by the wrong-portal page, see globals.css).
 
 export const PORTAL_NAME: Record<Portal, MessageKey> = {
   app: "portals.app",
@@ -27,11 +28,9 @@ export const PORTAL_NAME: Record<Portal, MessageKey> = {
   admin: "portals.admin",
 };
 
-/** The portal's name as a coloured pill, so people always know which area they're in. */
-function PortalBadge({ portal }: { portal: Portal }) {
-  return (
-    <span className="inline-flex h-6 items-center rounded-full px-2.5 text-xs font-semibold text-brand neu-pressed-xs">{t(PORTAL_NAME[portal])}</span>
-  );
+/** The portal's name in plain text, so people always know which area they're in. */
+function PortalName({ portal }: { portal: Portal }) {
+  return <span className="text-sm font-medium text-muted">{t(PORTAL_NAME[portal])}</span>;
 }
 
 /** Whose space this is: the resident's community, the community a manager runs, or the vendor. */
@@ -41,13 +40,7 @@ async function ContextName({ portal }: { portal: Portal }) {
   const community = portal === "app" ? user.flat?.community : portal === "manager" ? user.staff?.community : undefined;
   const name = community?.name ?? (portal === "vendor" || portal === "tech" ? user.vendor?.name : undefined);
   if (!name) return null;
-  const Icon = community ? Building2 : Store;
-  return (
-    <span className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-fg">
-      <Icon aria-hidden className="size-4 shrink-0 text-brand" />
-      <span className="truncate">{name}</span>
-    </span>
-  );
+  return <span className="block truncate text-sm font-medium text-fg">{name}</span>;
 }
 
 function BellLink({ href, count }: { href: string; count: number }) {
@@ -57,14 +50,14 @@ function BellLink({ href, count }: { href: string; count: number }) {
     <Link
       href={href}
       aria-label={count > 0 ? t("notifications.bellUnread", { n: shown }) : t("notifications.bell")}
-      className="relative inline-flex size-11 items-center justify-center rounded-full text-muted neu-raised-sm transition-[box-shadow,color] duration-200 ease-in-out hover:text-fg hover:neu-raised-xs active:neu-pressed-sm"
+      className="relative inline-flex size-11 items-center justify-center rounded-control text-muted transition-colors hover:bg-surface-hover hover:text-fg"
     >
       <Bell aria-hidden className="size-5" />
       {count > 0 && (
         <span
           aria-hidden
           data-testid="unread-badge"
-          className="absolute top-1.5 right-1.5 flex h-4.5 min-w-4.5 animate-pop items-center justify-center rounded-full bg-danger px-1 text-[11px] leading-none font-bold text-bg ring-2 ring-surface"
+          className="absolute top-1 right-1 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-danger px-1 text-[11px] leading-none font-semibold text-accent-fg"
         >
           {shown}
         </span>
@@ -135,12 +128,38 @@ function Tour({ portal }: { portal: Portal }) {
   );
 }
 
-/** Page transitions: a soft cross-fade between pages (none with reduced motion, see globals.css). */
-function PageContent({ className, children }: { className: string; children: ReactNode }) {
+/** The top bar: what goes on the left (logo, menu, portal), then the bell and the account menu. */
+function Navbar({ portal, width, children }: { portal: Portal; width: string; children: ReactNode }) {
   return (
-    <ViewTransition default="page-fade">
-      <main className={className}>{children}</main>
-    </ViewTransition>
+    <header className="sticky top-0 z-30 border-b border-border bg-surface print:hidden">
+      <div className={cn("mx-auto flex h-14 items-center gap-3 px-4 md:px-6", width)}>
+        {children}
+        <span className="hidden min-w-0 sm:block">
+          <Suspense fallback={<InlineSkeleton />}>
+            <ContextName portal={portal} />
+          </Suspense>
+        </span>
+        <div className="ml-auto flex items-center gap-1">
+          <NotificationBell portal={portal} />
+          <Account portal={portal} />
+        </div>
+      </div>
+    </header>
+  );
+}
+
+/** The left column on wide screens: the logo, the portal name and its navigation. */
+function Sidebar({ portal, children }: { portal: Portal; children: ReactNode }) {
+  return (
+    <aside className="hidden md:sticky md:top-0 md:flex md:h-dvh md:w-60 md:shrink-0 md:flex-col md:gap-5 md:border-r md:border-border md:bg-surface md:px-3 md:py-4 print:hidden">
+      <div className="space-y-1 px-3">
+        <Logo href={PORTAL_PATH[portal]} />
+        <p>
+          <PortalName portal={portal} />
+        </p>
+      </div>
+      {children}
+    </aside>
   );
 }
 
@@ -151,36 +170,22 @@ export function TabShell({ portal, children }: { portal: TabPortal; children: Re
   return (
     <div data-portal={portal} className="min-h-dvh bg-bg md:flex">
       {wideSidebar && (
-        <aside className="hidden md:sticky md:top-0 md:z-20 md:flex md:h-dvh md:w-60 md:shrink-0 md:flex-col md:gap-4 md:bg-surface md:px-3 md:py-3 md:shadow-card print:hidden">
-          <div className="flex items-center gap-2 px-2">
-            <Logo href={PORTAL_PATH[portal]} />
-          </div>
+        <Sidebar portal={portal}>
           <PortalNav portal={portal} fallback={<SideNavList items={PORTAL_NAV[portal]} pathname="" />}>
             <ActiveSideNav portal={portal} />
           </PortalNav>
-        </aside>
+        </Sidebar>
       )}
       <div className="min-w-0 flex-1">
-        <header className="sticky top-0 z-30 bg-surface/90 shadow-card backdrop-blur print:hidden">
-          <div className={cn("mx-auto flex h-14 items-center gap-2 px-3 md:px-6", width)}>
-            <span className={cn(wideSidebar && "md:hidden")}>
-              <Logo href={PORTAL_PATH[portal]} compact />
-            </span>
-            <PortalBadge portal={portal} />
-            <span className="hidden min-w-0 sm:block">
-              <Suspense fallback={<InlineSkeleton />}>
-                <ContextName portal={portal} />
-              </Suspense>
-            </span>
-            <div className="ml-auto flex items-center gap-1">
-              <NotificationBell portal={portal} />
-              <Account portal={portal} />
-            </div>
-          </div>
-        </header>
-        <PageContent className={cn("mx-auto w-full animate-fade-in px-4 pt-5 pb-[calc(6.5rem+env(safe-area-inset-bottom))] print:p-0", width, wideSidebar && "md:px-6 md:pb-12")}>
-          {children}
-        </PageContent>
+        <Navbar portal={portal} width={width}>
+          <span className={cn(wideSidebar && "md:hidden")}>
+            <Logo href={PORTAL_PATH[portal]} compact />
+          </span>
+          <span className={cn(wideSidebar && "md:hidden")}>
+            <PortalName portal={portal} />
+          </span>
+        </Navbar>
+        <main className={cn("mx-auto w-full px-4 pt-5 pb-[calc(6.5rem+env(safe-area-inset-bottom))] print:p-0", width, wideSidebar && "md:px-6 md:pb-12")}>{children}</main>
       </div>
       <div className="print:hidden">
         <PortalNav portal={portal} fallback={<TabList portal={portal} pathname="" />}>
@@ -206,36 +211,19 @@ export function StaffShell({ portal, children }: { portal: StaffPortal; children
   );
   return (
     <div data-portal={portal} className="min-h-dvh bg-bg md:flex">
-      <aside className="hidden md:sticky md:top-0 md:z-20 md:flex md:h-dvh md:w-64 md:shrink-0 md:flex-col md:gap-4 md:bg-surface md:px-3 md:py-3 md:shadow-card">
-        <div className="space-y-2 px-2">
-          <Logo href={PORTAL_PATH[portal]} />
-          <PortalBadge portal={portal} />
-        </div>
-        {nav}
-      </aside>
+      <Sidebar portal={portal}>{nav}</Sidebar>
       <div className="min-w-0 flex-1">
-        <header className="sticky top-0 z-30 bg-surface/90 shadow-card backdrop-blur">
-          <div className="mx-auto flex h-14 max-w-5xl items-center gap-2 px-3 md:px-6">
-            {/* Static, so a tap never lands on a copy that is about to be replaced; hidden by CSS on the
-                wrong-portal page (see [data-owner-only] in globals.css). */}
-            <span className="md:hidden" data-owner-only>
-              {drawer}
-            </span>
-            <span className="md:hidden">
-              <PortalBadge portal={portal} />
-            </span>
-            <span className="hidden min-w-0 sm:block">
-              <Suspense fallback={<InlineSkeleton />}>
-                <ContextName portal={portal} />
-              </Suspense>
-            </span>
-            <div className="ml-auto flex items-center gap-1">
-              <NotificationBell portal={portal} />
-              <Account portal={portal} />
-            </div>
-          </div>
-        </header>
-        <PageContent className="mx-auto w-full max-w-5xl animate-fade-in px-4 py-6 md:px-6">{children}</PageContent>
+        <Navbar portal={portal} width="max-w-5xl">
+          {/* Static, so a tap never lands on a copy that is about to be replaced; hidden by CSS on the
+              wrong-portal page (see [data-owner-only] in globals.css). */}
+          <span className="-ml-2 md:hidden" data-owner-only>
+            {drawer}
+          </span>
+          <span className="md:hidden">
+            <PortalName portal={portal} />
+          </span>
+        </Navbar>
+        <main className="mx-auto w-full max-w-5xl px-4 py-5 md:px-6">{children}</main>
       </div>
       <Tour portal={portal} />
     </div>

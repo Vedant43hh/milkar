@@ -1,9 +1,7 @@
 "use client";
 
-import { PartyPopper } from "lucide-react";
 import { useState, useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/button";
-import { Celebration } from "@/components/ui/celebrate";
 import { Countdown } from "@/components/ui/countdown";
 import { QuantityStepper } from "@/components/ui/stepper";
 import { Field, Input, Select } from "@/components/ui/form";
@@ -47,7 +45,6 @@ export function CountdownDemo() {
 
 export function FeedbackDemo() {
   const toast = useToast();
-  const [celebrating, setCelebrating] = useState(false);
   return (
     <div className="flex flex-wrap gap-2">
       <Button variant="secondary" size="sm" onClick={() => toast({ tone: "success", title: "Added to your order", body: "2 × Sona Masoori Rice" })} type="button">
@@ -59,10 +56,9 @@ export function FeedbackDemo() {
       <Button variant="secondary" size="sm" onClick={() => toast({ tone: "info", title: "Cutoff in 6 hours" })} type="button">
         Info toast
       </Button>
-      <Button variant="accent" size="sm" icon={<PartyPopper aria-hidden className="size-4" />} onClick={() => setCelebrating(true)} type="button">
-        Tier unlock
+      <Button variant="secondary" size="sm" onClick={() => toast({ tone: "celebrate", title: "Price unlocked: everyone now pays ₹440 for Sona Masoori Rice" })} type="button">
+        Price unlock
       </Button>
-      {celebrating && <Celebration message="🎉 Tier unlocked! Everyone now pays ₹440" onDone={() => setCelebrating(false)} />}
     </div>
   );
 }

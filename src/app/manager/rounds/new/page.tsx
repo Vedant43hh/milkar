@@ -30,17 +30,14 @@ async function Chooser() {
   return (
     <div>
       <PageHeader title={t("manager.chooseKind")} />
-      <div className="grid gap-3 md:grid-cols-2">
-        {KINDS.map(({ href, icon: Icon, kind }) => (
-          <Link key={href} href={href} className="group flex items-start gap-3 rounded-card p-4 sm:p-5 neu-raised transition-[box-shadow] duration-200 ease-in-out hover:neu-raised-sm active:neu-pressed">
-            <span className="flex size-11 shrink-0 items-center justify-center rounded-full text-brand neu-pressed-xs">
-              <Icon aria-hidden className="size-5" />
-            </span>
+      <div className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
+        {KINDS.map(({ href, kind }) => (
+          <Link key={href} href={href} className="group flex items-start gap-3 p-4 transition-colors hover:bg-surface-hover">
             <span className="min-w-0 flex-1">
               <span className="block font-semibold text-fg">{t(`manager.form.kinds.${kind}.title`)}</span>
               <span className="mt-0.5 block text-sm text-muted">{t(`manager.form.kinds.${kind}.body`)}</span>
             </span>
-            <ChevronRight aria-hidden className="mt-1 size-5 text-subtle transition-transform group-hover:translate-x-0.5" />
+            <ChevronRight aria-hidden className="mt-1 size-5 text-muted" />
           </Link>
         ))}
       </div>

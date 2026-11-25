@@ -111,7 +111,7 @@ function ReviewBody({
         {quote.lines.map((line) => (
           <li key={line.name} className="flex items-baseline justify-between gap-3 py-2 text-sm">
             <span className="min-w-0">
-              <span className={cn("mr-1.5 font-semibold tabular-nums", line.refund ? "text-success" : "text-brand")}>{line.change}</span>
+              <span className={cn("mr-1.5 font-semibold tabular-nums", line.refund ? "text-success" : "text-accent")}>{line.change}</span>
               {line.name}
             </span>
             <span className="shrink-0 text-muted tabular-nums">{line.amount}</span>
@@ -124,8 +124,8 @@ function ReviewBody({
         {quote.walletAppliedPaise > 0 && <Row label={text.walletApplied} value={quote.wallet} />}
         <Row label={text.toPay} value={quote.gateway} strong />
       </dl>
-      <p className="text-xs text-muted">{text.priceNote}</p>
-      <p className="text-xs text-subtle">{interpolate(text.wallet, { amount: wallet })}</p>
+      <p className="text-sm text-muted">{text.priceNote}</p>
+      <p className="text-sm text-muted">{interpolate(text.wallet, { amount: wallet })}</p>
       <Button block loading={pending} onClick={onPay} type="button">
         {quote.gatewayPaise > 0 ? interpolate(text.payUpi, { amount: quote.gateway }) : text.confirmFree}
       </Button>

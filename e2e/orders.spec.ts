@@ -18,7 +18,7 @@ test("home shows the categories, live group buys with neighbours' flats, and the
   await expect(chips.getByRole("link", { name: /Subscriptions/ })).toBeVisible();
 
   const ac = page.getByRole("link", { name: /AC servicing Service Day/ }).first();
-  await expect(ac.getByText("6 more flats to unlock ₹400!")).toBeVisible();
+  await expect(ac.getByText("6 more flats to unlock ₹400")).toBeVisible();
   await expect(ac.getByRole("img", { name: /^14 neighbours joined: / })).toBeVisible(); // flat numbers, never names
 
   const impact = page.getByRole("region", { name: "Community impact" });

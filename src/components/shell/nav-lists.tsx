@@ -14,9 +14,9 @@ export function TabList({ portal, pathname }: { portal: TabPortal; pathname: str
   return (
     <nav
       aria-label={tu("nav.main")}
-      className={cn("fixed inset-x-0 bottom-0 z-40 bg-surface/95 px-2 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] shadow-card backdrop-blur", portal === "app" && "md:hidden")}
+      className={cn("fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)]", portal === "app" && "md:hidden")}
     >
-      <ul className={cn("mx-auto grid max-w-md gap-1", COLUMNS[items.length])}>
+      <ul className={cn("mx-auto grid max-w-md", COLUMNS[items.length])}>
         {items.map((item) => {
           const active = isActive(pathname, item);
           const Icon = item.icon;
@@ -26,12 +26,12 @@ export function TabList({ portal, pathname }: { portal: TabPortal; pathname: str
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "relative flex flex-col items-center justify-center gap-0.5 rounded-control transition-[box-shadow,color] duration-200 ease-in-out",
-                  tall ? "min-h-16 text-xs" : "min-h-14 text-[0.7rem]",
-                  active ? "font-semibold text-brand neu-pressed-sm" : "text-muted hover:text-fg",
+                  "flex flex-col items-center justify-center gap-0.5 text-xs transition-colors",
+                  tall ? "min-h-16" : "min-h-14",
+                  active ? "font-medium text-accent" : "text-muted hover:text-fg",
                 )}
               >
-                <Icon aria-hidden className={cn(tall ? "size-6" : "size-5", active && "stroke-[2.5]")} />
+                <Icon aria-hidden className={tall ? "size-6" : "size-5"} />
                 {tu(item.label)}
               </Link>
             </li>
@@ -44,15 +44,15 @@ export function TabList({ portal, pathname }: { portal: TabPortal; pathname: str
 
 function SideItem({ item, pathname }: { item: NavItem; pathname: string }) {
   const Icon = item.icon;
-  const classes = "flex min-h-11 items-center gap-3 rounded-control px-3 text-sm";
+  const classes = "flex min-h-11 items-center gap-3 rounded-control px-3 text-sm transition-colors";
   const active = isActive(pathname, item);
   return (
     <Link
       href={item.href}
       aria-current={active ? "page" : undefined}
-      className={cn(classes, "transition-[box-shadow,color] duration-200 ease-in-out", active ? "font-semibold text-brand neu-pressed-sm" : "text-muted hover:text-fg hover:neu-raised-xs")}
+      className={cn(classes, active ? "bg-accent-soft font-medium text-accent" : "text-muted hover:bg-surface-hover hover:text-fg")}
     >
-      <Icon aria-hidden className="size-5" />
+      <Icon aria-hidden className="size-4.5" />
       {tu(item.label)}
     </Link>
   );
@@ -62,7 +62,7 @@ function SideItem({ item, pathname }: { item: NavItem; pathname: string }) {
 export function SideNavList({ items, pathname }: { items: NavItem[]; pathname: string }) {
   return (
     <nav aria-label={tu("nav.main")}>
-      <ul className="space-y-1">
+      <ul className="space-y-0.5">
         {items.map((item) => (
           <li key={item.href}>
             <SideItem item={item} pathname={pathname} />

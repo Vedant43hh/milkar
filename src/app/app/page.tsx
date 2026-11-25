@@ -1,4 +1,4 @@
-import { ArrowRight, CalendarClock, KeyRound, Megaphone, PiggyBank, ShoppingBasket, Sparkles, Wallet } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 import { CategoryChips } from "@/components/buys/category-chips";
@@ -43,11 +43,10 @@ async function ResidentHomePage() {
         {home.held.map((h) => (
           <Banner
             key={h.roundId}
-            tone="accent"
-            icon={<CalendarClock aria-hidden className="size-4" />}
+            tone="warning"
             title={t("home.held", { service: h.round.service?.name ?? "", until: formatIST(h.holdExpiresAt!) })}
             action={
-              <ButtonLink href={`/app/services/${h.roundId}`} size="sm" variant="accent">
+              <ButtonLink href={`/app/services/${h.roundId}`} size="sm" variant="primary">
                 {t("home.confirmHeld")}
               </ButtonLink>
             }
@@ -57,9 +56,9 @@ async function ResidentHomePage() {
         ))}
 
         <Card className="grid grid-cols-2 gap-4">
-          <Stat label={t("home.savedThisMonth")} value={formatINR(home.savingsPaise)} hint={t("home.savedHint")} icon={<PiggyBank aria-hidden className="size-5" />} tone="accent" />
+          <Stat label={t("home.savedThisMonth")} value={formatINR(home.savingsPaise)} hint={t("home.savedHint")} tone="accent" />
           <Link href="/app/wallet" className="rounded-control">
-            <Stat label={t("home.wallet")} value={formatINR(home.walletPaise)} hint={t("home.walletHint")} icon={<Wallet aria-hidden className="size-5" />} tone="brand" />
+            <Stat label={t("home.wallet")} value={formatINR(home.walletPaise)} hint={t("home.walletHint")} tone="info" />
           </Link>
         </Card>
       </div>
@@ -70,18 +69,17 @@ async function ResidentHomePage() {
         </SectionTitle>
         {home.openRounds.length === 0 ? (
           <EmptyState
-            icon={<ShoppingBasket aria-hidden className="size-6" />}
             title={t("home.activeRoundsEmpty")}
             body={t("home.activeRoundsEmptyBody")}
             action={
-              <ButtonLink href="/app/polls" variant="secondary" icon={<Megaphone aria-hidden className="size-4" />}>
+              <ButtonLink href="/app/polls" variant="secondary">
                 {t("buys.vote")}
                 <ArrowRight aria-hidden className="size-4" />
               </ButtonLink>
             }
           />
         ) : (
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
             {home.openRounds.map((buy) => (
               <GroupBuyCard key={buy.id} buy={buy} unitLabel={community.unitLabel} />
             ))}
@@ -94,20 +92,17 @@ async function ResidentHomePage() {
           <span id="visits">{t("home.upcomingVisits")}</span>
         </SectionTitle>
         {home.visits.length === 0 ? (
-          <EmptyState icon={<CalendarClock aria-hidden className="size-6" />} title={t("home.upcomingVisitsEmpty")} />
+          <EmptyState title={t("home.upcomingVisitsEmpty")} />
         ) : (
-          <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
+          <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
             {home.visits.map((visit) => (
               <li key={visit.id}>
-                <Link href={`/app/orders/${visit.roundId}`} className="flex items-center gap-3 px-4 py-3 transition-[box-shadow] duration-200 ease-in-out hover:neu-pressed-xs">
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-full text-brand neu-pressed-xs">
-                    <Sparkles aria-hidden className="size-5" />
-                  </span>
+                <Link href={`/app/orders/${visit.roundId}`} className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-hover">
                   <span className="min-w-0 flex-1">
                     <span className="block font-medium text-fg">{visit.round.service?.name}</span>
                     <span className="block text-sm text-muted">{t("home.visitWhen", { when: formatIST(visit.startsAt), technician: visit.technicianName ?? "" })}</span>
                   </span>
-                  <Badge tone="accent" icon={<KeyRound aria-hidden className="size-3.5" />}>
+                  <Badge tone="info">
                     {t("home.code", { code: visit.completionCode })}
                   </Badge>
                 </Link>
@@ -115,7 +110,7 @@ async function ResidentHomePage() {
             ))}
           </ul>
         )}
-        {home.visits.length > 0 && <p className="mt-2 text-xs text-muted">{t("home.codeHint")}</p>}
+        {home.visits.length > 0 && <p className="mt-2 text-sm text-muted">{t("home.codeHint")}</p>}
       </section>
 
       <div className="mt-6">
@@ -135,7 +130,7 @@ async function ResidentHomePage() {
         {home.polls.length === 0 ? (
           <EmptyState title={t("home.pollsEmpty")} />
         ) : (
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
             {home.polls.map((poll) => (
               <ResidentPollCard key={poll.id} poll={poll} />
             ))}

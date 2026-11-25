@@ -1,6 +1,6 @@
 "use client";
 
-import { Building2, Check, KeyRound, Search } from "lucide-react";
+import { Check, KeyRound, Search } from "lucide-react";
 import { useEffect, useRef, useState, useTransition, type KeyboardEvent } from "react";
 import type { Messages } from "@/i18n";
 import { interpolate } from "@/i18n/interpolate";
@@ -61,10 +61,9 @@ export function CommunityFinder({ text, chosen, onChoose }: { text: Text; chosen
 
   if (chosen) {
     return (
-      <div className="flex items-center justify-between gap-3 rounded-card p-4 neu-pressed-sm">
+      <div className="flex items-center justify-between gap-3 rounded-control bg-bg p-3">
         <input type="hidden" name="communityId" value={chosen.id} />
-        <span className="flex min-w-0 items-center gap-2 font-semibold text-brand">
-          <Building2 aria-hidden className="size-5 shrink-0" />
+        <span className="flex min-w-0 items-center gap-2 font-semibold text-accent">
           <span>{interpolate(text.find.chosen, { community: chosen.name, city: chosen.city })}</span>
         </span>
         <Button type="button" variant="secondary" size="sm" onClick={() => onChoose(null)}>
@@ -99,7 +98,7 @@ export function CommunityFinder({ text, chosen, onChoose }: { text: Text; chosen
           {text.find.codeHint}
         </p>
       </div>
-      <p className="text-center text-xs font-medium tracking-wide text-subtle uppercase">{text.find.or}</p>
+      <p className="text-sm text-muted">{text.find.or}</p>
       <div>
         <Label htmlFor="community-search">{text.find.searchLabel}</Label>
         <div className="flex gap-2">
@@ -123,7 +122,7 @@ export function CommunityFinder({ text, chosen, onChoose }: { text: Text; chosen
         </p>
       )}
       {results && results.length > 0 && (
-        <ul className="divide-y divide-border overflow-hidden rounded-card neu-pressed-sm">
+        <ul className="divide-y divide-border overflow-hidden rounded-card border border-border">
           {results.map((c) => (
             <li key={c.id} className="flex items-center justify-between gap-3 px-4 py-3">
               <span className="min-w-0">

@@ -1,7 +1,6 @@
-import { IndianRupee } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Card, CardHeader, PageHeader, SectionTitle } from "@/components/ui/card";
+import { CardHeader, PageHeader, SectionTitle } from "@/components/ui/card";
 import { ConfirmAction } from "@/components/ui/confirm-action";
 import { EmptyState } from "@/components/ui/display";
 import { PageSkeleton } from "@/components/ui/skeleton";
@@ -28,7 +27,7 @@ type Row = Awaited<ReturnType<typeof listPayouts>>["ready"][number];
 function PayoutCard({ row }: { row: Row }) {
   const titleId = `payout-${row.id}`;
   return (
-    <Card as="li" labelledBy={titleId}>
+    <li aria-labelledby={titleId} className="p-4">
       <CardHeader
         titleId={titleId}
         title={`${row.vendor.name} · ${t("vendorOrders.number", { n: row.number })}`}
@@ -51,7 +50,7 @@ function PayoutCard({ row }: { row: Row }) {
           />
         </div>
       )}
-    </Card>
+    </li>
   );
 }
 
@@ -64,7 +63,7 @@ async function Payouts() {
         <SectionTitle>
           <span id={id}>{title}</span>
         </SectionTitle>
-        <ul className="space-y-3">
+        <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
           {rows.map((row) => (
             <PayoutCard key={row.id} row={row} />
           ))}
@@ -74,7 +73,7 @@ async function Payouts() {
   return (
     <div className="space-y-6">
       <PageHeader title={t("adminPayouts.title")} subtitle={t("adminPayouts.intro")} />
-      {ready.length + waiting.length + paid.length === 0 && <EmptyState icon={<IndianRupee aria-hidden className="size-6" />} title={t("adminPayouts.none")} body={t("adminPayouts.noneBody")} />}
+      {ready.length + waiting.length + paid.length === 0 && <EmptyState title={t("adminPayouts.none")} body={t("adminPayouts.noneBody")} />}
       {section("payouts-ready", t("adminPayouts.ready"), ready)}
       {section("payouts-waiting", t("adminPayouts.waiting"), waiting)}
       {section("payouts-paid", t("adminPayouts.paid"), paid)}

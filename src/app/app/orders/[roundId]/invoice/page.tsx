@@ -1,4 +1,4 @@
-import { ChevronLeft, Info } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -42,7 +42,7 @@ async function InvoiceView({ params }: { params: PageProps<"/app/orders/[roundId
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2 print:hidden">
-        <Link href={`/app/orders/${round.id}`} className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-brand">
+        <Link href={`/app/orders/${round.id}`} className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-accent">
           <ChevronLeft aria-hidden className="size-4" />
           {t("invoice.back")}
         </Link>
@@ -50,16 +50,16 @@ async function InvoiceView({ params }: { params: PageProps<"/app/orders/[roundId
       </div>
       {!invoice.supplier.gstin && (
         <div className="print:hidden">
-          <Banner tone="warning" icon={<Info aria-hidden className="size-4" />}>
+          <Banner tone="warning">
             {t("invoice.sampleNote")}
           </Banner>
         </div>
       )}
 
-      <article className="space-y-5 rounded-card bg-surface p-4 text-sm shadow-card sm:p-6 print:p-0 print:shadow-none">
+      <article className="space-y-5 rounded-card border border-border bg-surface p-4 text-sm print:border-0 print:p-0">
         <header className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-fg">{invoice.supplier.gstin ? t("invoice.taxTitle") : t("invoice.title")}</h1>
+            <h1 className="text-xl font-semibold text-fg">{invoice.supplier.gstin ? t("invoice.taxTitle") : t("invoice.title")}</h1>
             <p className="text-muted">{t("invoice.round", { round: round.title })}</p>
           </div>
           <dl className="grid grid-cols-[auto_auto] gap-x-3 gap-y-0.5 text-right">
@@ -80,12 +80,12 @@ async function InvoiceView({ params }: { params: PageProps<"/app/orders/[roundId
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <h2 className="text-xs font-semibold tracking-wide text-muted uppercase">{t("invoice.supplier")}</h2>
+            <h2 className="text-sm font-semibold tracking-wide text-muted uppercase">{t("invoice.supplier")}</h2>
             <p className="font-medium text-fg">{invoice.supplier.name}</p>
             {invoice.supplier.gstin && <p className="text-muted">{t("invoice.gstin", { gstin: invoice.supplier.gstin })}</p>}
           </div>
           <div>
-            <h2 className="text-xs font-semibold tracking-wide text-muted uppercase">{t("invoice.buyer")}</h2>
+            <h2 className="text-sm font-semibold tracking-wide text-muted uppercase">{t("invoice.buyer")}</h2>
             <p className="font-medium text-fg">{invoice.buyer.name}</p>
             <p className="text-muted">{invoice.buyer.address}</p>
           </div>
@@ -93,7 +93,7 @@ async function InvoiceView({ params }: { params: PageProps<"/app/orders/[roundId
 
         <table className="w-full border-collapse text-left">
           <thead>
-            <tr className="border-b border-border text-xs text-muted">
+            <tr className="border-b border-border text-sm text-muted">
               <th scope="col" className="py-2 pr-2 font-medium">
                 {t("invoice.columns.item")}
               </th>
@@ -110,7 +110,7 @@ async function InvoiceView({ params }: { params: PageProps<"/app/orders/[roundId
               <tr key={i} className="border-b border-border align-top">
                 <td className="py-2 pr-2">
                   <span className="block font-medium text-fg">{line.description}</span>
-                  <span className="block text-xs text-muted tabular-nums">
+                  <span className="block text-sm text-muted tabular-nums">
                     {t("invoice.columns.rate")} {formatINR(line.unitPaise)} · {t("invoice.columns.taxable")} {formatINR(line.taxablePaise)} · {t("invoice.columns.gst")}{" "}
                     {t("invoice.gstRate", { rate: pct(line.gstBps) })}
                   </span>
@@ -146,7 +146,7 @@ async function InvoiceView({ params }: { params: PageProps<"/app/orders/[roundId
 
         <div className="grid gap-4 sm:grid-cols-2">
           <section aria-labelledby="tax-summary">
-            <h2 id="tax-summary" className="mb-1 text-xs font-semibold tracking-wide text-muted uppercase">
+            <h2 id="tax-summary" className="mb-1 text-sm font-semibold tracking-wide text-muted uppercase">
               {t("invoice.byRateTitle")}
             </h2>
             <dl className="space-y-0.5">
@@ -161,7 +161,7 @@ async function InvoiceView({ params }: { params: PageProps<"/app/orders/[roundId
             </dl>
           </section>
           <section aria-labelledby="payments">
-            <h2 id="payments" className="mb-1 text-xs font-semibold tracking-wide text-muted uppercase">
+            <h2 id="payments" className="mb-1 text-sm font-semibold tracking-wide text-muted uppercase">
               {t("invoice.paymentTitle")}
             </h2>
             <dl className="space-y-0.5">
@@ -181,7 +181,7 @@ async function InvoiceView({ params }: { params: PageProps<"/app/orders/[roundId
           </section>
         </div>
 
-        <p className="text-xs text-muted">{t("invoice.note")}</p>
+        <p className="text-sm text-muted">{t("invoice.note")}</p>
       </article>
     </div>
   );

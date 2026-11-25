@@ -1,4 +1,4 @@
-import { ChevronRight, CircleAlert, ShieldCheck, Store, UserRound, Users, Wrench } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -21,7 +21,7 @@ export const metadata: Metadata = { title: t("auth.loginTitle") };
 export default function LoginPage({ searchParams }: PageProps<"/login">) {
   return (
     <PublicShell>
-      <h1 className="text-2xl font-semibold tracking-tight">{t("auth.loginHeading")}</h1>
+      <h1 className="text-xl font-semibold">{t("auth.loginHeading")}</h1>
       <p className="mt-1 mb-6 text-sm text-muted">{t("auth.loginIntro")}</p>
       <Suspense
         fallback={
@@ -47,16 +47,16 @@ async function LoginSection({ searchParams }: { searchParams: PageProps<"/login"
   return (
     <div className="space-y-6">
       {(params.error === "demo" || params.error === "off") && (
-        <Banner tone="danger" role="alert" icon={<CircleAlert aria-hidden className="size-4" />}>
+        <Banner tone="danger" role="alert">
           {t(params.error === "off" ? "errors.accountOff" : "errors.demoDisabled")}
         </Banner>
       )}
       <Card>
         <LoginForm next={next} mockOtp={env.OTP_MODE === "mock"} text={messages().auth} />
       </Card>
-      <p className="text-center text-sm text-muted">
+      <p className="text-sm text-muted">
         {t("auth.newHere")}{" "}
-        <Link href="/register" className="font-semibold text-brand underline-offset-2 hover:underline">
+        <Link href="/register" className="font-semibold text-accent underline-offset-2 hover:underline">
           {t("auth.registerLink")}
         </Link>
       </p>
@@ -65,7 +65,6 @@ async function LoginSection({ searchParams }: { searchParams: PageProps<"/login"
   );
 }
 
-const DEMO_ICONS = { ADMIN: ShieldCheck, MANAGER: Users, RESIDENT: UserRound, VENDOR: Store, TECHNICIAN: Wrench } as const;
 
 function DemoLogins({ next }: { next: string | null }) {
   return (
@@ -74,30 +73,26 @@ function DemoLogins({ next }: { next: string | null }) {
         {t("auth.demoHeading")}
       </h2>
       <p className="mb-3 text-sm text-muted">{t("auth.demoIntro")}</p>
-      <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
+      <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
         {DEMO_USER_KEYS.map((key) => {
           const demo = DEMO_USERS[key];
-          const Icon = DEMO_ICONS[demo.role];
           return (
             <li key={key}>
               <form action={demoLoginAction}>
                 <input type="hidden" name="key" value={key} />
                 <input type="hidden" name="next" value={next ?? ""} />
-                <button type="submit" className="flex min-h-14 w-full items-center gap-3 px-4 py-2 text-left transition-[box-shadow] duration-200 ease-in-out hover:neu-pressed-xs">
-                  <span className="flex size-9 shrink-0 items-center justify-center rounded-full text-brand neu-pressed-xs">
-                    <Icon aria-hidden className="size-4" />
-                  </span>
+                <button type="submit" className="flex min-h-14 w-full items-center gap-3 px-4 py-2 text-left transition-colors hover:bg-surface-hover">
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-1.5 text-sm font-medium text-fg">
                       {t("auth.demoAs", { name: demo.name })}
-                      <Badge tone="accent">{t("auth.demoBadge")}</Badge>
+                      <Badge tone="neutral">{t("auth.demoBadge")}</Badge>
                     </span>
-                    <span className="block text-xs text-muted">
+                    <span className="block text-sm text-muted">
                       {t(`roles.${demo.role}`)}
                       {demoUserContext(demo) ? ` · ${demoUserContext(demo)}` : ""}
                     </span>
                   </span>
-                  <ChevronRight aria-hidden className="size-5 text-subtle" />
+                  <ChevronRight aria-hidden className="size-5 text-muted" />
                 </button>
               </form>
             </li>

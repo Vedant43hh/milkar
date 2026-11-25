@@ -14,7 +14,7 @@ import type { GroupBuy } from "@/server/group-buys";
 
 export const CATEGORY_LOOK: Record<BuyCategory, { icon: LucideIcon; tint: string }> = {
   GROCERIES: { icon: ShoppingBasket, tint: "text-success" },
-  HOME_SERVICES: { icon: Sparkles, tint: "text-brand" },
+  HOME_SERVICES: { icon: Sparkles, tint: "text-accent" },
   REPAIRS: { icon: Wrench, tint: "text-warning" },
   SUBSCRIPTIONS: { icon: Repeat, tint: "text-accent" },
 };
@@ -25,7 +25,7 @@ export const CATEGORY_LOOK: Record<BuyCategory, { icon: LucideIcon; tint: string
  */
 export function GroupBuyCard({ buy, unitLabel }: { buy: GroupBuy; unitLabel: string }) {
   const isService = buy.kind === "SERVICE";
-  const { icon: Icon, tint } = CATEGORY_LOOK[buy.category];
+  const { tint } = CATEGORY_LOOK[buy.category];
   const status = isService
     ? buy.booking
       ? t("home.booked", { slot: formatIST(buy.booking.slot.startsAt) })
@@ -40,10 +40,10 @@ export function GroupBuyCard({ buy, unitLabel }: { buy: GroupBuy; unitLabel: str
   const per = lead ? (isService ? (lead.unitLabel ?? "unit") : meterWords("UNITS", lead.productUnit, unitLabel).one) : null;
 
   return (
-    <Link href={buy.href} className="group block space-y-3 rounded-card p-4 sm:p-5 neu-raised transition-[box-shadow] duration-200 ease-in-out hover:neu-raised-sm active:neu-pressed">
+    <Link href={buy.href} className="group block space-y-3 p-4 transition-colors hover:bg-surface-hover">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 space-y-1">
-          <Badge icon={<Icon aria-hidden className="size-3.5" />} className={tint}>
+          <Badge className={tint}>
             {t(`buys.categories.${buy.category}.name`)}
           </Badge>
           <h3 className="font-semibold text-fg">{buy.title}</h3>
@@ -51,9 +51,9 @@ export function GroupBuyCard({ buy, unitLabel }: { buy: GroupBuy; unitLabel: str
             <Countdown to={buy.cutoffAt.toISOString()} />
           </p>
         </div>
-        <span className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-brand">
+        <span className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-accent">
           {cta}
-          <ArrowRight aria-hidden className="size-4 transition-transform group-hover:translate-x-0.5" />
+          <ArrowRight aria-hidden className="size-4" />
         </span>
       </div>
       {lead && words && (
@@ -65,7 +65,7 @@ export function GroupBuyCard({ buy, unitLabel }: { buy: GroupBuy; unitLabel: str
           <TierMeter meter={lead.meter} basisWords={words} compact />
         </div>
       )}
-      {!isService && buy.itemCount > 1 && <p className="text-xs text-muted">{t("groupBuy.items", { n: buy.itemCount })}</p>}
+      {!isService && buy.itemCount > 1 && <p className="text-sm text-muted">{t("groupBuy.items", { n: buy.itemCount })}</p>}
       <NeighbourFlats flats={buy.flats} total={buy.flats.length} />
       <p className="text-sm text-muted">{status}</p>
     </Link>

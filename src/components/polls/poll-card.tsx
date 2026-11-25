@@ -1,7 +1,6 @@
-import { ArrowRight, Megaphone } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import { t } from "@/i18n";
 import type { ResidentPoll } from "@/server/polls";
 import { PollVote, type PollVoteText } from "./poll-vote";
@@ -14,11 +13,8 @@ export function pollVoteText(): PollVoteText {
 export function ResidentPollCard({ poll }: { poll: ResidentPoll }) {
   const target = poll.service ? `${poll.service.name} · ${poll.service.vendor.name}` : poll.product?.name;
   return (
-    <Card as="article" className="space-y-3">
+    <article className="space-y-3 p-4">
       <div className="flex items-start gap-3">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-full text-accent neu-pressed-xs">
-          <Megaphone aria-hidden className="size-5" />
-        </span>
         <div className="min-w-0">
           <h3 className="font-semibold text-fg">{poll.title}</h3>
           {target && <p className="text-sm text-muted">{target}</p>}
@@ -28,7 +24,7 @@ export function ResidentPollCard({ poll }: { poll: ResidentPoll }) {
       {poll.status === "CONVERTED" && poll.convertedRound ? (
         <div className="flex items-center justify-between gap-2">
           <Badge tone="success">{t("polls.converted")}</Badge>
-          <Link href={`/round/${poll.convertedRound.id}`} className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-brand">
+          <Link href={`/round/${poll.convertedRound.id}`} className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-accent">
             {t("polls.goToRound")}
             <ArrowRight aria-hidden className="size-4" />
           </Link>
@@ -36,6 +32,6 @@ export function ResidentPollCard({ poll }: { poll: ResidentPoll }) {
       ) : (
         <PollVote pollId={poll.id} voted={poll.voted} votes={poll._count.votes} threshold={poll.threshold} text={pollVoteText()} />
       )}
-    </Card>
+    </article>
   );
 }

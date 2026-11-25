@@ -1,4 +1,4 @@
-import { ChevronLeft, Clock, House, Undo2, Wrench } from "lucide-react";
+import { ChevronLeft, Undo2 } from "lucide-react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -20,7 +20,7 @@ import { technicianVisit } from "@/server/technician";
 
 export const metadata: Metadata = { title: t("techVisit.title") };
 
-const PARTS_TONE: Record<string, Tone> = { PENDING: "accent", APPROVED: "success", DECLINED: "neutral", REFUNDED: "neutral" };
+const PARTS_TONE: Record<string, Tone> = { PENDING: "warning", APPROVED: "success", DECLINED: "neutral", REFUNDED: "neutral" };
 
 export default function TechnicianVisitPage({ params }: PageProps<"/tech/visits/[visitId]">) {
   return (
@@ -42,29 +42,26 @@ async function VisitView({ params }: { params: PageProps<"/tech/visits/[visitId]
     <div className="space-y-4 pb-24">
       {/* While the resident decides on parts, check back by itself. */}
       {visit.actions.waiting && <AutoRefresh seconds={5} />}
-      <Link href="/tech" className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-brand">
+      <Link href="/tech" className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-accent">
         <ChevronLeft aria-hidden className="size-4" />
         {t("techVisit.back")}
       </Link>
       <header className="space-y-2">
         <div className="flex items-start justify-between gap-3">
-          <h1 className="text-2xl font-semibold tracking-tight text-fg">
+          <h1 className="text-xl font-semibold text-fg">
             {t("techVisit.flat", { unit: visit.flat.community.unitLabel, flat: `${visit.flat.tower}-${visit.flat.number}` })}
           </h1>
           <VisitStatusBadge status={visit.status} />
         </div>
         <p className="flex items-center gap-2 text-base text-fg tabular-nums">
-          <Clock aria-hidden className="size-5 text-brand" />
           {formatIST(visit.startsAt)} – {formatIST(visit.endsAt, "time")}
         </p>
         <p className="flex items-center gap-2 text-sm text-muted">
-          <House aria-hidden className="size-4" />
           {visit.flat.community.name}
         </p>
         <p className="flex items-center gap-2 text-sm text-muted">
-          <Wrench aria-hidden className="size-4" />
           {visit.round.service?.name ?? visit.round.title}
-          {visit.kind === "REVISIT" && <Badge tone="accent">{t("tech.revisit")}</Badge>}
+          {visit.kind === "REVISIT" && <Badge tone="info">{t("tech.revisit")}</Badge>}
         </p>
       </header>
 
@@ -73,7 +70,7 @@ async function VisitView({ params }: { params: PageProps<"/tech/visits/[visitId]
         <p className="text-base text-fg">{visit.booking.problemNote ?? <span className="text-muted">{t("techVisit.noProblem")}</span>}</p>
         {photo && (
           <a href={`/api/photos/${photo.id}`} target="_blank" rel="noreferrer" className="mt-3 block" aria-label={t("techVisit.openPhoto")}>
-            <Image src={`/api/photos/${photo.id}`} alt={t("techVisit.photo")} width={photo.width} height={photo.height} unoptimized className="max-h-64 w-auto rounded-control object-contain neu-raised-sm" />
+            <Image src={`/api/photos/${photo.id}`} alt={t("techVisit.photo")} width={photo.width} height={photo.height} unoptimized className="max-h-64 w-auto rounded-control border border-border object-contain" />
           </a>
         )}
       </Card>
@@ -85,7 +82,7 @@ async function VisitView({ params }: { params: PageProps<"/tech/visits/[visitId]
         ) : (
           <ul className="space-y-3">
             {visit.partsRequests.map((request) => (
-              <li key={request.id} className="space-y-1.5 rounded-control p-4 text-sm neu-pressed-sm">
+              <li key={request.id} className="space-y-1.5 rounded-control bg-bg p-3 text-sm">
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-semibold text-fg tabular-nums">{formatINR(request.totalPaise)}</span>
                   <Badge tone={PARTS_TONE[request.status]}>{t(`techVisit.parts.status.${request.status}`)}</Badge>
@@ -111,7 +108,7 @@ async function VisitView({ params }: { params: PageProps<"/tech/visits/[visitId]
         )}
       </Card>
 
-      <div className="sticky bottom-[calc(5rem+env(safe-area-inset-bottom))] z-20 rounded-card bg-surface/95 p-3 shadow-raised backdrop-blur">
+      <div className="sticky bottom-[calc(5rem+env(safe-area-inset-bottom))] z-20 rounded-card border border-border bg-surface p-3">
         <VisitActions visit={visit} />
       </div>
     </div>

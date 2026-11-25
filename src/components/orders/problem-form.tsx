@@ -109,7 +109,7 @@ export function ProblemForm({ roundId, note, photo, text }: { roundId: string; n
       </div>
       <div className="space-y-2">
         {shown && (
-          <Image src={shown.url} alt={text.preview} width={shown.width} height={shown.height} unoptimized className="max-h-48 w-auto rounded-control object-contain neu-raised-sm" />
+          <Image src={shown.url} alt={text.preview} width={shown.width} height={shown.height} unoptimized className="max-h-48 w-auto rounded-control border border-border object-contain" />
         )}
         <div className="flex flex-wrap items-center gap-2">
           <label
@@ -117,7 +117,7 @@ export function ProblemForm({ roundId, note, photo, text }: { roundId: string; n
             className={buttonClasses({
               variant: "secondary",
               size: "sm",
-              className: "cursor-pointer has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-focus",
+              className: "cursor-pointer has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent",
             })}
           >
             <Camera aria-hidden className="size-4" />
@@ -140,7 +140,7 @@ export function ProblemForm({ roundId, note, photo, text }: { roundId: string; n
             </Button>
           )}
         </div>
-        <p className="text-xs text-muted">{text.photoHint}</p>
+        <p className="text-sm text-muted">{text.photoHint}</p>
       </div>
       <Button loading={saving || busy}>{text.save}</Button>
     </form>

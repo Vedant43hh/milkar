@@ -1,6 +1,6 @@
 "use client";
 
-import { CircleAlert, FlaskConical, UserPlus } from "lucide-react";
+import { UserPlus } from "lucide-react";
 import { useActionState } from "react";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Banner } from "@/components/ui/display";
@@ -15,7 +15,7 @@ const initialState: LoginState = { step: "phone" };
 export function LoginForm({ next, mockOtp, text }: { next: string | null; mockOtp: boolean; text: Messages["auth"] }) {
   const [state, formAction, pending] = useActionState(loginAction, initialState);
   const error = state.error && (
-    <Banner tone="danger" role="alert" icon={<CircleAlert aria-hidden className="size-4" />}>
+    <Banner tone="danger" role="alert">
       {state.error}
     </Banner>
   );
@@ -26,7 +26,7 @@ export function LoginForm({ next, mockOtp, text }: { next: string | null; mockOt
       {state.step === "noAccount" && state.phone ? (
         <>
           <input type="hidden" name="phone" value={state.phone} />
-          <Banner tone="info" role="status" title={text.noAccountTitle} icon={<UserPlus aria-hidden className="size-4" />}>
+          <Banner tone="info" role="status" title={text.noAccountTitle}>
             {text.noAccountBody}
           </Banner>
           <ButtonLink href="/register" block icon={<UserPlus aria-hidden className="size-4" />}>
@@ -41,7 +41,7 @@ export function LoginForm({ next, mockOtp, text }: { next: string | null; mockOt
           <div>
             <Label htmlFor="phone">{text.phoneLabel}</Label>
             <div className="flex items-stretch gap-2">
-              <span className="flex min-h-11 items-center rounded-control px-3 text-muted neu-pressed">+91</span>
+              <span className="flex min-h-11 items-center rounded-control border border-border-field bg-bg px-3 text-muted">+91</span>
               <Input
                 id="phone"
                 name="phone"
@@ -81,7 +81,7 @@ export function LoginForm({ next, mockOtp, text }: { next: string | null; mockOt
             />
           </div>
           {mockOtp && (
-            <Banner tone="accent" icon={<FlaskConical aria-hidden className="size-4" />}>
+            <Banner tone="info">
               {text.mockHint}
             </Banner>
           )}

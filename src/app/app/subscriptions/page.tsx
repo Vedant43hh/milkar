@@ -1,4 +1,4 @@
-import { CalendarClock, Pause, Play, Repeat, ShoppingBasket } from "lucide-react";
+import { Pause, Play, Repeat } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ActionForm, SubmitButton } from "@/components/ui/action-form";
@@ -38,13 +38,11 @@ function SubscriptionCard({ sub }: { sub: Subscription }) {
       <ul className="space-y-1 text-sm text-fg">
         {sub.items.map((item) => (
           <li key={item.productId} className="flex items-center gap-2">
-            <ShoppingBasket aria-hidden className="size-4 shrink-0 text-muted" />
             {item.quantity} × {item.name}
           </li>
         ))}
       </ul>
       <p className="mt-2 flex items-center gap-1.5 text-sm text-muted">
-        <CalendarClock aria-hidden className="size-4" />
         {open ? t("subscriptions.thisWeek", { when: formatIST(sub.round.cutoffAt) }) : t("subscriptions.nextUp", { when: formatIST(sub.round.cutoffAt) })}
         {open && ` · ${t(sub.orderedThisWeek ? "subscriptions.orderedThisWeek" : "subscriptions.notOrdered")}`}
       </p>
@@ -56,7 +54,7 @@ function SubscriptionCard({ sub }: { sub: Subscription }) {
           {t("catalogue.save")}
         </SubmitButton>
       </ActionForm>
-      <p className="text-xs text-muted">{t("subscriptions.autoPayHint")}</p>
+      <p className="text-sm text-muted">{t("subscriptions.autoPayHint")}</p>
 
       <div className="mt-3 flex flex-wrap gap-2">
         {open && !sub.orderedThisWeek && sub.status === "ACTIVE" && (
@@ -98,7 +96,6 @@ async function Subscriptions() {
       <PageHeader title={t("subscriptions.title")} subtitle={t("subscriptions.intro")} />
       {subs.length === 0 ? (
         <EmptyState
-          icon={<Repeat aria-hidden className="size-6" />}
           title={t("subscriptions.none")}
           body={t("subscriptions.noneBody")}
           action={<ButtonLink href="/app/buys/subscriptions">{t("subscriptions.browse")}</ButtonLink>}

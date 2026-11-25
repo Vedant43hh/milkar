@@ -56,7 +56,7 @@ test("repair days are listed under Repairs with the visit price falling as flats
   await demoLogin(page, "Rahul Deshmukh");
   await page.goto("/app/buys/repairs");
   const plumber = page.getByRole("link", { name: /Plumber Day/ });
-  await expect(plumber.getByText("3 more flats to unlock ₹249!")).toBeVisible();
+  await expect(plumber.getByText("3 more flats to unlock ₹249")).toBeVisible();
   await expect(plumber.getByText("₹299")).toBeVisible();
 });
 
@@ -119,7 +119,7 @@ test("the technician asks for parts, the resident approves and pays, and the cod
   await expect(page.getByText(/That code isn't right\. 4 tries left\./)).toBeVisible();
   await page.getByRole("dialog", { name: "The resident's code" }).getByLabel("4-digit code").fill(code);
   await page.getByRole("dialog", { name: "The resident's code" }).getByRole("button", { name: "Finish the visit" }).click();
-  await expect(page.getByText("Visit done. Thank you!")).toBeVisible();
+  await expect(page.getByText("Visit done.", { exact: true })).toBeVisible();
   await expect(page.getByText("This visit is finished.")).toBeVisible();
 });
 
@@ -148,7 +148,7 @@ test("a resident declines the parts and the technician finishes without them", a
   await demoLogin(page, "Mahesh Kale");
   await page.goto(visit);
   await finishWithCode(page, code);
-  await expect(page.getByText("Visit done. Thank you!")).toBeVisible();
+  await expect(page.getByText("Visit done.", { exact: true })).toBeVisible();
 });
 
 test("a technician who can't get in marks it, and the resident's money minus the fee goes back", async ({ page }) => {

@@ -55,7 +55,7 @@ async function Service({ params }: { params: PageProps<"/vendor/catalogue/servic
 
   return (
     <div className="space-y-5">
-      <Link href="/vendor/catalogue" className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-brand">
+      <Link href="/vendor/catalogue" className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-accent">
         <ChevronLeft aria-hidden className="size-4" />
         {t("catalogue.back")}
       </Link>
@@ -96,7 +96,7 @@ async function Service({ params }: { params: PageProps<"/vendor/catalogue/servic
                             .join(" → ")}
                         </span>
                       </span>
-                      <span className="shrink-0 font-semibold text-brand">{t("catalogue.edit")}</span>
+                      <span className="shrink-0 font-semibold text-accent">{t("catalogue.edit")}</span>
                     </Link>
                   </li>
                 ))}
@@ -108,7 +108,7 @@ async function Service({ params }: { params: PageProps<"/vendor/catalogue/servic
             <CardHeader titleId="slots-title" title={t("catalogue.slots")} subtitle={t("catalogue.slotsIntro")} />
             <ul className="space-y-3">
               {service.slotTemplates.map((slot) => (
-                <li key={slot.id} className="rounded-control p-4 neu-pressed-sm">
+                <li key={slot.id} className="rounded-control bg-bg p-3">
                   <SlotFields serviceId={service.id} templateId={slot.id} start={slot.startTime} end={slot.endTime} technicians={slot.technicians} label={t("catalogue.slotLabel", { start: slot.startTime, end: slot.endTime })} />
                   <ActionForm action={removeSlotAction} className="mt-2">
                     <input type="hidden" name="templateId" value={slot.id} />
@@ -118,7 +118,7 @@ async function Service({ params }: { params: PageProps<"/vendor/catalogue/servic
                   </ActionForm>
                 </li>
               ))}
-              <li className="rounded-control p-4 neu-pressed-sm">
+              <li className="rounded-control bg-bg p-3">
                 <SlotFields serviceId={service.id} templateId="new" start="" end="" technicians={1} label={t("catalogue.addSlot")} />
               </li>
             </ul>

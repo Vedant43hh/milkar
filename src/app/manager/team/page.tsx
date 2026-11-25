@@ -1,4 +1,4 @@
-import { ShieldCheck, UserMinus, UserPlus, UserRound } from "lucide-react";
+import { UserMinus, UserPlus } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ConfirmAction } from "@/components/ui/confirm-action";
@@ -41,17 +41,14 @@ async function Team() {
     <div className="space-y-5">
       <PageHeader title={t("team.title")} subtitle={t("team.intro", { community: community.name })} />
       {!primary && (
-        <Banner icon={<ShieldCheck aria-hidden className="size-4" />}>
+        <Banner>
           {t("team.onlyPrimary")}
         </Banner>
       )}
 
-      <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
+      <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
         {team.map((member) => (
           <li key={member.id} className="flex items-center gap-3 px-4 py-3">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-full text-brand neu-pressed-xs">
-              <UserRound aria-hidden className="size-5" />
-            </span>
             <span className="min-w-0 flex-1">
               <span className="block font-medium text-fg">
                 {member.user.name}
@@ -59,7 +56,7 @@ async function Team() {
               </span>
               <span className="block text-sm text-muted tabular-nums">{formatPhone(member.user.phone)}</span>
             </span>
-            <Badge tone={member.kind === "PRIMARY" ? "brand" : "neutral"}>{t(member.kind === "PRIMARY" ? "team.primary" : "team.assistant")}</Badge>
+            <Badge tone={member.kind === "PRIMARY" ? "info" : "neutral"}>{t(member.kind === "PRIMARY" ? "team.primary" : "team.assistant")}</Badge>
             {primary && member.kind === "ASSISTANT" && (
               <ConfirmAction
                 action={removeAssistantAction}

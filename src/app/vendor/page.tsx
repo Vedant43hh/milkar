@@ -1,4 +1,4 @@
-import { ArrowRight, CalendarClock, IndianRupee, Package, Star, Truck } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 import { Card, CardHeader, PageHeader } from "@/components/ui/card";
@@ -21,7 +21,7 @@ export default function VendorPage() {
   );
 }
 
-const linkClass = "inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-brand";
+const linkClass = "inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-accent";
 
 async function VendorHome() {
   const user = await requirePortal("vendor");
@@ -40,7 +40,7 @@ async function VendorHome() {
         <Card labelledBy="today-title">
           <CardHeader titleId="today-title" title={t("vendorHome.todayTitle")} />
           <div className="grid gap-3 sm:grid-cols-3">
-            <Stat label={t("vendorHome.visitsToday")} value={String(today.visits)} hint={t("vendorHome.doneToday", { done: today.done, total: today.visits })} icon={<CalendarClock aria-hidden className="size-5" />} />
+            <Stat label={t("vendorHome.visitsToday")} value={String(today.visits)} hint={t("vendorHome.doneToday", { done: today.done, total: today.visits })} />
             {today.unassigned > 0 && <Stat tone="accent" label={t("vendorHome.unassigned")} value={String(today.unassigned)} />}
           </div>
           <Link href="/vendor/schedule" className={linkClass}>
@@ -81,7 +81,6 @@ async function VendorHome() {
             {home.deliveries.map((o) => (
               <li key={o.id}>
                 <Link href={`/vendor/orders/${o.id}`} className="flex min-h-11 items-center gap-3 py-2.5 text-sm">
-                  <Truck aria-hidden className="size-5 shrink-0 text-muted" />
                   <span className="min-w-0 flex-1">
                     <span className="block font-medium text-fg">
                       {o.round.title} · {o.round.community.name}
@@ -99,7 +98,7 @@ async function VendorHome() {
       <Card labelledBy="earnings-title">
         <CardHeader titleId="earnings-title" title={t("vendorHome.earningsTitle")} />
         <div className="grid gap-3 sm:grid-cols-3">
-          <Stat tone="brand" label={t("vendorHome.owed")} value={formatINR(earnings.owedPaise)} icon={<IndianRupee aria-hidden className="size-5" />} />
+          <Stat tone="info" label={t("vendorHome.owed")} value={formatINR(earnings.owedPaise)} />
           <Stat label={t("vendorHome.paid")} value={formatINR(earnings.paidPaise)} />
           <Stat label={t("vendorHome.thisMonth")} value={formatINR(earnings.thisMonthPaise)} />
         </div>
@@ -113,8 +112,7 @@ async function VendorHome() {
         <CardHeader titleId="rating-title" title={t("vendorHome.ratingTitle")} />
         {rating ? (
           <p className="flex items-center gap-2 text-fg">
-            <Star aria-hidden className="size-5 fill-current text-accent" />
-            <span className="text-2xl font-semibold tabular-nums">{t("vendorHome.rating", { rating })}</span>
+            <span className="text-xl font-semibold tabular-nums">{t("vendorHome.rating", { rating })}</span>
             <span className="text-sm text-muted">{t("vendorHome.ratingCount", { n: vendor.ratingCount })}</span>
           </p>
         ) : (
@@ -122,7 +120,7 @@ async function VendorHome() {
         )}
       </Card>
 
-      {nothing && <EmptyState icon={<Package aria-hidden className="size-6" />} title={t("vendorHome.nothingYet")} body={t("vendorHome.nothingYetBody")} />}
+      {nothing && <EmptyState title={t("vendorHome.nothingYet")} body={t("vendorHome.nothingYetBody")} />}
     </div>
   );
 }

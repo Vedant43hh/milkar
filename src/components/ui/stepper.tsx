@@ -28,7 +28,7 @@ export function QuantityStepper({
   const canDecrease = !disabled && !decreaseDisabled && value > min;
   const canIncrease = !disabled && (max === undefined || value < max);
   const button =
-    "flex size-11 items-center justify-center rounded-full text-brand neu-raised-sm transition-[box-shadow,color] duration-200 ease-in-out hover:neu-raised-xs active:neu-pressed-sm disabled:pointer-events-none disabled:text-subtle disabled:opacity-50 disabled:neu-flat";
+    "flex size-11 items-center justify-center rounded-control border border-border bg-surface text-fg transition-colors hover:bg-surface-hover disabled:pointer-events-none disabled:opacity-50";
 
   if (value === 0 && canIncrease) {
     return (
@@ -36,7 +36,7 @@ export function QuantityStepper({
         type="button"
         onClick={() => onChange(1)}
         aria-label={tu("stepper.add", { item: label })}
-        className={cn("inline-flex min-h-11 items-center gap-1 rounded-full px-4 text-sm font-semibold text-brand neu-raised-sm transition-[box-shadow] duration-200 ease-in-out hover:neu-raised-xs active:neu-pressed-sm", className)}
+        className={cn("inline-flex min-h-11 items-center gap-1 rounded-control border border-border bg-surface px-3 text-sm font-medium text-accent transition-colors hover:bg-surface-hover", className)}
       >
         <Plus aria-hidden className="size-4" />
         {tu("stepper.addShort")}
@@ -49,7 +49,7 @@ export function QuantityStepper({
       <button type="button" className={button} onClick={() => onChange(value - 1)} disabled={!canDecrease} aria-label={tu("stepper.decrease", { item: label })}>
         <Minus aria-hidden className="size-4" />
       </button>
-      <output aria-live="polite" className="min-w-8 text-center font-semibold text-fg tabular-nums">
+      <output aria-live="polite" className="min-w-8 text-center text-sm font-semibold text-fg tabular-nums">
         {value}
       </output>
       <button type="button" className={button} onClick={() => onChange(value + 1)} disabled={!canIncrease} aria-label={tu("stepper.increase", { item: label })}>

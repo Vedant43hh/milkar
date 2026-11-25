@@ -1,4 +1,4 @@
-import { Ban, ChevronLeft, Clock, FileText, KeyRound, PackageCheck, Pencil, Repeat, Truck } from "lucide-react";
+import { ChevronLeft, FileText, Repeat } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -44,7 +44,7 @@ async function Order({ params }: { params: PageProps<"/app/orders/[roundId]">["p
 
   return (
     <PullToRefresh>
-      <Link href="/app/orders" className="mb-2 inline-flex min-h-11 items-center gap-1 text-sm font-medium text-brand">
+      <Link href="/app/orders" className="mb-2 inline-flex min-h-11 items-center gap-1 text-sm font-medium text-accent">
         <ChevronLeft aria-hidden className="size-4" />
         {t("orders.title")}
       </Link>
@@ -59,9 +59,8 @@ async function Order({ params }: { params: PageProps<"/app/orders/[roundId]">["p
         {round.status === "OPEN" && (
           <Banner
             tone="info"
-            icon={<Clock aria-hidden className="size-4" />}
             action={
-              <ButtonLink href={shopHref} size="sm" icon={<Pencil aria-hidden className="size-4" />}>
+              <ButtonLink href={shopHref} size="sm">
                 {t("orders.detail.changeOrder")}
               </ButtonLink>
             }
@@ -70,7 +69,7 @@ async function Order({ params }: { params: PageProps<"/app/orders/[roundId]">["p
           </Banner>
         )}
         {round.status === "CANCELLED" && (
-          <Banner tone="danger" icon={<Ban aria-hidden className="size-4" />}>
+          <Banner tone="danger">
             {t("orders.detail.cancelled", { reason: round.cancelReason ?? "" })}
           </Banner>
         )}
@@ -81,9 +80,8 @@ async function Order({ params }: { params: PageProps<"/app/orders/[roundId]">["p
           <CardHeader titleId="weekly-title" title={t("subscriptions.keepTitle")} subtitle={standing && standing.status !== "CANCELLED" ? undefined : t("subscriptions.keepBody")} />
           {standing && standing.status !== "CANCELLED" ? (
             <p className="flex flex-wrap items-center gap-2 text-sm text-fg">
-              <Repeat aria-hidden className="size-4 text-brand" />
               {t("subscriptions.keeping", { status: t(`subscriptions.status.${standing.status}`).toLowerCase() })}
-              <Link href="/app/subscriptions" className="font-semibold text-brand">
+              <Link href="/app/subscriptions" className="font-semibold text-accent">
                 {t("subscriptions.manage")}
               </Link>
             </p>
@@ -114,20 +112,17 @@ async function Order({ params }: { params: PageProps<"/app/orders/[roundId]">["p
         <Card className="mt-6 space-y-2">
           <CardHeader title={t("orders.detail.pickupTitle")} />
           <p className="flex items-center gap-1.5 text-sm text-muted">
-            <Truck aria-hidden className="size-4" />
             {t("orders.detail.delivery", { when: formatIST(round.deliveryAt) })}
           </p>
           {pickup && (
             <>
               {round.requirePickupCode && pickup.status === "PENDING" && (
-                <div className="flex flex-wrap items-center gap-2 rounded-control px-4 py-3 neu-pressed-sm">
-                  <KeyRound aria-hidden className="size-4 text-accent-soft-fg" />
-                  <span className="font-semibold text-accent-soft-fg tabular-nums">{t("orders.detail.pickupCode", { code: pickup.pickupCode })}</span>
-                  <span className="text-xs text-accent-soft-fg">{t("orders.detail.pickupHint")}</span>
+                <div className="flex flex-wrap items-center gap-2 rounded-control bg-bg px-3 py-2">
+                  <span className="font-semibold text-accent tabular-nums">{t("orders.detail.pickupCode", { code: pickup.pickupCode })}</span>
+                  <span className="text-sm text-accent">{t("orders.detail.pickupHint")}</span>
                 </div>
               )}
               <p className="flex items-center gap-1.5 text-sm font-medium text-fg">
-                <PackageCheck aria-hidden className="size-4 text-brand" />
                 {pickup.status === "COLLECTED" && pickup.collectedAt ? t("orders.detail.collected", { when: formatIST(pickup.collectedAt) }) : t("orders.detail.pending")}
               </p>
             </>
@@ -142,7 +137,7 @@ async function Order({ params }: { params: PageProps<"/app/orders/[roundId]">["p
         {items.length === 0 ? (
           <p className="text-sm text-muted">{t("orders.detail.noItems")}</p>
         ) : (
-          <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
+          <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
             {items.map((item) => (
               <ItemRow key={item.id} item={item} finalized={round.finalizedAt !== null} />
             ))}
@@ -186,7 +181,7 @@ async function Order({ params }: { params: PageProps<"/app/orders/[roundId]">["p
                 <li key={c.id} className="flex items-baseline justify-between gap-3">
                   <span className="min-w-0">
                     <span className="block text-fg">{t(`wallet.reasons.${c.type}`)}</span>
-                    <span className="block text-xs text-muted">{formatIST(c.createdAt)}</span>
+                    <span className="block text-sm text-muted">{formatIST(c.createdAt)}</span>
                   </span>
                   <span className="font-medium text-success tabular-nums">+{formatINR(c.amountPaise)}</span>
                 </li>
@@ -200,14 +195,14 @@ async function Order({ params }: { params: PageProps<"/app/orders/[roundId]">["p
 }
 
 function ItemRow({ item, finalized }: { item: RoundHistory["items"][number]; finalized: boolean }) {
-  const tone = item.status === "CONFIRMED" ? "success" : item.status === "DROPPED" || item.status === "CANCELLED" ? "neutral" : "brand";
+  const tone = item.status === "CONFIRMED" ? "success" : item.status === "DROPPED" || item.status === "CANCELLED" ? "neutral" : "info";
   const unit = finalized && item.finalUnitPaise !== null ? item.finalUnitPaise : null;
   return (
     <li className="space-y-1 px-4 py-3">
       <div className="flex items-start justify-between gap-3">
         <span className="min-w-0">
           <span className="block font-medium text-fg">{item.name}</span>
-          <span className="block text-xs text-muted">{item.vendor}</span>
+          <span className="block text-sm text-muted">{item.vendor}</span>
         </span>
         <Badge tone={tone}>{t(`orders.itemStatus.${item.status}`)}</Badge>
       </div>
@@ -217,8 +212,8 @@ function ItemRow({ item, finalized }: { item: RoundHistory["items"][number]; fin
         {item.finalPaise !== null && item.status === "CONFIRMED" && <span className="text-fg">{t("orders.detail.finalLine", { amount: formatINR(item.finalPaise) })}</span>}
         {item.refundPaise > 0 && <span className="font-medium text-success">{t("orders.detail.refundLine", { amount: formatINR(item.refundPaise) })}</span>}
       </p>
-      {item.status === "DROPPED" && <p className="text-xs text-muted">{t("orders.detail.dropped")}</p>}
-      {item.shortQty + item.damagedQty > 0 && <p className="text-xs text-muted">{t("orders.detail.short", { n: item.shortQty + item.damagedQty })}</p>}
+      {item.status === "DROPPED" && <p className="text-sm text-muted">{t("orders.detail.dropped")}</p>}
+      {item.shortQty + item.damagedQty > 0 && <p className="text-sm text-muted">{t("orders.detail.short", { n: item.shortQty + item.damagedQty })}</p>}
     </li>
   );
 }

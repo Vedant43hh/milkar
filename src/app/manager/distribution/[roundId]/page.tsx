@@ -1,4 +1,4 @@
-import { ChevronLeft, CircleCheck, PackageX, ShoppingBag } from "lucide-react";
+import { ChevronLeft, CircleCheck, PackageX } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -46,21 +46,21 @@ async function Checklist({ params }: { params: PageProps<"/manager/distribution/
 
   return (
     <div className="space-y-4">
-      <Link href="/manager/distribution" className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-brand">
+      <Link href="/manager/distribution" className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-accent">
         <ChevronLeft aria-hidden className="size-4" />
         {t("distribution.back")}
       </Link>
       <PageHeader title={round.title} subtitle={t("distribution.deliveredOn", { when: formatIST(round.deliveryAt) })} />
       <div className="space-y-1.5">
         <p className="text-sm font-medium text-fg">{progressText}</p>
-        <ProgressBar value={(progress.collected / Math.max(1, progress.total)) * 100} label={progressText} tone={progress.done ? "success" : "brand"} />
+        <ProgressBar value={(progress.collected / Math.max(1, progress.total)) * 100} label={progressText} tone={progress.done ? "success" : "accent"} />
       </div>
       {round.status === "COMPLETED" && (
-        <Banner tone="success" icon={<CircleCheck aria-hidden className="size-4" />}>
+        <Banner tone="success">
           {t("distribution.allDone")}
         </Banner>
       )}
-      <ul className="space-y-3">
+      <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
         {[...pending, ...collected].map((flat) => (
           <FlatBag key={flat.flatId} flat={flat} round={round} />
         ))}
@@ -73,10 +73,9 @@ function FlatBag({ flat, round }: { flat: Flat; round: Data["round"] }) {
   const label = t("distribution.flat", { unit: round.unitLabel, flat: `${flat.tower}-${flat.flatNumber}` });
   const done = flat.pickup?.status === "COLLECTED";
   return (
-    <li className="space-y-3 rounded-card bg-surface p-4 shadow-card sm:p-5">
+    <li className="space-y-3 p-4">
       <div className="flex items-start justify-between gap-2">
-        <h2 className="flex items-center gap-2 text-lg font-semibold text-fg">
-          <ShoppingBag aria-hidden className="size-5 text-brand" />
+        <h2 className="flex items-center gap-2 text-base font-semibold text-fg">
           {label}
         </h2>
         <Badge tone={done ? "success" : "neutral"}>{done ? t("distribution.collectedAt", { when: formatIST(flat.pickup!.collectedAt!, "time") }) : t("distribution.pending")}</Badge>
@@ -123,13 +122,13 @@ function FlatBag({ flat, round }: { flat: Flat; round: Data["round"] }) {
           <div className="space-y-4">
             <p className="text-sm text-muted">{t("distribution.reportBody")}</p>
             {flat.orderItems.map((item) => (
-              <ActionForm key={item.id} action={reportDeliveryIssueAction} className="space-y-2 rounded-control p-4 neu-pressed-sm">
+              <ActionForm key={item.id} action={reportDeliveryIssueAction} className="space-y-2 rounded-control bg-bg p-3">
                 <input type="hidden" name="orderItemId" value={item.id} />
                 <p className="text-sm font-medium text-fg">
                   {item.name} × {item.quantity}
                   {flat.orderItems.length > 1 && <span className="font-normal text-muted"> · {t("distribution.owner", { name: item.owner ?? "" })}</span>}
                 </p>
-                {item.refundPaise > 0 && <p className="text-xs text-success">{t("distribution.already", { n: formatINR(item.refundPaise) })}</p>}
+                {item.refundPaise > 0 && <p className="text-sm text-success">{t("distribution.already", { n: formatINR(item.refundPaise) })}</p>}
                 <div className="grid grid-cols-2 gap-2">
                   <Field id={`short-${item.id}`} label={t("distribution.short")}>
                     {(aria) => <Input {...aria} name="short" type="number" min={item.shortQty} max={item.quantity} required defaultValue={item.shortQty} inputMode="numeric" />}

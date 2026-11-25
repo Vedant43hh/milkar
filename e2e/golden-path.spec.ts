@@ -105,7 +105,7 @@ test("golden path: from the landing page to a finished repair, with every number
   const cards = page.getByRole("listitem").filter({ visible: true }).filter({ hasText: /more .+ to unlock ₹/ });
   let pick: { product: string; needed: number; newPrice: number; mrp: number } | null = null;
   for (const card of await cards.all()) {
-    const match = /(\d+) more .+? to unlock (₹[\d,]+)!/.exec((await card.textContent()) ?? "");
+    const match = /(\d+) more .+? to unlock (₹[\d,]+)/.exec((await card.textContent()) ?? "");
     if (!match || (pick && Number(match[1]) >= pick.needed)) continue;
     pick = {
       product: (await card.locator("p").first().textContent())!.trim(),
@@ -131,7 +131,7 @@ test("golden path: from the landing page to a finished repair, with every number
   const groceryRound = new URL(page.url()).searchParams.get("round")!;
 
   // 5. A tier unlocks for everyone.
-  await expect(page.getByText(`🎉 Price unlocked! Everyone now pays ${inr(grocery.newPrice)} for ${grocery.product}`)).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(`Price unlocked: everyone now pays ${inr(grocery.newPrice)} for ${grocery.product}`)).toBeVisible({ timeout: 30_000 });
 
   // 4b. A Plumber Day visit, with what's wrong.
   await page.goto("/app/buys/repairs");
@@ -211,7 +211,7 @@ test("golden path: from the landing page to a finished repair, with every number
   const codeSheet = tech.getByRole("dialog", { name: "The resident's code" });
   await codeSheet.getByLabel("4-digit code").fill(code);
   await codeSheet.getByRole("button", { name: "Finish the visit" }).click();
-  await expect(tech.getByText("Visit done. Thank you!")).toBeVisible();
+  await expect(tech.getByText("Visit done.", { exact: true })).toBeVisible();
 
   // 8. Every number agrees.
   const balance = tierRefund - fromWallet;

@@ -2,7 +2,7 @@ import { tu } from "@/i18n/ui";
 import { cn } from "./cn";
 
 export function Skeleton({ className }: { className?: string }) {
-  return <div aria-hidden className={cn("animate-pulse rounded-lg neu-pressed-xs", className)} />;
+  return <div aria-hidden className={cn("animate-pulse rounded-control bg-surface-hover", className)} />;
 }
 
 /** Placeholder for a page while its data streams in. */
@@ -12,7 +12,7 @@ export function PageSkeleton({ cards = 3 }: { cards?: number }) {
       <Skeleton className="h-8 w-2/3" />
       <Skeleton className="h-4 w-1/2" />
       {Array.from({ length: cards }, (_, i) => (
-        <div key={i} className="space-y-3 rounded-card bg-surface p-4 shadow-card sm:p-5">
+        <div key={i} className="space-y-3 rounded-card border border-border bg-surface p-4">
           <Skeleton className="h-5 w-1/2" />
           <Skeleton className="h-3 w-full" />
           <Skeleton className="h-3 w-4/5" />
@@ -24,11 +24,10 @@ export function PageSkeleton({ cards = 3 }: { cards?: number }) {
 
 export function ListSkeleton({ rows = 4 }: { rows?: number }) {
   return (
-    <div role="status" aria-label={tu("ui.loading")} className="divide-y divide-border rounded-card bg-surface shadow-card">
+    <div role="status" aria-label={tu("ui.loading")} className="divide-y divide-border rounded-card border border-border bg-surface">
       {Array.from({ length: rows }, (_, i) => (
         <div key={i} className="flex items-center gap-3 p-4">
-          <Skeleton className="size-10 rounded-full" />
-          <div className="flex-1 space-y-2">
+                    <div className="flex-1 space-y-2">
             <Skeleton className="h-4 w-1/2" />
             <Skeleton className="h-3 w-1/3" />
           </div>

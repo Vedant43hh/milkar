@@ -1,6 +1,5 @@
 "use client";
 
-import { Clock, PackageCheck, Repeat, Truck } from "lucide-react";
 import { useActionState, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Switch } from "@/components/ui/form";
@@ -68,9 +67,9 @@ export function GroceryRoundForm({
     <div className="space-y-3">
       <p className="text-sm text-muted">{text.form.productsHint}</p>
       {groups.map((group) => (
-        <fieldset key={group.label} className="rounded-card bg-surface shadow-card">
+        <fieldset key={group.label} className="rounded-card border border-border bg-surface">
           <legend className="sr-only">{group.label}</legend>
-          <p aria-hidden className="border-b border-border px-4 py-2 text-xs font-semibold tracking-wide text-muted uppercase">
+          <p aria-hidden className="border-b border-border px-4 py-2 text-sm font-semibold tracking-wide text-muted uppercase">
             {group.label}
           </p>
           <ul className="divide-y divide-border">
@@ -82,12 +81,12 @@ export function GroceryRoundForm({
                   value={p.id}
                   id={`product-${p.id}`}
                   defaultChecked={checked ? checked.has(p.id) : true}
-                  className="size-5 shrink-0 accent-brand"
+                  className="shrink-0"
                 />
                 <label htmlFor={`product-${p.id}`} className="min-w-0 flex-1 cursor-pointer">
                   <span className="block font-medium text-fg">{p.name}</span>
-                  <span className="block text-xs text-muted tabular-nums">{p.ladder}</span>
-                  <span className="block text-xs text-subtle">{p.detail}</span>
+                  <span className="block text-sm text-muted tabular-nums">{p.ladder}</span>
+                  <span className="block text-sm text-muted">{p.detail}</span>
                 </label>
                 <span className="flex shrink-0 flex-col items-center">
                   <Input
@@ -100,7 +99,7 @@ export function GroceryRoundForm({
                     aria-label={interpolate(text.form.capFor, { product: p.name })}
                     className="w-16 px-2 text-center"
                   />
-                  <span aria-hidden className="mt-0.5 text-xs text-subtle">
+                  <span aria-hidden className="mt-0.5 text-sm text-muted">
                     {text.form.perFlat}
                   </span>
                 </span>
@@ -113,24 +112,20 @@ export function GroceryRoundForm({
   );
 
   const check = (
-    <div className="space-y-3 rounded-card p-4 text-sm neu-pressed-sm">
+    <div className="space-y-3 rounded-control bg-bg p-3 text-sm">
       <p className="text-muted">{f.checkIntro}</p>
       <ul className="space-y-1.5 text-fg">
         <li className="flex items-center gap-2">
-          <PackageCheck aria-hidden className="size-4 text-muted" />
           {interpolate(f.checkProducts, { n: live.products })}
         </li>
         <li className="flex items-center gap-2">
-          <Clock aria-hidden className="size-4 text-muted" />
           {interpolate(f.checkCutoff, { when: showFieldDate(live.cutoffAt, f.notSet) })}
         </li>
         <li className="flex items-center gap-2">
-          <Truck aria-hidden className="size-4 text-muted" />
           {interpolate(f.checkDelivery, { when: showFieldDate(live.deliveryAt, f.notSet) })}
         </li>
         {live.weekly && (
           <li className="flex items-center gap-2">
-            <Repeat aria-hidden className="size-4 text-muted" />
             {f.checkWeekly}
           </li>
         )}

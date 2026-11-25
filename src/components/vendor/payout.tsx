@@ -3,7 +3,7 @@ import { t } from "@/i18n";
 import { formatINR } from "@/lib/pricing/money";
 import type { Payout, PayoutStatus } from "@/lib/vendor/payout";
 
-const STATUS_TONE: Record<PayoutStatus, Tone> = { ISSUED: "warning", ACKNOWLEDGED: "brand", PAID: "success" };
+const STATUS_TONE: Record<PayoutStatus, Tone> = { ISSUED: "warning", ACKNOWLEDGED: "info", PAID: "success" };
 
 export function OrderStatusBadge({ status }: { status: PayoutStatus }) {
   return <Badge tone={STATUS_TONE[status]}>{t(`vendorOrders.status.${status}`)}</Badge>;

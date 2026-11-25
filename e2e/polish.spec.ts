@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { demoLogin, expectNoSeriousA11yIssues } from "./helpers";
 
 // Every main page of every portal, at 360×800: tap targets of at least 44 px, a visible focus ring
-// on everything the keyboard reaches, and no serious accessibility problem in either theme.
+// on everything the keyboard reaches, and no serious accessibility problem.
 const PORTALS = [
   { who: "Rahul Deshmukh", pages: ["/app", "/app/buys", "/app/groceries", "/app/services", "/app/orders", "/app/wallet", "/app/subscriptions", "/app/polls", "/app/notifications"] },
   { who: "Sunita Kulkarni", pages: ["/manager", "/manager/rounds", "/manager/distribution", "/manager/visits", "/manager/issues", "/manager/residents", "/manager/polls", "/manager/team"] },
@@ -81,17 +81,14 @@ async function checkPage(page: Page, path: string) {
   expect.soft(await smallTapTargets(page), `small tap targets on ${path}`).toEqual([]);
   expect.soft(await focusWithoutRing(page), `controls without a focus ring on ${path}`).toEqual([]);
   await expectNoSeriousA11yIssues(page);
-  await page.emulateMedia({ colorScheme: "dark" });
-  await expectNoSeriousA11yIssues(page);
-  await page.emulateMedia({ colorScheme: "light" });
 }
 
-test("public pages: tap targets and accessibility in both themes", async ({ page }) => {
+test("public pages: tap targets, focus rings and accessibility", async ({ page }) => {
   for (const path of PUBLIC_PAGES) await checkPage(page, path);
 });
 
 for (const { who, pages } of PORTALS) {
-  test(`${who}'s portal: tap targets and accessibility in both themes`, async ({ page }) => {
+  test(`${who}'s portal: tap targets, focus rings and accessibility`, async ({ page }) => {
     test.setTimeout(pages.length * 20_000);
     await demoLogin(page, who);
     for (const path of pages) await checkPage(page, path);

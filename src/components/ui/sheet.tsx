@@ -9,9 +9,9 @@ export type SheetSide = "bottom" | "left";
 const DIALOG: Record<SheetSide, string> = {
   // A bottom sheet on phones, a centred dialog on larger screens.
   bottom:
-    "fixed inset-x-0 bottom-0 top-auto m-0 max-h-[85dvh] w-full max-w-none overflow-y-auto rounded-t-2xl border-0 bg-surface p-0 text-fg shadow-raised backdrop:bg-overlay open:animate-slide-up md:inset-0 md:m-auto md:max-w-md md:rounded-2xl",
+    "fixed inset-x-0 bottom-0 top-auto m-0 max-h-[85dvh] w-full max-w-none overflow-y-auto rounded-t-card border border-border bg-surface p-0 text-fg backdrop:bg-overlay open:animate-slide-up md:inset-0 md:m-auto md:max-w-md md:rounded-card",
   // A drawer from the left edge: the staff portals' sidebar on phones.
-  left: "fixed inset-y-0 left-0 right-auto m-0 h-dvh max-h-dvh w-[min(20rem,85vw)] max-w-none overflow-y-auto rounded-r-2xl border-0 bg-surface p-0 text-fg shadow-raised backdrop:bg-overlay open:animate-slide-in-left",
+  left: "fixed inset-y-0 left-0 right-auto m-0 h-dvh max-h-dvh w-[min(20rem,85vw)] max-w-none overflow-y-auto border-0 border-r border-border bg-surface p-0 text-fg backdrop:bg-overlay open:animate-slide-in-left",
 };
 
 function Frame({
@@ -65,7 +65,7 @@ function Frame({
       }}
       className={DIALOG[side]}
     >
-      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-surface px-5 py-3">
+      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-surface px-4 py-2">
         <h2 id={titleId} className="font-semibold">
           {title}
         </h2>
@@ -73,12 +73,12 @@ function Frame({
           type="button"
           onClick={close}
           aria-label={tu("ui.close")}
-          className="inline-flex size-11 items-center justify-center rounded-full text-muted neu-raised-sm transition-[box-shadow,color] duration-200 ease-in-out hover:text-fg hover:neu-raised-xs active:neu-pressed-sm"
+          className="inline-flex size-11 items-center justify-center rounded-control text-muted transition-colors hover:bg-surface-hover hover:text-fg"
         >
           <X aria-hidden className="size-5" />
         </button>
       </div>
-      <div className="p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">{children}</div>
+      <div className="p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">{children}</div>
     </dialog>
   );
 }
@@ -119,7 +119,7 @@ export function Sheet({
         onClick={() => ref.current?.showModal()}
         className={
           triggerClassName ??
-          "inline-flex min-h-11 min-w-11 items-center justify-center rounded-full neu-raised-sm transition-[box-shadow] duration-200 ease-in-out hover:neu-raised-xs active:neu-pressed-sm"
+          "inline-flex min-h-11 min-w-11 items-center justify-center rounded-control text-muted transition-colors hover:bg-surface-hover hover:text-fg"
         }
       >
         {trigger}

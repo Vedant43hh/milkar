@@ -1,4 +1,3 @@
-import { BadgeCheck, Star } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -46,7 +45,7 @@ async function Profile() {
           subtitle={t(`vendorProfile.kind.${vendor.kind}`)}
           action={
             standing.verificationStatus === "VERIFIED" ? (
-              <Badge tone="success" icon={<BadgeCheck aria-hidden className="size-3.5" />}>
+              <Badge tone="success">
                 {t("vendor.verified")}
               </Badge>
             ) : (
@@ -75,8 +74,7 @@ async function Profile() {
         <CardHeader titleId="profile-rating" title={t("vendorProfile.ratingTitle")} />
         {rating ? (
           <p className="flex items-center gap-2 text-fg">
-            <Star aria-hidden className="size-5 fill-current text-accent" />
-            <span className="text-2xl font-semibold tabular-nums">{t("vendorHome.rating", { rating })}</span>
+            <span className="text-xl font-semibold tabular-nums">{t("vendorHome.rating", { rating })}</span>
             <span className="text-sm text-muted">{t("vendorHome.ratingCount", { n: vendor.ratingCount })}</span>
           </p>
         ) : (

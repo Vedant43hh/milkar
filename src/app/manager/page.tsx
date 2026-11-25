@@ -1,4 +1,4 @@
-import { CalendarCheck, ClipboardList, IndianRupee, Lightbulb, Megaphone, MessageSquareWarning, PiggyBank, Repeat, ShoppingBasket, Sparkles, Truck, UserCheck, Users, Wrench } from "lucide-react";
+import { Megaphone, Repeat, ShoppingBasket, Sparkles, Wrench } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ImpactCard } from "@/components/impact/impact-card";
@@ -64,11 +64,11 @@ async function ManagerHome() {
       <Card labelledBy="stats-title" className="mt-5">
         <CardHeader titleId="stats-title" title={t("managerHome.stats", { community: community.name })} />
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-          <Stat label={t("managerHome.residents")} value={home.residents} hint={t("managerHome.residentsHint", { flats: home.flats, units })} icon={<Users aria-hidden className="size-5" />} tone="brand" />
-          <Stat label={t("managerHome.activeFlats")} value={home.activeFlats} hint={t("managerHome.activeFlatsHint", { units })} icon={<UserCheck aria-hidden className="size-5" />} tone="brand" />
-          <Stat label={t("managerHome.openRounds")} value={home.openRounds} icon={<ClipboardList aria-hidden className="size-5" />} />
-          <Stat label={t("managerHome.gmv")} value={formatINR(home.gmvPaise)} icon={<IndianRupee aria-hidden className="size-5" />} tone="success" />
-          <Stat label={t("managerHome.saved")} value={formatINR(home.savedPaise)} hint={t("managerHome.savedHint")} icon={<PiggyBank aria-hidden className="size-5" />} tone="accent" />
+          <Stat label={t("managerHome.residents")} value={home.residents} hint={t("managerHome.residentsHint", { flats: home.flats, units })} tone="info" />
+          <Stat label={t("managerHome.activeFlats")} value={home.activeFlats} hint={t("managerHome.activeFlatsHint", { units })} tone="info" />
+          <Stat label={t("managerHome.openRounds")} value={home.openRounds} />
+          <Stat label={t("managerHome.gmv")} value={formatINR(home.gmvPaise)} tone="success" />
+          <Stat label={t("managerHome.saved")} value={formatINR(home.savedPaise)} hint={t("managerHome.savedHint")} tone="accent" />
         </div>
       </Card>
 
@@ -80,7 +80,6 @@ async function ManagerHome() {
           <div className="space-y-3">
             {home.pendingJoins > 0 && (
               <Banner
-                icon={<UserCheck aria-hidden className="size-4" />}
                 action={
                   <ButtonLink href="/manager/residents" variant="secondary" size="sm">
                     {t("manager.review")}
@@ -93,7 +92,6 @@ async function ManagerHome() {
             {home.openIssues > 0 && (
               <Banner
                 tone="warning"
-                icon={<MessageSquareWarning aria-hidden className="size-4" />}
                 action={
                   <ButtonLink href="/manager/issues" variant="secondary" size="sm">
                     {t("manager.review")}
@@ -108,7 +106,6 @@ async function ManagerHome() {
             ))}
             {suggestions.length > 0 && (
               <Banner
-                icon={<Lightbulb aria-hidden className="size-4" />}
                 action={
                   <ButtonLink href="/manager/polls" variant="secondary" size="sm">
                     {t("manager.review")}
@@ -129,12 +126,11 @@ async function ManagerHome() {
         {home.distributions.length === 0 && home.visitDays.length === 0 ? (
           <p className="text-sm text-muted">{t("managerHome.nothingToday")}</p>
         ) : (
-          <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
+          <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
             {home.distributions.map((d) => (
               <li key={d.id}>
                 <ListRow
                   href={`/manager/distribution/${d.id}`}
-                  icon={<Truck aria-hidden className="size-5" />}
                   title={t("managerHome.handout", { round: d.title })}
                   subtitle={t("managerHome.handoutProgress", { collected: d.collected, total: d.total })}
                 />
@@ -144,7 +140,6 @@ async function ManagerHome() {
               <li key={v.id}>
                 <ListRow
                   href={`/manager/visits/${v.id}`}
-                  icon={<CalendarCheck aria-hidden className="size-5" />}
                   title={t("managerHome.visitDay", { round: v.title })}
                   subtitle={t("managerHome.visitProgress", { done: v.done, total: v.visits })}
                 />
@@ -159,9 +154,9 @@ async function ManagerHome() {
           <span id="open-now">{t("manager.openNow")}</span>
         </SectionTitle>
         {live.length === 0 ? (
-          <EmptyState icon={<ClipboardList aria-hidden className="size-6" />} title={t("manager.openNowEmpty")} body={t("manager.openNowEmptyBody")} />
+          <EmptyState title={t("manager.openNowEmpty")} body={t("manager.openNowEmptyBody")} />
         ) : (
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
             {live.map((round) => (
               <RoundCard key={round.id} round={round} unitLabel={community.unitLabel} now={now} />
             ))}
@@ -184,7 +179,7 @@ async function ManagerHome() {
           >
             <span id="recent-rounds">{t("manager.recent")}</span>
           </SectionTitle>
-          <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
+          <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
             {recent.map((round) => (
               <li key={round.id}>
                 <ListRow

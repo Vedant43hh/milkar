@@ -1,4 +1,4 @@
-import { ChevronRight, Clock, House, ImageIcon, MessageSquareText, Wrench } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { t } from "@/i18n";
@@ -11,43 +11,38 @@ import { VisitStatusBadge } from "../visits/visit-status-badge";
 export function VisitList({ visits, empty, showDay = false }: { visits: TechnicianVisit[]; empty: ReactNode; showDay?: boolean }) {
   if (visits.length === 0) return <>{empty}</>;
   return (
-    <ol className="space-y-3">
+    <ol className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
       {visits.map((v) => {
         const waiting = v.partsRequests.some((r) => r.status === "PENDING");
         return (
           <li key={v.id}>
-            <Link href={`/tech/visits/${v.id}`} className="block rounded-card p-4 sm:p-5 neu-raised transition-[box-shadow] duration-200 ease-in-out hover:neu-raised-sm active:neu-pressed">
+            <Link href={`/tech/visits/${v.id}`} className="block p-4 transition-colors hover:bg-surface-hover">
               <div className="flex items-start justify-between gap-3">
-                <p className="flex items-center gap-2 text-lg font-semibold text-fg tabular-nums">
-                  <Clock aria-hidden className="size-5 text-brand" />
+                <p className="flex items-center gap-2 text-base font-semibold text-fg tabular-nums">
                   {showDay ? formatIST(v.startsAt) : `${formatIST(v.startsAt, "time")} – ${formatIST(v.endsAt, "time")}`}
                 </p>
                 <VisitStatusBadge status={v.status} />
               </div>
               <p className="mt-2 flex items-center gap-2 text-base text-fg">
-                <House aria-hidden className="size-5 shrink-0 text-muted" />
                 {v.flat.community.unitLabel} {v.flat.tower}-{v.flat.number} · {v.flat.community.name}
               </p>
               <p className="mt-1 flex items-center gap-2 text-sm text-muted">
-                <Wrench aria-hidden className="size-4 shrink-0" />
                 {v.round.service?.name ?? v.round.title}
-                {v.kind === "REVISIT" && <Badge tone="accent">{t("tech.revisit")}</Badge>}
+                {v.kind === "REVISIT" && <Badge tone="info">{t("tech.revisit")}</Badge>}
               </p>
               {v.booking.problemNote && (
                 <p className="mt-2 flex items-start gap-2 text-sm text-fg">
-                  <MessageSquareText aria-hidden className="mt-0.5 size-4 shrink-0 text-muted" />
                   <span className="line-clamp-2">{v.booking.problemNote}</span>
                   {v.booking.photo && (
                     <>
-                      <ImageIcon aria-hidden className="mt-0.5 size-4 shrink-0 text-muted" />
                       <span className="sr-only">{t("techVisit.photo")}</span>
                     </>
                   )}
                 </p>
               )}
               <div className="mt-2 flex items-center justify-between gap-2">
-                {waiting ? <Badge tone="accent">{t("techVisit.parts.status.PENDING")}</Badge> : <span />}
-                <ChevronRight aria-hidden className="size-5 text-subtle" />
+                {waiting ? <Badge tone="warning">{t("techVisit.parts.status.PENDING")}</Badge> : <span />}
+                <ChevronRight aria-hidden className="size-5 text-muted" />
               </div>
             </Link>
           </li>

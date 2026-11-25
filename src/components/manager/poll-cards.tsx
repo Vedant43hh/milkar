@@ -1,8 +1,7 @@
-import { CircleCheck, Lightbulb, Megaphone, Rocket } from "lucide-react";
+import { CircleCheck, Megaphone, Rocket } from "lucide-react";
 import Link from "next/link";
 import { ActionForm, SubmitButton } from "@/components/ui/action-form";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/form";
 import { ProgressBar } from "@/components/ui/progress";
 import { t } from "@/i18n";
@@ -47,11 +46,8 @@ function ClosePollForm({ poll, suggestion = false }: { poll: ManagerPoll; sugges
 /** A poll past its threshold: one tap opens a pre-filled round. */
 export function ReadyPollCard({ poll }: { poll: ManagerPoll }) {
   return (
-    <Card as="article" className="space-y-3">
+    <article className="space-y-3 p-4">
       <div className="flex items-start gap-3">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-full text-accent neu-pressed-xs">
-          <Rocket aria-hidden className="size-5" />
-        </span>
         <div className="min-w-0">
           <h3 className="font-semibold text-fg">{poll.title}</h3>
           {target(poll) && <p className="text-sm text-muted">{target(poll)}</p>}
@@ -63,7 +59,7 @@ export function ReadyPollCard({ poll }: { poll: ManagerPoll }) {
           <p className="text-sm text-muted">{t("manager.pollReadyBody")}</p>
           <ActionForm action={convertPollAction}>
             <input type="hidden" name="pollId" value={poll.id} />
-            <SubmitButton variant="accent" icon={<Rocket aria-hidden className="size-4" />}>
+            <SubmitButton variant="primary" icon={<Rocket aria-hidden className="size-4" />}>
               {t("manager.openRound")}
             </SubmitButton>
           </ActionForm>
@@ -74,7 +70,7 @@ export function ReadyPollCard({ poll }: { poll: ManagerPoll }) {
           <ClosePollForm poll={poll} />
         </div>
       )}
-    </Card>
+    </article>
   );
 }
 
@@ -83,11 +79,8 @@ export function SuggestionCard({ poll }: { poll: ManagerPoll }) {
   const by = poll.suggestedBy ? `${poll.suggestedBy.name ?? ""}${poll.suggestedBy.flat ? ` (${poll.suggestedBy.flat.tower}-${poll.suggestedBy.flat.number})` : ""}` : "";
   const thresholdId = `threshold-${poll.id}`;
   return (
-    <Card as="article" className="space-y-3">
+    <article className="space-y-3 p-4">
       <div className="flex items-start gap-3">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted neu-pressed-xs">
-          <Lightbulb aria-hidden className="size-5" />
-        </span>
         <div className="min-w-0">
           <h3 className="font-semibold text-fg">{poll.title}</h3>
           <p className="text-sm text-muted">{t("manager.polls.suggestedBy", { name: by })}</p>
@@ -99,7 +92,7 @@ export function SuggestionCard({ poll }: { poll: ManagerPoll }) {
         <ActionForm action={publishSuggestionAction} className="flex items-end gap-2">
           <input type="hidden" name="pollId" value={poll.id} />
           <span>
-            <label htmlFor={thresholdId} className="mb-1 block text-xs font-medium text-muted">
+            <label htmlFor={thresholdId} className="mb-1 block text-sm font-medium text-muted">
               {t("manager.polls.thresholdLabel")}
             </label>
             <Input id={thresholdId} type="number" name="threshold" min={2} max={500} defaultValue={poll.threshold} className="w-20 text-center" />
@@ -110,14 +103,14 @@ export function SuggestionCard({ poll }: { poll: ManagerPoll }) {
         </ActionForm>
         <ClosePollForm poll={poll} suggestion />
       </div>
-    </Card>
+    </article>
   );
 }
 
 /** A published poll still collecting votes. */
 export function OpenPollCard({ poll }: { poll: ManagerPoll }) {
   return (
-    <Card as="article" className="space-y-3">
+    <article className="space-y-3 p-4">
       <div>
         <h3 className="font-semibold text-fg">{poll.title}</h3>
         {target(poll) && <p className="text-sm text-muted">{target(poll)}</p>}
@@ -126,7 +119,7 @@ export function OpenPollCard({ poll }: { poll: ManagerPoll }) {
       <div className="flex justify-end">
         <ClosePollForm poll={poll} />
       </div>
-    </Card>
+    </article>
   );
 }
 
@@ -139,7 +132,7 @@ export function DonePollRow({ poll }: { poll: ManagerPoll }) {
         <span className="block text-sm text-muted tabular-nums">{t("manager.polls.votes", { votes: poll._count.votes, threshold: poll.threshold })}</span>
       </span>
       {poll.convertedRound ? (
-        <Link href={`/manager/rounds/${poll.convertedRound.id}`} className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-brand">
+        <Link href={`/manager/rounds/${poll.convertedRound.id}`} className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-accent">
           <CircleCheck aria-hidden className="size-4" />
           {t("manager.polls.viewRound")}
         </Link>

@@ -1,6 +1,5 @@
 "use client";
 
-import { CalendarCheck, Clock, Repeat } from "lucide-react";
 import { useActionState, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Switch } from "@/components/ui/form";
@@ -67,20 +66,17 @@ export function ServiceRoundForm({ serviceId, defaults, text }: { serviceId: str
             id: "check",
             title: f.stepCheck,
             content: (
-              <div className="space-y-3 rounded-card p-4 text-sm neu-pressed-sm">
+              <div className="space-y-3 rounded-control bg-bg p-3 text-sm">
                 <p className="text-muted">{f.checkIntro}</p>
                 <ul className="space-y-1.5 text-fg">
                   <li className="flex items-center gap-2">
-                    <Clock aria-hidden className="size-4 text-muted" />
                     {interpolate(f.checkCutoff, { when: showFieldDate(live.cutoffAt ?? "", f.notSet) })}
                   </li>
                   <li className="flex items-center gap-2">
-                    <CalendarCheck aria-hidden className="size-4 text-muted" />
                     {interpolate(f.checkDays, { days: days.join(", ") || f.notSet })}
                   </li>
                   {live.repeatWeekly === "on" && (
                     <li className="flex items-center gap-2">
-                      <Repeat aria-hidden className="size-4 text-muted" />
                       {f.checkWeekly}
                     </li>
                   )}

@@ -1,4 +1,4 @@
-import { ChevronRight, ShoppingBasket, Sparkles } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { Badge, type Tone } from "@/components/ui/badge";
 import { Countdown } from "@/components/ui/countdown";
@@ -11,7 +11,7 @@ import type { ManagerRound } from "@/server/rounds";
 import { offeringName, offeringWords, statsOf } from "./round-view";
 
 export const STATUS_TONE: Record<DisplayStatus, Tone> = {
-  OPEN: "brand",
+  OPEN: "info",
   CLOSED: "warning",
   FINALIZING: "warning",
   FINALIZED: "success",
@@ -21,10 +21,9 @@ export const STATUS_TONE: Record<DisplayStatus, Tone> = {
 };
 
 export function RoundStatusBadges({ kind, status }: { kind: "GROCERY" | "SERVICE"; status: DisplayStatus }) {
-  const KindIcon = kind === "GROCERY" ? ShoppingBasket : Sparkles;
   return (
     <span className="flex flex-wrap items-center gap-1.5">
-      <Badge icon={<KindIcon aria-hidden className="size-3.5" />}>{t(`roundKind.${kind}`)}</Badge>
+      <Badge>{t(`roundKind.${kind}`)}</Badge>
       <Badge tone={STATUS_TONE[status]}>{t(`roundStatus.${status}`)}</Badge>
     </span>
   );
@@ -40,7 +39,7 @@ export function RoundCard({ round, unitLabel, now }: { round: ManagerRound; unit
   return (
     <Link
       href={`/manager/rounds/${round.id}`}
-      className="group block rounded-card p-4 sm:p-5 neu-raised transition-[box-shadow] duration-200 ease-in-out hover:neu-raised-sm active:neu-pressed"
+      className="group block p-4 transition-colors hover:bg-surface-hover"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 space-y-1.5">
@@ -50,7 +49,7 @@ export function RoundCard({ round, unitLabel, now }: { round: ManagerRound; unit
             {status === "OPEN" ? <Countdown to={round.cutoffAt.toISOString()} /> : <span className="text-muted">{formatIST(round.cutoffAt)}</span>}
           </p>
         </div>
-        <ChevronRight aria-hidden className="mt-1 size-5 shrink-0 text-subtle transition-transform group-hover:translate-x-0.5" />
+        <ChevronRight aria-hidden className="mt-1 size-5 shrink-0 text-muted" />
       </div>
       <p className="mt-2 text-sm text-muted tabular-nums">
         {t("manager.stats", { flats: stats.flats, units: stats.units, collected: formatINR(stats.collectedPaise) })}

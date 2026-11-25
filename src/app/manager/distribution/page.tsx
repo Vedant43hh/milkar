@@ -1,6 +1,5 @@
-import { CircleCheck, Truck } from "lucide-react";
 import type { Metadata } from "next";
-import { Suspense, type ReactNode } from "react";
+import { Suspense } from "react";
 import { PageHeader, SectionTitle } from "@/components/ui/card";
 import { EmptyState, ListRow } from "@/components/ui/display";
 import { PageSkeleton } from "@/components/ui/skeleton";
@@ -25,13 +24,12 @@ async function Distribution() {
   const rounds = await listDistributionRounds(user.staff.community.id);
   const toDo = rounds.filter((r) => r.status === "FINALIZED");
   const done = rounds.filter((r) => r.status === "COMPLETED");
-  const list = (items: typeof rounds, icon: ReactNode) => (
-    <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
+  const list = (items: typeof rounds) => (
+    <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
       {items.map((r) => (
         <li key={r.id}>
           <ListRow
             href={`/manager/distribution/${r.id}`}
-            icon={icon}
             title={r.title}
             subtitle={
               <>
@@ -48,7 +46,7 @@ async function Distribution() {
     <div>
       <PageHeader title={t("distribution.title")} subtitle={t("distribution.intro")} />
       {rounds.length === 0 ? (
-        <EmptyState icon={<Truck aria-hidden className="size-6" />} title={t("distribution.none")} body={t("distribution.noneBody")} />
+        <EmptyState title={t("distribution.none")} body={t("distribution.noneBody")} />
       ) : (
         <>
           {toDo.length > 0 && (
@@ -56,7 +54,7 @@ async function Distribution() {
               <SectionTitle>
                 <span id="to-hand-out">{t("distribution.toHandOut")}</span>
               </SectionTitle>
-              {list(toDo, <Truck aria-hidden className="size-5" />)}
+              {list(toDo)}
             </section>
           )}
           {done.length > 0 && (
@@ -64,7 +62,7 @@ async function Distribution() {
               <SectionTitle>
                 <span id="handed-out">{t("distribution.done")}</span>
               </SectionTitle>
-              {list(done, <CircleCheck aria-hidden className="size-5" />)}
+              {list(done)}
             </section>
           )}
         </>

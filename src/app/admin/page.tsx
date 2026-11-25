@@ -36,15 +36,14 @@ async function AdminHome() {
           <p className="text-sm text-muted">{t("adminHome.allClear")}</p>
         ) : (
           <ul className="divide-y divide-border">
-            {waiting.map(({ href, label, n, icon: Icon, ...q }) => (
+            {waiting.map(({ href, label, n, ...q }) => (
               <li key={href}>
                 <Link href={href} className="flex min-h-11 items-center gap-3 py-2.5 text-sm">
-                  <Icon aria-hidden className="size-5 shrink-0 text-muted" />
                   <span className="min-w-0 flex-1">
                     <span className="block font-medium text-fg">{label}</span>
                     {"detail" in q && q.detail && <span className="block text-muted">{q.detail}</span>}
                   </span>
-                  <span className="rounded-full px-2.5 py-0.5 text-sm font-semibold text-accent tabular-nums neu-pressed-xs">{n}</span>
+                  <span className="rounded-control bg-neutral-soft px-2 py-0.5 text-sm font-medium text-neutral tabular-nums">{n}</span>
                   <ArrowRight aria-hidden className="size-4 text-muted" />
                 </Link>
               </li>

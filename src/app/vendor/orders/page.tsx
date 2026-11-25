@@ -1,4 +1,3 @@
-import { Package } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -35,7 +34,7 @@ async function Orders() {
   return (
     <div className="space-y-5">
       <PageHeader title={t("vendorOrders.title")} subtitle={t("vendorOrders.intro")} />
-      {orders.length === 0 && <EmptyState icon={<Package aria-hidden className="size-6" />} title={t("vendorOrders.none")} body={t("vendorOrders.noneBody")} />}
+      {orders.length === 0 && <EmptyState title={t("vendorOrders.none")} body={t("vendorOrders.noneBody")} />}
       {SECTIONS.map(({ status, title }) => {
         const inSection = orders.filter((o) => o.status === status);
         if (inSection.length === 0) return null;
@@ -44,10 +43,10 @@ async function Orders() {
             <SectionTitle>
               <span id={`orders-${status}`}>{t(title)}</span>
             </SectionTitle>
-            <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
+            <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
               {inSection.map((o) => (
                 <li key={o.id}>
-                  <Link href={`/vendor/orders/${o.id}`} className="flex min-h-11 items-center justify-between gap-3 px-4 py-3 text-sm transition-[box-shadow] duration-200 ease-in-out hover:neu-pressed-xs">
+                  <Link href={`/vendor/orders/${o.id}`} className="flex min-h-11 items-center justify-between gap-3 px-4 py-3 text-sm transition-colors hover:bg-surface-hover">
                     <span className="min-w-0">
                       <span className="block font-medium text-fg">
                         {t("vendorOrders.number", { n: o.number })} · {o.round.title}

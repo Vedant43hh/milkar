@@ -1,4 +1,4 @@
-import { ArrowRight, BadgeCheck, CalendarCheck, Megaphone, Sparkles } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -38,27 +38,26 @@ async function Services() {
       <PageHeader title={t("serviceDay.listTitle")} subtitle={t("serviceDay.listIntro")} />
       {days.length === 0 ? (
         <EmptyState
-          icon={<Sparkles aria-hidden className="size-6" />}
           title={t("serviceDay.noDays")}
           body={t("serviceDay.noDaysBody")}
           action={
-            <ButtonLink href="/app/polls" variant="secondary" icon={<Megaphone aria-hidden className="size-4" />}>
+            <ButtonLink href="/app/polls" variant="secondary">
               {t("serviceDay.seePolls")}
             </ButtonLink>
           }
         />
       ) : (
-        <ul className="grid gap-3 md:grid-cols-2">
+        <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
           {days.map((d) => (
             <li key={d.id}>
-              <Link href={`/app/services/${d.id}`} className="group block space-y-3 rounded-card p-4 sm:p-5 neu-raised transition-[box-shadow] duration-200 ease-in-out hover:neu-raised-sm active:neu-pressed">
+              <Link href={`/app/services/${d.id}`} className="group block space-y-3 p-4 transition-colors hover:bg-surface-hover">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 space-y-1">
                     <h2 className="font-semibold text-fg">{d.title}</h2>
                     <p className="flex flex-wrap items-center gap-1.5 text-sm text-muted">
                       {t("serviceDay.by", { vendor: d.vendor })}
                       {d.verified && (
-                        <Badge tone="success" icon={<BadgeCheck aria-hidden className="size-3.5" />}>
+                        <Badge tone="success">
                           {t("serviceDay.verified")}
                         </Badge>
                       )}
@@ -68,13 +67,13 @@ async function Services() {
                       <Countdown to={d.cutoffAt.toISOString()} />
                     </p>
                   </div>
-                  <ArrowRight aria-hidden className="mt-1 size-5 shrink-0 text-subtle transition-transform group-hover:translate-x-0.5" />
+                  <ArrowRight aria-hidden className="mt-1 size-5 shrink-0 text-muted" />
                 </div>
                 {d.meterInput && <TierMeter meter={computeMeter(d.meterInput, d.flats)} basisWords={words} compact />}
                 <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
                   {d.cheapest && <span className="text-muted">{t("serviceDay.from", { price: formatINR(d.cheapest.paise), unit: d.cheapest.unitLabel })}</span>}
                   {d.booking ? (
-                    <Badge tone={d.booking.status === "HELD" ? "accent" : "brand"} icon={<CalendarCheck aria-hidden className="size-3.5" />}>
+                    <Badge tone={d.booking.status === "HELD" ? "warning" : "success"}>
                       {d.booking.status === "HELD" ? t("serviceDay.heldBadge") : t("serviceDay.yourBooking", { slot: d.booking.label })}
                     </Badge>
                   ) : (

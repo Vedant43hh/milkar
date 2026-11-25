@@ -1,4 +1,4 @@
-import { ClipboardList, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { RoundCard, RoundStatusBadges } from "@/components/manager/round-card";
@@ -47,20 +47,20 @@ async function Rounds() {
           </ButtonLink>
         }
       />
-      {rounds.length === 0 && <EmptyState icon={<ClipboardList aria-hidden className="size-6" />} title={t("manager.noRounds")} body={t("manager.noRoundsBody")} />}
+      {rounds.length === 0 && <EmptyState title={t("manager.noRounds")} body={t("manager.noRoundsBody")} />}
       {groups
         .filter((g) => g.rounds.length > 0)
         .map((g) => (
           <section key={g.key} aria-label={t(g.key)}>
             <SectionTitle>{t(g.key)}</SectionTitle>
             {g.cards ? (
-              <div className="grid gap-3 md:grid-cols-2">
+              <div className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
                 {g.rounds.map((round) => (
                   <RoundCard key={round.id} round={round} unitLabel={community.unitLabel} now={now} />
                 ))}
               </div>
             ) : (
-              <ul className="divide-y divide-border overflow-hidden rounded-card bg-surface shadow-card">
+              <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
                 {g.rounds.map((round) => {
                   const stats = statsOf(round);
                   return (

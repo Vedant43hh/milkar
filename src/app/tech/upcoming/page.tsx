@@ -1,4 +1,3 @@
-import { CalendarDays } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { VisitList } from "@/components/tech/visit-list";
@@ -25,7 +24,7 @@ async function Upcoming() {
   return (
     <>
       <PageHeader title={t("tech.upcomingTitle")} subtitle={t("tech.upcomingIntro")} />
-      <VisitList showDay visits={visits} empty={<EmptyState icon={<CalendarDays aria-hidden className="size-6" />} title={t("tech.noVisitsUpcoming")} />} />
+      <VisitList showDay visits={visits} empty={<EmptyState title={t("tech.noVisitsUpcoming")} />} />
     </>
   );
 }
