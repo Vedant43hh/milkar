@@ -13,7 +13,8 @@ async function main() {
   if (process.env.NODE_ENV === "production" && process.env.SEED_ALLOW_PRODUCTION !== "true") {
     throw new Error("Refusing to seed in production. Set SEED_ALLOW_PRODUCTION=true for a demo database.");
   }
-  const connectionString = process.env.DATABASE_URL;
+  // A direct connection when there is one (Neon on Vercel): the seed runs large transactions.
+  const connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL;
   if (!connectionString) throw new Error("DATABASE_URL is not set");
   const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString }) });
   const { world } = buildWorld(new Date());
