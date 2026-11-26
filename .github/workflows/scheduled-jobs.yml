@@ -1,0 +1,29 @@
+# Runs the app's scheduled jobs (closing rounds at cutoff, reminders, weekly orders) every
+# 10 minutes. Vercel's free plan only allows a daily cron, so GitHub triggers /api/cron instead.
+# Needs the repository secret CRON_SECRET, set to the same value as on Vercel.
+name: Scheduled jobs
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: scheduled-jobs
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Call /api/cron
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          APP_URL: https://milkar-rho.vercel.app
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::Add the CRON_SECRET repository secret (Settings > Secrets and variables > Actions)."
+            exit 1
+          fi
+          curl -fsS --retry 2 --max-time 120 -H "Authorization: Bearer $CRON_SECRET" "$APP_URL/api/cron"
